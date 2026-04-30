@@ -1,6 +1,6 @@
 {
-  "latest": "1.5.2",
-  "ios_url": "https://github.com/JohnnWi/homelab-project/releases/download/v1.5.2/Homelab.ipa",
-  "android_url": "https://github.com/JohnnWi/homelab-project/releases/download/v1.5.2/Homelab.apk",
-  "changelog": "Fixed Komodo stack detail refresh and fallback handling.\nImproved Komodo status presentation on iOS and Android.\nIncluded additional Komodo stability and UX fixes."
+  "latest": "1.5.3",
+  "ios_url": "https://github.com/JohnnWi/homelab-project/releases/download/v1.5.3/Homelab.ipa",
+  "android_url": "https://github.com/JohnnWi/homelab-project/releases/download/v1.5.3/Homelab.apk",
+  "changelog": "Improved Maltrail event parsing across iOS and Android.\nAdded compatibility for text-based Maltrail event responses.\nIncluded date and event handling fixes for more reliable Maltrail data."
 }
