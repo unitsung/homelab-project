@@ -429,17 +429,13 @@ actor GenericAPIClient {
         let publicIPString = await requestString(path: "/v1/publicip/ip", headers: headers)
         guard vpnObject != nil || publicIPObject != nil || publicIPString != nil || forwardedObject != nil || forwardedString != nil else { return nil }
 
-        let connectionStatus = valueForPath("status", in: vpnObject as Any) ?? valueForPath("openvpn.status", in: vpnObject as Any)
-        let serverName = valueForPath("server_name", in: vpnObject as Any) ?? valueForPath("openvpn.server_name", in: vpnObject as Any)
-        let vpnProvider = valueForPath("provider", in: vpnObject as Any)
-            ?? valueForPath("vpn.provider", in: vpnObject as Any)
-            ?? valueForPath("openvpn.provider", in: vpnObject as Any)
-        let publicIP = valueForPath("public_ip", in: publicIPObject as Any)
-            ?? valueForPath("ip", in: publicIPObject as Any)
+        let connectionStatus = firstValue(for: ["status", "openvpn.status"], in: vpnObject)
+        let serverName = firstValue(for: ["server_name", "openvpn.server_name"], in: vpnObject)
+        let vpnProvider = firstValue(for: ["provider", "vpn.provider", "openvpn.provider"], in: vpnObject)
+        let publicIP = firstValue(for: ["public_ip", "ip"], in: publicIPObject)
             ?? publicIPString
-        let country = valueForPath("country", in: publicIPObject as Any) ?? valueForPath("location.country", in: publicIPObject as Any)
-        let forwardedPort = valueForPath("port", in: forwardedObject as Any)
-            ?? valueForPath("port_forwarded", in: forwardedObject as Any)
+        let country = firstValue(for: ["country", "location.country"], in: publicIPObject)
+        let forwardedPort = firstValue(for: ["port", "port_forwarded"], in: forwardedObject)
             ?? forwardedString
 
         return GluetunSnapshot(
@@ -465,15 +461,35 @@ actor GenericAPIClient {
         let sessions = parseFlaresolverrSessions(from: sessionsObject)
         guard healthObject != nil || rootObject != nil || sessionsObject != nil else { return nil }
 
+        let version: String?
+        if let healthVersion = firstValue(for: ["version"], in: healthObject) {
+            version = healthVersion
+        } else {
+            version = firstValue(for: ["version"], in: rootObject)
+        }
+
+        let status: String?
+        if let healthStatus = firstValue(for: ["status"], in: healthObject) {
+            status = healthStatus
+        } else if let rootStatus = firstValue(for: ["status"], in: rootObject) {
+            status = rootStatus
+        } else {
+            status = firstValue(for: ["status"], in: sessionsObject)
+        }
+
+        let message: String?
+        if let healthMessage = firstValue(for: ["message", "msg"], in: healthObject) {
+            message = healthMessage
+        } else if let rootMessage = firstValue(for: ["message"], in: rootObject) {
+            message = rootMessage
+        } else {
+            message = firstValue(for: ["message"], in: sessionsObject)
+        }
+
         return FlaresolverrSnapshot(
-            version: valueForPath("version", in: healthObject as Any) ?? valueForPath("version", in: rootObject as Any),
-            status: valueForPath("status", in: healthObject as Any)
-                ?? valueForPath("status", in: rootObject as Any)
-                ?? valueForPath("status", in: sessionsObject as Any),
-            message: valueForPath("message", in: healthObject as Any)
-                ?? valueForPath("msg", in: healthObject as Any)
-                ?? valueForPath("message", in: rootObject as Any)
-                ?? valueForPath("message", in: sessionsObject as Any),
+            version: version,
+            status: status,
+            message: message,
             sessions: sessions
         )
     }
@@ -657,13 +673,14 @@ actor GenericAPIClient {
             ("Providers", ["providers", "data.providers"])
         ]
 
-        let mapped = keys.compactMap { label, paths in
+        var mapped: [GenericStatusDetail] = []
+        for (label, paths) in keys {
             for path in paths {
                 if let value = valueForPath(path, in: dict) {
-                    return GenericStatusDetail(label: label, value: value)
+                    mapped.append(GenericStatusDetail(label: label, value: value))
+                    break
                 }
             }
-            return nil
         }
 
         if !mapped.isEmpty {
@@ -1078,6 +1095,16 @@ actor GenericAPIClient {
             current = dict[part]
         }
         return normalizedValue(current)
+    }
+
+    private func firstValue(for paths: [String], in object: Any?) -> String? {
+        guard let object else { return nil }
+        for path in paths {
+            if let value = valueForPath(path, in: object) {
+                return value
+            }
+        }
+        return nil
     }
 
     private func normalizedValue(_ value: Any?) -> String? {
