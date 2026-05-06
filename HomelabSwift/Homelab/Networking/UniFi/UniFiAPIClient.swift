@@ -355,13 +355,23 @@ struct UniFiDevice: Identifiable, Decodable, Sendable, Hashable {
         model = try container.decodeIfPresent(String.self, forKey: .model) ?? uidb?.string("model") ?? root?.string("model") ?? uidb?.string("model_in_eol") ?? root?.string("model_in_eol")
         type = try container.decodeIfPresent(String.self, forKey: .type) ?? uidb?.string("type") ?? root?.string("type")
         macAddress = try container.decodeIfPresent(String.self, forKey: .macAddress) ?? uidb?.string("mac") ?? root?.string("mac") ?? root?.string("mac_address")
-        let decodedIpAddress = try container.decodeIfPresent(String.self, forKey: .ipAddress)
-        ipAddress = decodedIpAddress
-            ?? uidb?.string("ip")
-            ?? root?.string("ip")
-            ?? uidb?.string("ipAddress")
-            ?? root?.string("ipAddress")
-            ?? root?.string("ip_address")
+        var resolvedIpAddress = try container.decodeIfPresent(String.self, forKey: .ipAddress)
+        if resolvedIpAddress == nil {
+            resolvedIpAddress = uidb?.string("ip")
+        }
+        if resolvedIpAddress == nil {
+            resolvedIpAddress = root?.string("ip")
+        }
+        if resolvedIpAddress == nil {
+            resolvedIpAddress = uidb?.string("ipAddress")
+        }
+        if resolvedIpAddress == nil {
+            resolvedIpAddress = root?.string("ipAddress")
+        }
+        if resolvedIpAddress == nil {
+            resolvedIpAddress = root?.string("ip_address")
+        }
+        ipAddress = resolvedIpAddress
         state = try container.decodeIfPresent(String.self, forKey: .state) ?? uidb?.string("state") ?? root?.string("state")
         version = try container.decodeIfPresent(String.self, forKey: .version) ?? uidb?.string("version") ?? root?.string("version")
         firmwareVersion = try container.decodeIfPresent(String.self, forKey: .firmwareVersion) ?? uidb?.string("firmwareVersion") ?? root?.string("firmwareVersion") ?? uidb?.string("firmware_version") ?? root?.string("firmware_version")
