@@ -27,6 +27,15 @@
       ],
       "versions": [
         {
+          "version": "1.6.2",
+          "buildVersion": "38",
+          "date": "2026-05-06",
+          "localizedDescription": "Removed the crypto donation section from Settings on iOS and Android.\nCleaned up related donation strings and settings UI copy.\nIncluded minor settings maintenance for the 1.6.2 release.",
+          "downloadURL": "https://github.com/JohnnWi/homelab-project/releases/download/v1.6.2/Homelab.ipa",
+          "size": 33523307,
+          "minOSVersion": "26.0"
+        },
+        {
           "version": "1.6.1",
           "buildVersion": "37",
           "date": "2026-05-06",
@@ -324,6 +333,16 @@
     }
   ],
   "news": [
+    {
+      "title": "v1.6.2 — Removed the crypto donation section from Settings on iOS and Android.",
+      "identifier": "release-1.6.2",
+      "caption": "Removed the crypto donation section from Settings on iOS and Android. Cleaned up related donation strings and settings UI copy. Included minor settings maintenance for the 1.6.2 release.",
+      "date": "2026-05-06",
+      "tintColor": "#4A90D9",
+      "notify": true,
+      "url": "https://github.com/JohnnWi/homelab-project/releases/tag/v1.6.2",
+      "appID": "homelab.foreverhomelab"
+    },
     {
       "title": "v1.6.1 — Improved UniFi URL normalization across iOS and Android.",
       "identifier": "release-1.6.1",
