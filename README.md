@@ -9,17 +9,6 @@
 
 Homelab Dashboard is a fully native mobile app for monitoring and managing a self-hosted homelab from one place. The project ships two dedicated apps, one for iOS and one for Android, designed around the same product idea while respecting each platform's native UI patterns.
 
-## 🔗 Official Links
-
-| Resource | Link |
-|---|---|
-| Privacy Policy | [johnnwi.github.io/homelab-project/privacy.html](https://johnnwi.github.io/homelab-project/privacy.html) |
-| Support | [johnnwi.github.io/homelab-project/support.html](https://johnnwi.github.io/homelab-project/support.html) |
-| Releases | [github.com/JohnnWi/homelab-project/releases](https://github.com/JohnnWi/homelab-project/releases) |
-| AltStore / SideStore Source | [apps.json](https://raw.githubusercontent.com/JohnnWi/homelab-project/main/apps.json) |
-
----
-
 ## 💝 Support the App Store Launch
 
 A GoFundMe campaign has been launched to raise €100 to publish the iOS app on the App Store. Every contribution helps.
