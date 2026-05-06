@@ -77,13 +77,13 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6.1.0
 
       - name: Compile Debug Kotlin
         run: ./gradlew :app:compileDebugKotlin --console=plain
 
   ios-compile:
-    name: iOS compile (best effort)
+    name: iOS compile
     runs-on: macos-26
     timeout-minutes: 20
     defaults:
@@ -104,7 +104,6 @@ jobs:
           EOF
 
       - name: Compile iOS app without signing
-        continue-on-error: true
         run: |
           xcodebuild build \
             -project Homelab.xcodeproj \
