@@ -1506,4 +1506,43 @@
     <string name="uptime_kuma_response_time">Réponse</string>
     <string name="uptime_kuma_cert_days">Jours cert.</string>
     <string name="uptime_kuma_no_monitors">Aucun moniteur trouvé</string>
+
+    <!-- TrueNAS -->
+    <string name="service_truenas">TrueNAS</string>
+    <string name="service_truenas_desc">Stockage, pools, partages et services</string>
+    <string name="login_hint_truenas">TrueNAS SCALE/Community Edition 25.04 ou version ultérieure est recommandé. Utilisez une clé API utilisateur avec accès JSON-RPC WebSocket; HTTPS ou WSS est requis.</string>
+    <string name="truenas_instance_label">Instance TrueNAS</string>
+    <string name="login_error_url_required">L\'URL de l\'instance est requise.</string>
+    <string name="truenas_auth_failed">Échec de l\'authentification TrueNAS.</string>
+    <string name="truenas_request_failed">Échec de la requête TrueNAS.</string>
+    <string name="truenas_invalid_api_key">Clé API TrueNAS invalide.</string>
+    <string name="truenas_secure_transport_required">L\'accès API TrueNAS nécessite HTTPS ou WSS.</string>
+    <string name="truenas_system">Système</string>
+    <string name="truenas_version">Version</string>
+    <string name="truenas_product">Produit</string>
+    <string name="truenas_memory">Mémoire</string>
+    <string name="truenas_uptime">Disponibilité</string>
+    <string name="truenas_pools">Pools</string>
+    <string name="truenas_healthy_pools">Pools sains</string>
+    <string name="truenas_storage_used">Stockage utilisé</string>
+    <string name="truenas_disks">Disques</string>
+    <string name="truenas_shares">Partages</string>
+    <string name="truenas_services">Services</string>
+    <string name="truenas_running_services">Services actifs</string>
+    <string name="truenas_workloads">Charges</string>
+    <string name="truenas_apps">Apps</string>
+    <string name="truenas_virtual_machines">Machines virtuelles</string>
+    <string name="truenas_smb">SMB</string>
+    <string name="truenas_nfs">NFS</string>
+    <string name="truenas_iscsi">iSCSI</string>
+    <string name="truenas_running">Actif</string>
+    <string name="truenas_enabled">Activé</string>
+    <string name="truenas_stopped">Arrêté</string>
+    <string name="truenas_alerts">Alertes</string>
+    <string name="truenas_no_alerts">Aucune alerte active</string>
+    <string name="truenas_available">Disponible</string>
+    <string name="truenas_used">Utilisé</string>
+    <string name="truenas_pool_status">État du pool</string>
+    <string name="truenas_no_pools">Aucun pool retourné par TrueNAS.</string>
+    <string name="truenas_no_disks">Aucun disque retourné par TrueNAS.</string>
 </resources>

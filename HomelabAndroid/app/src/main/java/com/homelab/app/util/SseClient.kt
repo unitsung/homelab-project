@@ -53,6 +53,7 @@ class SseClient @Inject constructor(
                 ServiceType.WAKAPI -> "Wakapi"
                 ServiceType.CRAFTY_CONTROLLER -> "Crafty Controller"
                 ServiceType.PROXMOX -> "Proxmox"
+                ServiceType.TRUENAS -> "TrueNAS"
                 ServiceType.PTERODACTYL -> "Pterodactyl"
                 ServiceType.CALAGOPUS -> "Calagopus"
                 ServiceType.UNKNOWN -> "Unknown"

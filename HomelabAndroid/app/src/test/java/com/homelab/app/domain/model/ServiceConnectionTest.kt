@@ -74,4 +74,11 @@ class ServiceConnectionTest {
         assertEquals(ServiceType.BESZEL.displayName, migrated.label)
         assertEquals("ops@example.com", migrated.username)
     }
+
+    @Test
+    fun `stored truenas variants resolve to one service type`() {
+        assertEquals(ServiceType.TRUENAS, ServiceType.fromStoredName("TRUENAS"))
+        assertEquals(ServiceType.TRUENAS, ServiceType.fromStoredName("truenas-scale"))
+        assertEquals(ServiceType.TRUENAS, ServiceType.fromStoredName("truenas_core"))
+    }
 }

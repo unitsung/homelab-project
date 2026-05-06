@@ -1841,4 +1841,43 @@
     <string name="calagopus_action_restart">Restart</string>
     <string name="calagopus_action_kill">Kill</string>
     <string name="calagopus_action_sent">Action sent</string>
+
+    <!-- TrueNAS -->
+    <string name="service_truenas">TrueNAS</string>
+    <string name="service_truenas_desc">Storage, pools, shares and services</string>
+    <string name="login_hint_truenas">TrueNAS SCALE/Community Edition 25.04 or later is recommended. Use a user API key with JSON-RPC WebSocket access; HTTPS or WSS is required.</string>
+    <string name="truenas_instance_label">TrueNAS instance</string>
+    <string name="login_error_url_required">Instance URL is required.</string>
+    <string name="truenas_auth_failed">TrueNAS authentication failed.</string>
+    <string name="truenas_request_failed">TrueNAS request failed.</string>
+    <string name="truenas_invalid_api_key">Invalid TrueNAS API key.</string>
+    <string name="truenas_secure_transport_required">TrueNAS API access requires HTTPS or WSS.</string>
+    <string name="truenas_system">System</string>
+    <string name="truenas_version">Version</string>
+    <string name="truenas_product">Product</string>
+    <string name="truenas_memory">Memory</string>
+    <string name="truenas_uptime">Uptime</string>
+    <string name="truenas_pools">Pools</string>
+    <string name="truenas_healthy_pools">Healthy pools</string>
+    <string name="truenas_storage_used">Storage used</string>
+    <string name="truenas_disks">Disks</string>
+    <string name="truenas_shares">Shares</string>
+    <string name="truenas_services">Services</string>
+    <string name="truenas_running_services">Running services</string>
+    <string name="truenas_workloads">Workloads</string>
+    <string name="truenas_apps">Apps</string>
+    <string name="truenas_virtual_machines">Virtual machines</string>
+    <string name="truenas_smb">SMB</string>
+    <string name="truenas_nfs">NFS</string>
+    <string name="truenas_iscsi">iSCSI</string>
+    <string name="truenas_running">Running</string>
+    <string name="truenas_enabled">Enabled</string>
+    <string name="truenas_stopped">Stopped</string>
+    <string name="truenas_alerts">Alerts</string>
+    <string name="truenas_no_alerts">No active alerts</string>
+    <string name="truenas_available">Available</string>
+    <string name="truenas_used">Used</string>
+    <string name="truenas_pool_status">Pool status</string>
+    <string name="truenas_no_pools">No pools returned by TrueNAS.</string>
+    <string name="truenas_no_disks">No disks returned by TrueNAS.</string>
 </resources>

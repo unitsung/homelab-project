@@ -26,6 +26,7 @@ import com.homelab.app.data.repository.PiholeRepository
 import com.homelab.app.data.repository.PortainerRepository
 import com.homelab.app.data.repository.ServicesRepository
 import com.homelab.app.data.repository.TechnitiumRepository
+import com.homelab.app.data.repository.TrueNasRepository
 import com.homelab.app.data.repository.UptimeKumaRepository
 import com.homelab.app.domain.model.ServiceInstance
 import com.homelab.app.util.ServiceType
@@ -68,6 +69,7 @@ class HomeViewModel @Inject constructor(
     private val patchmonRepository: PatchmonRepository,
     private val plexRepository: PlexRepository,
     private val proxmoxRepository: ProxmoxRepository,
+    private val trueNasRepository: TrueNasRepository,
     private val pangolinRepository: PangolinRepository,
     private val wakapiRepository: com.homelab.app.data.repository.WakapiRepository,
     private val pterodactylRepository: PterodactylRepository,
@@ -367,6 +369,10 @@ class HomeViewModel @Inject constructor(
                     totalRunning += vms.count { it.isRunning } + lxcs.count { it.isRunning }
                 }
                 InstanceSummary("$totalRunning", "/ $totalGuests", "proxmox_guests_running")
+            }
+            ServiceType.TRUENAS -> {
+                val dashboard = trueNasRepository.getSummary(instanceId)
+                InstanceSummary("${dashboard.healthyPoolCount}", "/ ${dashboard.pools.size}", "truenas_healthy_pools")
             }
             ServiceType.PTERODACTYL -> {
                 val servers = pterodactylRepository.getServers(instanceId)

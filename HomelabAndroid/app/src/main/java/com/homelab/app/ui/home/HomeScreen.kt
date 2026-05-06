@@ -336,6 +336,7 @@ private fun InstanceCard(
             "plex_total_items" -> stringResource(R.string.plex_total_items)
             "coded_today" -> stringResource(R.string.wakapi_coded_today)
             "proxmox_guests_running" -> stringResource(R.string.proxmox_guests_running)
+            "truenas_healthy_pools" -> stringResource(R.string.truenas_healthy_pools)
             else -> s.label.lowercase()
         }
     }

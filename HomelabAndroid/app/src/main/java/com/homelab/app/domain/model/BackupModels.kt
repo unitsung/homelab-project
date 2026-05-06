@@ -75,6 +75,7 @@ object BackupServiceTypeMapper {
             ServiceType.FLARESOLVERR -> "flaresolverr"
             ServiceType.WAKAPI -> "wakapi"
             ServiceType.PROXMOX -> "proxmox"
+            ServiceType.TRUENAS -> "truenas"
             ServiceType.PTERODACTYL -> "pterodactyl"
             ServiceType.CALAGOPUS -> "calagopus"
             ServiceType.UNKNOWN -> "unknown"
@@ -116,6 +117,8 @@ object BackupServiceTypeMapper {
             "wakapi" -> ServiceType.WAKAPI
             "crafty_controller", "crafty" -> ServiceType.CRAFTY_CONTROLLER
             "proxmox" -> ServiceType.PROXMOX
+            "truenas", "truenas_scale", "truenas-scale", "truenasscale",
+            "truenas_core", "truenas-core", "truenascore" -> ServiceType.TRUENAS
             "pterodactyl" -> ServiceType.PTERODACTYL
             "calagopus" -> ServiceType.CALAGOPUS
             else -> null

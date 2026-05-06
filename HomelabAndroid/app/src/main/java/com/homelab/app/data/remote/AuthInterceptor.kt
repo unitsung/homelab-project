@@ -82,28 +82,18 @@ class AuthInterceptor @Inject constructor(
         // Auto-retry for Beszel on auth failure (401 or 400 for PocketBase)
         if (effectiveInstance != null &&
             effectiveInstance.type == ServiceType.BESZEL &&
-            (response.code == 401 || response.code == 400) &&
+            shouldAttemptBeszelReauth(response) &&
             bypassHeader != "true" &&
             !effectiveInstance.username.isNullOrBlank() &&
             !effectiveInstance.password.isNullOrBlank()
         ) {
             val newToken = try {
                 runBlocking {
-                    beszelRepository.get().authenticate(
-                        effectiveInstance.url,
-                        effectiveInstance.username,
-                        effectiveInstance.password,
-                        allowSelfSigned = effectiveInstance.allowSelfSigned
-                    )
+                    beszelRepository.get().refreshStoredToken(effectiveInstance.id)
                 }
             } catch (_: Exception) { null }
 
             if (newToken != null) {
-                // Persist the refreshed token
-                runBlocking {
-                    serviceInstancesRepository.saveInstance(effectiveInstance.copy(token = newToken))
-                }
-
                 // Retry with new token
                 response.close()
                 val retryBuilder = request.newBuilder()
@@ -113,6 +103,15 @@ class AuthInterceptor @Inject constructor(
 
                 return response
             }
+        }
+
+        if (effectiveInstance != null &&
+            effectiveInstance.type == ServiceType.BESZEL &&
+            shouldAttemptBeszelReauth(response) &&
+            bypassHeader != "true" &&
+            instanceIdHeader != null
+        ) {
+            globalEventBus.emitAuthError(instanceIdHeader)
         }
 
         // Auto-retry for Nginx Proxy Manager on token expiration/auth failure.
@@ -310,6 +309,21 @@ class AuthInterceptor @Inject constructor(
         return lowered.contains("token has expired") ||
             lowered.contains("jwt expired") ||
             lowered.contains("tokenexpirederror")
+    }
+
+    private fun shouldAttemptBeszelReauth(response: Response): Boolean {
+        if (response.code in setOf(401, 403)) return true
+        if (response.code != 400) return false
+        val body = try {
+            response.peekBody(4096).string()
+        } catch (_: Exception) {
+            return true
+        }
+        val lowered = body.lowercase()
+        return lowered.contains("token") ||
+            lowered.contains("auth") ||
+            lowered.contains("unauthorized") ||
+            lowered.contains("forbidden")
     }
 
     private fun addAuthHeaders(

@@ -28,6 +28,7 @@ final class BackupModelsTests: XCTestCase {
             piholeAuthMode: nil,
             proxmoxAuthMode: nil,
             proxmoxRealm: nil,
+            unifiAuthMode: nil,
             fallbackUrl: "https://pangolin.example.com",
             allowSelfSigned: false,
             password: nil,
@@ -38,5 +39,14 @@ final class BackupModelsTests: XCTestCase {
         XCTAssertEqual(instance?.type, .pangolin)
         XCTAssertEqual(instance?.apiKey, "pangolin-key")
         XCTAssertEqual(instance?.fallbackUrl, "https://pangolin.example.com")
+    }
+
+    func testTrueNASBackupMapperAliases() {
+        XCTAssertEqual(BackupServiceTypeMapper.backupKey(for: .truenas), "truenas")
+        XCTAssertEqual(BackupServiceTypeMapper.serviceType(from: "truenas"), .truenas)
+        XCTAssertEqual(BackupServiceTypeMapper.serviceType(from: "truenas_scale"), .truenas)
+        XCTAssertEqual(BackupServiceTypeMapper.serviceType(from: "truenas-scale"), .truenas)
+        XCTAssertEqual(BackupServiceTypeMapper.serviceType(from: "truenas_core"), .truenas)
+        XCTAssertEqual(BackupServiceTypeMapper.serviceType(from: "truenas-core"), .truenas)
     }
 }

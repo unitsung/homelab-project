@@ -931,6 +931,28 @@ final class ModelDecodingTests: XCTestCase {
         XCTAssertEqual(String(decoding: data, as: UTF8.self), "\"linux_update\"")
     }
 
+    func testServiceTypeDecodesTrueNASAliases() throws {
+        let aliases = ["truenas", "truenas_scale", "truenasscale", "truenas_core", "truenascore"]
+        for alias in aliases {
+            let data = Data("\"\(alias)\"".utf8)
+            let decoded = try JSONDecoder().decode(ServiceType.self, from: data)
+            XCTAssertEqual(decoded, .truenas, "Alias \(alias) should decode as TrueNAS")
+        }
+    }
+
+    func testServiceTypeEncodesTrueNASWithCanonicalRawValue() throws {
+        let data = try JSONEncoder().encode(ServiceType.truenas)
+        XCTAssertEqual(String(decoding: data, as: UTF8.self), "\"truenas\"")
+    }
+
+    func testTrueNASAPIKeyTransportRequiresSecureWebSocket() {
+        XCTAssertTrue(TrueNASAPIClient.usesSecureAPITransport("truenas.local"))
+        XCTAssertTrue(TrueNASAPIClient.usesSecureAPITransport("https://truenas.local"))
+        XCTAssertTrue(TrueNASAPIClient.usesSecureAPITransport("wss://truenas.local/api/current"))
+        XCTAssertFalse(TrueNASAPIClient.usesSecureAPITransport("http://truenas.local"))
+        XCTAssertFalse(TrueNASAPIClient.usesSecureAPITransport("ws://truenas.local/websocket"))
+    }
+
     func testWakapiSummaryDecodingSupportsNativeSummaryPayload() throws {
         let json = """
         {

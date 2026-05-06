@@ -99,6 +99,7 @@ private fun dashboardRoute(type: ServiceType, instanceId: String): String {
         ServiceType.WAKAPI -> "wakapi/$instanceId/dashboard"
         ServiceType.PLEX -> "plex/$instanceId/dashboard"
         ServiceType.PROXMOX -> "proxmox/$instanceId/dashboard"
+        ServiceType.TRUENAS -> "truenas/$instanceId/dashboard"
         ServiceType.PTERODACTYL -> "pterodactyl/$instanceId/dashboard"
         ServiceType.CALAGOPUS -> "calagopus/$instanceId/dashboard"
         ServiceType.RADARR,
@@ -1028,6 +1029,23 @@ fun AppNavigation() {
                     },
                     onNavigateToGlobalTasks = {
                         navController.navigate("proxmox/$instanceId/global-tasks")
+                    }
+                )
+            }
+
+            composable(
+                route = "truenas/{instanceId}/dashboard",
+                arguments = listOf(androidx.navigation.navArgument("instanceId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val instanceId = backStackEntry.arguments?.getString("instanceId") ?: return@composable
+                com.homelab.app.ui.truenas.TrueNasDashboardScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToInstance = { newInstanceId ->
+                        if (newInstanceId != instanceId) {
+                            navController.navigate(dashboardRoute(ServiceType.TRUENAS, newInstanceId)) {
+                                popUpTo("truenas/$instanceId/dashboard") { inclusive = true }
+                            }
+                        }
                     }
                 )
             }

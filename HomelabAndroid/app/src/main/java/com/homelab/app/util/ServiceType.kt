@@ -37,6 +37,7 @@ enum class ServiceType(val displayName: String) {
     FLARESOLVERR("FlareSolverr"),
     WAKAPI("Wakapi"),
     PROXMOX("Proxmox VE"),
+    TRUENAS("TrueNAS"),
     PTERODACTYL("Pterodactyl"),
     CALAGOPUS("Calagopus"),
     UNKNOWN("Unknown");
@@ -78,6 +79,11 @@ enum class ServiceType(val displayName: String) {
                 "UNIFI_NETWORK" -> UNIFI_NETWORK
                 "CRAFTY",
                 "CRAFTY_CONTROLLER" -> CRAFTY_CONTROLLER
+                "TRUENAS",
+                "TRUENAS_SCALE",
+                "TRUENASSCALE",
+                "TRUENAS_CORE",
+                "TRUENASCORE" -> TRUENAS
                 "PTERODACTYL" -> PTERODACTYL
                 "CALAGOPUS" -> CALAGOPUS
                 else -> entries.firstOrNull { it.name == normalized } ?: UNKNOWN

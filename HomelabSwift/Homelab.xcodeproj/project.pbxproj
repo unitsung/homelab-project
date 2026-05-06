@@ -16,6 +16,7 @@
 		05260E0A1A5781AC8EAE7011 /* EditBookmarkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CB770E60C2FE5FB6640BE98 /* EditBookmarkView.swift */; };
 		0608E2F28F00EDAF641EE43E /* UptimeKumaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91BC9E73D378366DA8D3C99E /* UptimeKumaModels.swift */; };
 		06B033BE66307E6CC8E75459 /* JellystatDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C74A7F7C1CB466CC7223840 /* JellystatDashboard.swift */; };
+		0B2C4949117F87CDA9133773 /* TrueNASDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FCBD54BB8085554C928EDA /* TrueNASDashboard.swift */; };
 		0CDEC08F570D58E9AC6743B5 /* ProxmoxTaskLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DB8B85BC0E01B15E9111C27 /* ProxmoxTaskLogView.swift */; };
 		0E5566DAE01FB0E9F10E98C8 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F5B6FAE42892F4BEB3097FD /* StatusBadge.swift */; };
 		0F634D9389BDB5467A64C25E /* GlassStatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735477DB04233B4FDA23469D /* GlassStatCard.swift */; };
@@ -38,6 +39,7 @@
 		29C9BD1512C814A8ED65D53A /* NpmDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CB742A0C436A83F92CC1FED /* NpmDashboard.swift */; };
 		29E8185E30D00ACA9B5D0C0F /* CraftyDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FB1BDA2DED27825F9D54D0 /* CraftyDashboard.swift */; };
 		2A10CBCF4DFA744F2BE9BE8B /* AdGuardHomeFiltersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1461ABFFED5C380B73195B /* AdGuardHomeFiltersView.swift */; };
+		2A2B324A3BEE70896105D4DA /* TrueNASModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E501E56649173D4BA8F24EA /* TrueNASModels.swift */; };
 		2BCD4D6ACDA7D4CEA00AFEBA /* BeszelAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E1E8A717351D5E42B2696F1 /* BeszelAPIClient.swift */; };
 		2DEE79E0C15D816F7170E110 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD1D644D530DE462BB79AA2 /* AppTheme.swift */; };
 		2E323D5C9589F5692F02B092 /* ProxmoxStorageContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24CCA4D77154824B51544FF /* ProxmoxStorageContentView.swift */; };
@@ -56,6 +58,7 @@
 		4CA71DBAD3D27E419ED0A10F /* NpmStreamForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA3C99077201F337CAC332D8 /* NpmStreamForm.swift */; };
 		4CF60BF28CB87B137D89A229 /* KomodoAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C89DAA067B6D6A378553CB61 /* KomodoAPIClient.swift */; };
 		4E06A01BDB74CF4F678913CD /* AdGuardHomeDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10229F75137E8019ACE551D7 /* AdGuardHomeDashboard.swift */; };
+		53AE4DC63535738D1804E28B /* TrueNASAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61734EE1BC78B3E2BA95622 /* TrueNASAPIClient.swift */; };
 		5739C0189A11AB2E9F581D4C /* AdGuardHomeBlockedServicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6C9B54D25DB2230917C8F8 /* AdGuardHomeBlockedServicesView.swift */; };
 		5A1A77E754C5CDAB7A67D713 /* Translations+French.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6C069732CC13919CD60F36 /* Translations+French.swift */; };
 		5A5F8EF3CA17C9A8CB0FA645 /* AdGuardHomeRewritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76B6FE397CB60885626195C /* AdGuardHomeRewritesView.swift */; };
@@ -260,6 +263,7 @@
 		465DB3CC355F5F7FDDF6DE00 /* PinEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinEntryView.swift; sourceTree = "<group>"; };
 		4742ECB110ED743BABA54DEE /* WakapiDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WakapiDashboard.swift; sourceTree = "<group>"; };
 		47A340D4B34D2BEF223A1135 /* PterodactylDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PterodactylDashboard.swift; sourceTree = "<group>"; };
+		47FCBD54BB8085554C928EDA /* TrueNASDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrueNASDashboard.swift; sourceTree = "<group>"; };
 		486E817863BA2B5DA5318488 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
 		4881549A11CBCDEFA7DCFB72 /* PangolinDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PangolinDashboard.swift; sourceTree = "<group>"; };
 		49C497A6F9411623A39F8CA5 /* PterodactylAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PterodactylAPIClient.swift; sourceTree = "<group>"; };
@@ -286,6 +290,7 @@
 		6AD5A40912505AFD774ED713 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
 		6AD961095B3F8B2101C8C66F /* UniFiAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniFiAPIClient.swift; sourceTree = "<group>"; };
 		6C61051F7EA9F32A6342570D /* PinSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinSetupView.swift; sourceTree = "<group>"; };
+		6E501E56649173D4BA8F24EA /* TrueNASModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrueNASModels.swift; sourceTree = "<group>"; };
 		6EF6E7AF1CDC6676B7421A7B /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 		720C06DC422C83CEF5E542D0 /* LidarrAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidarrAPIClient.swift; sourceTree = "<group>"; };
 		735477DB04233B4FDA23469D /* GlassStatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassStatCard.swift; sourceTree = "<group>"; };
@@ -328,6 +333,7 @@
 		A1C0C96DF48BA12ABCC04C11 /* BackupModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupModelsTests.swift; sourceTree = "<group>"; };
 		A3491FAD0D71DDB3C25D9D90 /* GiteaDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiteaDashboard.swift; sourceTree = "<group>"; };
 		A4589116BA4857CFFC0687E1 /* NpmCertificateCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmCertificateCard.swift; sourceTree = "<group>"; };
+		A61734EE1BC78B3E2BA95622 /* TrueNASAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrueNASAPIClient.swift; sourceTree = "<group>"; };
 		A69EDC601F02DCA97FEBAC18 /* NginxProxyManagerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NginxProxyManagerModels.swift; sourceTree = "<group>"; };
 		A8C246817EA53ED0E3950005 /* ProxmoxBackupJobsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxBackupJobsView.swift; sourceTree = "<group>"; };
 		AA26C2B4C3B48757F16F0E7B /* ProxmoxPoolDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxPoolDetailView.swift; sourceTree = "<group>"; };
@@ -610,6 +616,14 @@
 			path = Portainer;
 			sourceTree = "<group>";
 		};
+		4813335162F54D748D7BB96C /* TrueNAS */ = {
+			isa = PBXGroup;
+			children = (
+				6E501E56649173D4BA8F24EA /* TrueNASModels.swift */,
+			);
+			path = TrueNAS;
+			sourceTree = "<group>";
+		};
 		48AAFFAA1096205CCB4685B8 /* Gitea */ = {
 			isa = PBXGroup;
 			children = (
@@ -657,6 +671,7 @@
 				F2BD8B68C5C78ECC6C3C024A /* PiHole */,
 				1E866E8511A219B4C76B9235 /* Portainer */,
 				95BCC083816D8AA934FDC8F5 /* Proxmox */,
+				4813335162F54D748D7BB96C /* TrueNAS */,
 				E4365D1267750E9B89EF936F /* UptimeKuma */,
 			);
 			path = Models;
@@ -817,6 +832,14 @@
 				0726BE937688EDCEF843DA4A /* MaltrailAPIClient.swift */,
 			);
 			path = Maltrail;
+			sourceTree = "<group>";
+		};
+		80077F50E6CE23F9E89F7AEA /* TrueNAS */ = {
+			isa = PBXGroup;
+			children = (
+				47FCBD54BB8085554C928EDA /* TrueNASDashboard.swift */,
+			);
+			path = TrueNAS;
 			sourceTree = "<group>";
 		};
 		83DA3DAE15FBB9494FDF9EAD /* UptimeKuma */ = {
@@ -1056,6 +1079,7 @@
 				0484D4BF357548D950ABB56C /* Settings */,
 				971DDC6643DF517A71F1E0AA /* Sonarr */,
 				1B3FF86FA121ED2FFB8BC270 /* Technitium */,
+				80077F50E6CE23F9E89F7AEA /* TrueNAS */,
 				C7EDDE8C2FB40CF792552D6B /* UniFi */,
 				83DA3DAE15FBB9494FDF9EAD /* UptimeKuma */,
 				84FA10F3C1B14B2C55E58EE3 /* Wakapi */,
@@ -1103,6 +1127,14 @@
 				C7F560D9B1083811461B4B44 /* Signing.xcconfig */,
 			);
 			path = Config;
+			sourceTree = "<group>";
+		};
+		CA4177AE3C7D1E3CE3DC065B /* TrueNAS */ = {
+			isa = PBXGroup;
+			children = (
+				A61734EE1BC78B3E2BA95622 /* TrueNASAPIClient.swift */,
+			);
+			path = TrueNAS;
 			sourceTree = "<group>";
 		};
 		D43D23351242B6BFC6E743DC /* PiHole */ = {
@@ -1176,6 +1208,7 @@
 				FCECFC579C82906D02D48580 /* Radarr */,
 				02E6C0863A40CA732CDE1B37 /* Sonarr */,
 				084D2436AFFE34C15D089A1D /* Technitium */,
+				CA4177AE3C7D1E3CE3DC065B /* TrueNAS */,
 				37812033DFDA5B72BB1A466F /* UniFi */,
 				12DB927C145E608B87596524 /* UptimeKuma */,
 				ABC55F19459A78E216C60C0A /* Wakapi */,
@@ -1566,6 +1599,9 @@
 				8BE00328A6AC68DF3E40F05B /* Translations+Italian.swift in Sources */,
 				3C9BDFAE94048BBD360AF601 /* Translations+Spanish.swift in Sources */,
 				AAA9BC382610A55D8E374C95 /* Translations.swift in Sources */,
+				53AE4DC63535738D1804E28B /* TrueNASAPIClient.swift in Sources */,
+				0B2C4949117F87CDA9133773 /* TrueNASDashboard.swift in Sources */,
+				2A2B324A3BEE70896105D4DA /* TrueNASModels.swift in Sources */,
 				B3475959350ADC58148C2E6A /* UniFiAPIClient.swift in Sources */,
 				C97E7FCF77033F146747AF2E /* UniFiClientsView.swift in Sources */,
 				00623F9E5FFF09815953B86C /* UniFiDashboard.swift in Sources */,

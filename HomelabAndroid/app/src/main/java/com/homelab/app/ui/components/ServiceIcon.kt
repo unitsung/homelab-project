@@ -61,12 +61,16 @@ fun ServiceIcon(
                 content()
             } else {
                 val fallback: @Composable () -> Unit = {
-                    Icon(
-                        imageVector = type.fallbackIcon,
-                        contentDescription = type.displayName,
-                        tint = type.primaryColor,
-                        modifier = Modifier.size(iconSize * 0.72f)
-                    )
+                    if (type == ServiceType.TRUENAS) {
+                        Box(modifier = Modifier.size(iconSize))
+                    } else {
+                        Icon(
+                            imageVector = type.fallbackIcon,
+                            contentDescription = type.displayName,
+                            tint = type.primaryColor,
+                            modifier = Modifier.size(iconSize * 0.72f)
+                        )
+                    }
                 }
 
                 if (localServiceIcon != 0) {

@@ -67,6 +67,7 @@ struct ServiceLoginView: View {
             || serviceType == .prowlarr
             || serviceType == .bazarr
             || serviceType == .wakapi
+            || serviceType == .truenas
             || serviceType == .pterodactyl
             || serviceType == .calagopus
     }
@@ -487,6 +488,7 @@ struct ServiceLoginView: View {
                                  return localizer.t.loginHintFlaresolverr
         case .wakapi:            return localizer.t.loginHintWakapi
         case .proxmox:           return localizer.t.loginHintProxmox
+        case .truenas:           return localizer.t.loginHintTruenas
         case .pterodactyl:       return localizer.t.loginHintPterodactyl
         case .calagopus:         return localizer.t.loginHintCalagopus
         case .qbittorrent, .radarr, .sonarr, .lidarr, .jellyseerr, .prowlarr, .bazarr:
@@ -772,6 +774,26 @@ struct ServiceLoginView: View {
             return ServiceInstance(
                 id: existingInstanceId ?? UUID(),
                 type: .calagopus,
+                label: label,
+                url: url,
+                token: "",
+                username: existingInstance?.username,
+                apiKey: key,
+                fallbackUrl: fallbackUrl,
+                allowSelfSigned: allowSelfSigned
+            )
+
+        case .truenas:
+            let key = normalizedOptional(apiKey) ?? existingInstance?.apiKey
+            guard let key, !key.isEmpty else {
+                throw APIError.custom(localizer.t.loginErrorCredentials)
+            }
+            let client = TrueNASAPIClient(instanceId: existingInstanceId ?? UUID())
+            await client.configure(url: url, apiKey: key, fallbackUrl: fallbackUrl, allowSelfSigned: allowSelfSigned)
+            try await client.authenticate(url: url, apiKey: key, fallbackUrl: fallbackUrl)
+            return ServiceInstance(
+                id: existingInstanceId ?? UUID(),
+                type: .truenas,
                 label: label,
                 url: url,
                 token: "",

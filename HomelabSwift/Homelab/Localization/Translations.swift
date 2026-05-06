@@ -1260,6 +1260,37 @@ struct Translations {
     let serviceProxmox: String
     let serviceProxmoxDesc: String
     let loginHintProxmox: String
+    let serviceTruenasDesc: String
+    let loginHintTruenas: String
+    let truenasDashboard: String
+    let truenasSystem: String
+    let truenasVersion: String
+    let truenasUptime: String
+    let truenasHost: String
+    let truenasProduct: String
+    let truenasPools: String
+    let truenasHealthyPools: String
+    let truenasStorageUsed: String
+    let truenasDisks: String
+    let truenasShares: String
+    let truenasServices: String
+    let truenasRunningServices: String
+    let truenasWorkloads: String
+    let truenasApps: String
+    let truenasVirtualMachines: String
+    let truenasSMB: String
+    let truenasNFS: String
+    let truenasISCSI: String
+    let truenasRunning: String
+    let truenasEnabled: String
+    let truenasStopped: String
+    let truenasAlerts: String
+    let truenasNoAlerts: String
+    let truenasAvailable: String
+    let truenasUsed: String
+    let truenasPoolStatus: String
+    let truenasReadOnlyApiKey: String
+    let truenasSecureTransportRequired: String
     let loginAllowSelfSigned: String
     let loginRequireValidTLS: String
     let loginTLSDesc: String

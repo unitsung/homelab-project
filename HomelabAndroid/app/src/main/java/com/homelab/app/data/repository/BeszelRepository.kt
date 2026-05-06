@@ -12,29 +12,51 @@ import javax.inject.Singleton
 
 @Singleton
 class BeszelRepository @Inject constructor(
-    private val api: BeszelApi
+    private val api: BeszelApi,
+    private val serviceInstancesRepository: ServiceInstancesRepository
 ) {
-    suspend fun authenticate(url: String, email: String, password: String, allowSelfSigned: Boolean = false): String {
-        val cleanUrl = url.trimEnd('/') + "/api/collections/users/auth-with-password"
-        try {
-            val response = api.authenticate(
-                url = cleanUrl,
-                allowSelfSigned = allowSelfSigned.toString(),
-                credentials = mapOf("identity" to email, "password" to password)
-            )
-            return response.token
-        } catch (e: Exception) {
-            if (e is retrofit2.HttpException && e.code() == 400) {
-                // Pocketbase often throws 400 for bad auth
-                throw Exception("Authentication failed. Check your credentials and URL.")
+    suspend fun authenticate(
+        url: String,
+        email: String,
+        password: String,
+        fallbackUrl: String? = null,
+        allowSelfSigned: Boolean = false
+    ): String {
+        val candidates = listOf(url, fallbackUrl.orEmpty())
+            .mapNotNull { raw -> raw.trim().trimEnd('/').takeIf { it.isNotBlank() } }
+            .distinct()
+        var lastError: Exception? = null
+        for (candidate in candidates) {
+            val cleanUrl = "$candidate/api/collections/users/auth-with-password"
+            try {
+                val response = api.authenticate(
+                    url = cleanUrl,
+                    allowSelfSigned = allowSelfSigned.toString(),
+                    credentials = mapOf("identity" to email, "password" to password)
+                )
+                return response.token
+            } catch (e: Exception) {
+                if (e is retrofit2.HttpException && e.code() == 400) {
+                    // Pocketbase often throws 400 for bad auth
+                    lastError = Exception("Authentication failed. Check your credentials and URL.")
+                } else {
+                    lastError = e
+                }
             }
-            throw e
         }
+        throw lastError ?: Exception("Authentication failed. Check your credentials and URL.")
     }
 
     suspend fun getSystems(instanceId: String): List<BeszelSystem> {
         val response = api.getSystems(instanceId = instanceId)
-        return response.items.sortedBy { it.name.lowercase() }
+        val systems = response.items.sortedBy { it.name.lowercase() }
+        if (systems.isNotEmpty()) return systems
+
+        // PocketBase/Beszel can occasionally return an empty authorized collection after
+        // an expired token instead of a hard 401/403. Retry once after refreshing.
+        val refreshedToken = refreshStoredToken(instanceId) ?: return systems
+        if (refreshedToken.isBlank()) return systems
+        return api.getSystems(instanceId = instanceId).items.sortedBy { it.name.lowercase() }
     }
 
     suspend fun getSystem(instanceId: String, id: String): BeszelSystem {
@@ -114,5 +136,20 @@ class BeszelRepository @Inject constructor(
         } catch (_: Exception) {
             raw
         }
+    }
+
+    suspend fun refreshStoredToken(instanceId: String): String? {
+        val instance = serviceInstancesRepository.getInstance(instanceId) ?: return null
+        val email = instance.username?.takeIf { it.isNotBlank() } ?: return null
+        val password = instance.password?.takeIf { it.isNotBlank() } ?: return null
+        val newToken = authenticate(
+            url = instance.url,
+            email = email,
+            password = password,
+            fallbackUrl = instance.fallbackUrl,
+            allowSelfSigned = instance.allowSelfSigned
+        )
+        serviceInstancesRepository.saveInstance(instance.copy(token = newToken))
+        return newToken
     }
 }

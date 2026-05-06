@@ -48,7 +48,12 @@ actor BeszelAPIClient {
         defer { isRefreshing = false }
 
         do {
-            let newToken = try await authenticate(url: baseURL.isEmpty ? fallbackURL : baseURL, email: email, password: storedPassword)
+            let newToken = try await authenticate(
+                url: baseURL.isEmpty ? fallbackURL : baseURL,
+                email: email,
+                password: storedPassword,
+                fallbackUrl: fallbackURL
+            )
             token = newToken
             onTokenRefreshed?(newToken)
             return true
@@ -73,7 +78,7 @@ actor BeszelAPIClient {
     private func isAuthError(_ error: Error) -> Bool {
         guard let apiError = error as? APIError else { return false }
         switch apiError {
-        case .httpError(let code, _): return code == 401
+        case .httpError(let code, _): return code == 400 || code == 401 || code == 403
         case .unauthorized: return true
         case .bothURLsFailed(let primary, let fallback):
             return isAuthError(primary) || isAuthError(fallback)
@@ -130,7 +135,11 @@ actor BeszelAPIClient {
     // MARK: - Systems
 
     func getSystems() async throws -> BeszelSystemsResponse {
-        return try await authenticatedRequest(path: "/api/collections/systems/records?sort=-updated&perPage=50")
+        let response: BeszelSystemsResponse = try await authenticatedRequest(path: "/api/collections/systems/records?sort=-updated&perPage=50")
+        if response.items.isEmpty, await refreshToken() {
+            return try await authenticatedRequest(path: "/api/collections/systems/records?sort=-updated&perPage=50")
+        }
+        return response
     }
 
     func getSystem(id: String) async throws -> BeszelSystem {

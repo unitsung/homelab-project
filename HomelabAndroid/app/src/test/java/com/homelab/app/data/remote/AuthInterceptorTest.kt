@@ -29,10 +29,11 @@ class AuthInterceptorTest {
 
     private fun createInterceptor(
         eventBus: GlobalEventBus = mockk(relaxed = true),
-        instancesRepository: ServiceInstancesRepository = mockk()
+        instancesRepository: ServiceInstancesRepository = mockk(),
+        beszelRepository: BeszelRepository = mockk()
     ): Triple<AuthInterceptor, GlobalEventBus, ServiceInstancesRepository> {
         val beszelRepo = mockk<dagger.Lazy<BeszelRepository>>()
-        every { beszelRepo.get() } returns mockk()
+        every { beszelRepo.get() } returns beszelRepository
         val dockhandRepo = mockk<dagger.Lazy<DockhandRepository>>()
         every { dockhandRepo.get() } returns mockk()
         val maltrailRepo = mockk<dagger.Lazy<MaltrailRepository>>()
@@ -166,6 +167,44 @@ class AuthInterceptorTest {
         assertEquals("jelly-api-key", capturedRequest.captured.header("X-API-Token"))
         assertNull(capturedRequest.captured.header("X-Homelab-Service"))
         assertNull(capturedRequest.captured.header("X-Homelab-Instance-Id"))
+    }
+
+    @Test
+    fun `beszel 403 refreshes token and retries request`() {
+        val eventBus = mockk<GlobalEventBus>(relaxed = true)
+        val instancesRepository = mockk<ServiceInstancesRepository>()
+        val beszelRepository = mockk<BeszelRepository>()
+        val (interceptor) = createInterceptor(eventBus, instancesRepository, beszelRepository)
+        val chain = mockk<Interceptor.Chain>()
+        val proceeded = mutableListOf<Request>()
+        val request = Request.Builder()
+            .url("https://beszel.local/api/collections/systems/records")
+            .header("X-Homelab-Service", "Beszel")
+            .header("X-Homelab-Instance-Id", "instance-beszel")
+            .build()
+
+        coEvery { instancesRepository.getInstance("instance-beszel") } returns ServiceInstance(
+            id = "instance-beszel",
+            type = ServiceType.BESZEL,
+            label = "Beszel",
+            url = "https://beszel.local",
+            token = "expired-token",
+            username = "admin@example.com",
+            password = "secret"
+        )
+        coEvery { beszelRepository.refreshStoredToken("instance-beszel") } returns "fresh-token"
+        every { chain.request() } returns request
+        every { chain.proceed(any()) } answers {
+            val req = invocation.args[0] as Request
+            proceeded += req
+            response(req, if (proceeded.size == 1) 403 else 200)
+        }
+
+        val response = interceptor.intercept(chain)
+
+        assertEquals(200, response.code)
+        assertEquals("Bearer expired-token", proceeded.first().header("Authorization"))
+        assertEquals("Bearer fresh-token", proceeded.last().header("Authorization"))
     }
 
     @Test

@@ -200,6 +200,14 @@ extension ButtonStyle where Self == AppTheme.LiquidGlass {
 // MARK: - Adaptive status color (light/dark aware)
 
 extension Color {
+    static var truenasAccessibleAccent: Color {
+        Color(UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(red: 0.0, green: 0.584, blue: 0.835, alpha: 1.0)
+                : UIColor(red: 0.0, green: 0.471, blue: 0.690, alpha: 1.0)
+        })
+    }
+
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0

@@ -329,6 +329,7 @@ struct HomeView: View {
         case .lidarr:            LidarrDashboard(instanceId: route.instanceId)
         case .wakapi:            WakapiDashboard(instanceId: route.instanceId)
         case .proxmox:           ProxmoxDashboard(instanceId: route.instanceId)
+        case .truenas:           TrueNASDashboard(instanceId: route.instanceId)
         case .pterodactyl:       PterodactylDashboard(instanceId: route.instanceId)
         case .calagopus:         CalagopusDashboard(instanceId: route.instanceId)
         case .jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr:
@@ -534,6 +535,14 @@ struct HomeView: View {
                     totalRunning += vms.filter { $0.isRunning }.count + lxcs.filter { $0.isRunning }.count
                 }
                 return ServiceSummaryInfo(value: "\(totalRunning)", subValue: "/ \(totalGuests)", label: localizer.t.proxmoxGuestsRunning)
+            case .truenas:
+                guard let client = await servicesStore.truenasClient(instanceId: instanceId) else { return nil }
+                let snapshot = try await client.getDashboardSnapshot()
+                return ServiceSummaryInfo(
+                    value: "\(snapshot.healthyPoolCount)",
+                    subValue: "/ \(snapshot.pools.count)",
+                    label: localizer.t.truenasHealthyPools
+                )
             case .pterodactyl:
                 guard let client = await servicesStore.pterodactylClient(instanceId: instanceId) else { return nil }
                 let servers = try await client.getServers()
@@ -929,7 +938,9 @@ struct ServiceIconView: View {
 
     var body: some View {
         Group {
-            if let local = UIImage(named: localAssetName) {
+            if type == .truenas, let primary = candidates.first {
+                primaryIconView(primary)
+            } else if let local = UIImage(named: localAssetName) {
                 Image(uiImage: local)
                     .resizable()
                     .renderingMode(.original)
@@ -956,13 +967,19 @@ struct ServiceIconView: View {
                     .renderingMode(.original)
                     .scaledToFit()
             case .failure:
-                if candidates.count > 1 {
+                if type == .truenas {
+                    Color.clear
+                } else if candidates.count > 1 {
                     secondaryIconView
                 } else {
                     fallbackView
                 }
             case .empty:
-                fallbackView
+                if type == .truenas {
+                    Color.clear
+                } else {
+                    fallbackView
+                }
             @unknown default:
                 fallbackView
             }

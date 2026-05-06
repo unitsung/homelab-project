@@ -26,6 +26,7 @@ import com.homelab.app.data.repository.PortainerRepository
 import com.homelab.app.data.repository.ServiceInstancesRepository
 import com.homelab.app.data.repository.ServicesRepository
 import com.homelab.app.data.repository.TechnitiumRepository
+import com.homelab.app.data.repository.TrueNasRepository
 import com.homelab.app.data.repository.UnifiRepository
 import com.homelab.app.data.repository.UptimeKumaRepository
 import com.homelab.app.data.repository.WakapiRepository
@@ -73,6 +74,7 @@ class ServiceLoginViewModel @Inject constructor(
     private val mediaArrRepository: MediaArrRepository,
     private val wakapiRepository: WakapiRepository,
     private val proxmoxRepository: ProxmoxRepository,
+    private val trueNasRepository: TrueNasRepository,
     private val pterodactylRepository: PterodactylRepository,
     private val calagopusRepository: CalagopusRepository
 ) : ViewModel() {
@@ -137,12 +139,14 @@ class ServiceLoginViewModel @Inject constructor(
                     existing.url == cleanUrl &&
                     existing.username.orEmpty() == normalizedStoredUsername &&
                     existing.apiKey.orEmpty() == trimmedApiKey &&
-                    existing.piHoleStoredSecret.orEmpty() == trimmedPassword
+                    existing.piHoleStoredSecret.orEmpty() == trimmedPassword &&
+                    existing.allowSelfSigned == allowSelfSigned
 
                 val instance = if (metadataOnly) {
                     existing.copy(
                         label = normalizedLabel,
-                        fallbackUrl = cleanFallbackUrl
+                        fallbackUrl = cleanFallbackUrl,
+                        allowSelfSigned = allowSelfSigned
                     )
                 } else {
                     when (serviceType) {
@@ -204,7 +208,13 @@ class ServiceLoginViewModel @Inject constructor(
                                 throw IllegalArgumentException(context.getString(R.string.login_error_password_required))
                             }
                             require(authPassword.isNotBlank()) { context.getString(R.string.login_error_password_required) }
-                            val token = beszelRepository.authenticate(cleanUrl, trimmedUsername, authPassword, allowSelfSigned = allowSelfSigned)
+                            val token = beszelRepository.authenticate(
+                                url = cleanUrl,
+                                email = trimmedUsername,
+                                password = authPassword,
+                                fallbackUrl = cleanFallbackUrl,
+                                allowSelfSigned = allowSelfSigned
+                            )
                             ServiceInstance(
                                 id = instanceId,
                                 type = serviceType,
@@ -616,6 +626,24 @@ class ServiceLoginViewModel @Inject constructor(
                                 )
                             }
                         }
+                        ServiceType.TRUENAS -> {
+                            require(trimmedApiKey.isNotBlank()) { context.getString(R.string.login_error_api_key_required) }
+                            trueNasRepository.authenticate(
+                                url = cleanUrl,
+                                apiKey = trimmedApiKey,
+                                fallbackUrl = cleanFallbackUrl,
+                                allowSelfSigned = allowSelfSigned
+                            )
+                            ServiceInstance(
+                                id = instanceId,
+                                type = serviceType,
+                                label = normalizedLabel,
+                                url = cleanUrl,
+                                apiKey = trimmedApiKey,
+                                fallbackUrl = cleanFallbackUrl,
+                                allowSelfSigned = allowSelfSigned
+                            )
+                        }
                         ServiceType.QBITTORRENT -> {
                             require(trimmedUsername.isNotBlank()) { context.getString(R.string.login_error_username_required) }
                             val resolvedPassword = trimmedPassword.ifBlank {
@@ -735,7 +763,11 @@ class ServiceLoginViewModel @Inject constructor(
     private fun cleanUrl(url: String): String {
         var clean = url.trim()
         clean = clean.trimEnd { it == ')' || it == ']' || it == '}' || it == ',' || it == ';' }
-        if (!clean.startsWith("http://") && !clean.startsWith("https://")) {
+        if (!clean.startsWith("http://") &&
+            !clean.startsWith("https://") &&
+            !clean.startsWith("ws://") &&
+            !clean.startsWith("wss://")
+        ) {
             clean = "https://$clean"
         }
         return clean.replace(Regex("/+$"), "")

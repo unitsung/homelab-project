@@ -62,6 +62,14 @@ class BackupModelsTest {
     }
 
     @Test
+    fun `truenas backup mapper accepts scale and core aliases`() {
+        assertEquals("truenas", BackupServiceTypeMapper.backupKey(ServiceType.TRUENAS))
+        assertEquals(ServiceType.TRUENAS, BackupServiceTypeMapper.serviceType("truenas"))
+        assertEquals(ServiceType.TRUENAS, BackupServiceTypeMapper.serviceType("truenas_scale"))
+        assertEquals(ServiceType.TRUENAS, BackupServiceTypeMapper.serviceType("truenas-core"))
+    }
+
+    @Test
     fun `pangolin backup mapper and conversion stay stable`() {
         assertEquals("pangolin", BackupServiceTypeMapper.backupKey(ServiceType.PANGOLIN))
         assertEquals(ServiceType.PANGOLIN, BackupServiceTypeMapper.serviceType("pangolin"))

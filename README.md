@@ -26,7 +26,7 @@ Homelab Dashboard is a fully native mobile app for monitoring and managing a sel
 
 ## 🚀 Highlights
 
-- **33 integrated service dashboards** across infrastructure, networking, media automation, observability, and developer tooling.
+- **34 integrated service dashboards** across infrastructure, networking, media automation, observability, and developer tooling.
 - **One app, many instances**: add multiple instances of the same service and switch between them without friction.
 - **Fully native on both platforms**: SwiftUI on iOS, Jetpack Compose on Android.
 - **Practical daily-use features**: encrypted backup and restore, biometric unlock, multilingual UI, alternate icons, and fast in-app update prompts.
@@ -40,6 +40,7 @@ Homelab Dashboard is a fully native mobile app for monitoring and managing a sel
 
 - <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/portainer.png" width="18" style="vertical-align:middle"> **Portainer**: container overview, quick actions, resource usage.
 - <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/proxmox.png" width="18" style="vertical-align:middle"> **Proxmox VE**: nodes, guests, storage, networking, backups, and cluster operations.
+- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/truenas-core.png" width="18" style="vertical-align:middle"> <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/truenas-scale.png" width="18" style="vertical-align:middle"> **TrueNAS Scale / Core**: storage, pools, disks, shares, services, and system alerts.
 - <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/uptime-kuma.png" width="18" style="vertical-align:middle"> **Uptime Kuma**: monitor status, uptime visibility, and incident tracking.
 - <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/dockhand.png" width="18" style="vertical-align:middle"> **Dockhand**: native container management dashboard.
 - <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/dockmon.png" width="18" style="vertical-align:middle"> **DockMon**: Docker host and container monitoring with logs, restart, and update actions.
