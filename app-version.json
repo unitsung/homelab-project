@@ -1,6 +1,6 @@
 {
-  "latest": "1.5.4",
-  "ios_url": "https://github.com/JohnnWi/homelab-project/releases/download/v1.5.4/Homelab.ipa",
-  "android_url": "https://github.com/JohnnWi/homelab-project/releases/download/v1.5.4/Homelab.apk",
-  "changelog": "Improved Dockhand session recovery across iOS and Android.\nAdded automatic re-authentication and retry handling for Dockhand requests.\nIncluded additional stability fixes for Dockhand and related request flows."
+  "latest": "1.6.0",
+  "ios_url": "https://github.com/JohnnWi/homelab-project/releases/download/v1.6.0/Homelab.ipa",
+  "android_url": "https://github.com/JohnnWi/homelab-project/releases/download/v1.6.0/Homelab.apk",
+  "changelog": "Added TrueNAS Scale support.\nAdded TrueNAS Core support.\nImproved Beszel integration and reliability.\nIncluded backup, login, and service catalog updates for the new TrueNAS dashboard."
 }
