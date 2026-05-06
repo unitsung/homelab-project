@@ -65,6 +65,7 @@ jobs:
   android-compile:
     name: Android compile
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: HomelabAndroid
@@ -83,7 +84,8 @@ jobs:
 
   ios-compile:
     name: iOS compile
-    runs-on: macos-latest
+    runs-on: macos-26
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: HomelabSwift
@@ -92,6 +94,14 @@ jobs:
 
       - name: Show Xcode version
         run: xcodebuild -version
+
+      - name: Create CI signing config
+        run: |
+          mkdir -p Config
+          cat > Config/Signing.xcconfig <<'EOF'
+          DEVELOPMENT_TEAM =
+          PRODUCT_BUNDLE_IDENTIFIER = homelab.foreverhomelab
+          EOF
 
       - name: Compile iOS app without signing
         run: |
