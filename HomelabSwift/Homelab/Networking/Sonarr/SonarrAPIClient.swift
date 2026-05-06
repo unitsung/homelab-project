@@ -468,13 +468,15 @@ actor SonarrAPIClient {
         var fallback: String?
         for image in images {
             let type = (stringValue(image["coverType"]) ?? "").lowercased()
+            let remoteURL = stringValue(image["remoteUrl"])
+            let localURL = stringValue(image["url"])
             let resolved = resolvedServiceArtworkURL(
-                stringValue(image["remoteUrl"]),
+                remoteURL,
                 baseURL: baseURL,
                 fallbackURL: fallbackURL,
                 apiKey: apiKey
             ) ?? resolvedServiceArtworkURL(
-                stringValue(image["url"]),
+                localURL,
                 baseURL: baseURL,
                 fallbackURL: fallbackURL,
                 apiKey: apiKey
