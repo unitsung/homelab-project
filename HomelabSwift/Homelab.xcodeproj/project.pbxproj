@@ -1658,7 +1658,7 @@
 					"@executable_path/Frameworks",
 				);
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -1674,7 +1674,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.homelab.homelab.tests;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Homelab.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Homelab";
 			};
 			name = Debug;
@@ -1700,7 +1700,7 @@
 					"@executable_path/Frameworks",
 				);
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -1716,7 +1716,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.homelab.homelab.tests;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Homelab.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Homelab";
 			};
 			name = Release;
