@@ -1,7 +1,25 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+
+/// Lets OpenList player force landscape / portrait while open.
+final class HomelabAppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        supportedInterfaceOrientationsFor window: UIWindow?
+    ) -> UIInterfaceOrientationMask {
+        MainActor.assumeIsolated {
+            OpenListOrientationLock.mask
+        }
+    }
+}
+#endif
 
 @main
 struct HomelabApp: App {
+    #if canImport(UIKit)
+    @UIApplicationDelegateAdaptor(HomelabAppDelegate.self) private var appDelegate
+    #endif
     @State private var servicesStore = ServicesStore()
     @State private var settingsStore = SettingsStore()
     @State private var localizer = Localizer()
@@ -44,6 +62,14 @@ struct HomelabApp: App {
             .environment(localizer)
             .preferredColorScheme(colorScheme)
             .task {
+                // Force LogStore init so homelab-debug.log exists for agent pull
+                // (simctl / My Mac Designed for iPad host mirror).
+                _ = LogStore.shared
+                let paths = LogStore.shared.logFilePathsDescription()
+                AppLogger.shared.info(
+                    "App launched isiOSAppOnMac=\(ProcessInfo.processInfo.isiOSAppOnMac) logs:\n\(paths)",
+                    source: "App"
+                )
                 settingsStore.syncAppIconWithSystem()
                 localizer.language = settingsStore.language
                 needsSetup = !settingsStore.hasCompletedOnboarding

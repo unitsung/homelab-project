@@ -33,6 +33,7 @@ private final class ServiceClientManager {
     private var truenasClients: [UUID: TrueNASAPIClient] = [:]
     private var pterodactylClients: [UUID: PterodactylAPIClient] = [:]
     private var calagopusClients: [UUID: CalagopusAPIClient] = [:]
+    private var openlistClients: [UUID: OpenListAPIClient] = [:]
 
     func portainerClient(id: UUID) -> PortainerAPIClient {
         if let client = portainerClients[id] {
@@ -294,6 +295,16 @@ private final class ServiceClientManager {
         return client
     }
 
+    func openlistClient(id: UUID) -> OpenListAPIClient {
+        if let client = openlistClients[id] {
+            return client
+        }
+        let client = OpenListAPIClient(instanceId: id)
+        openlistClients[id] = client
+        return client
+    }
+
+
     func genericClient(id: UUID, type: ServiceType) -> GenericAPIClient {
         if let client = genericClients[id] {
             return client
@@ -363,6 +374,8 @@ private final class ServiceClientManager {
             pterodactylClients.removeValue(forKey: id)
         case .calagopus:
             calagopusClients.removeValue(forKey: id)
+        case .openlist:
+            openlistClients.removeValue(forKey: id)
         case .jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr:
             genericClients.removeValue(forKey: id)
         }
@@ -400,6 +413,7 @@ private final class ServiceClientManager {
         truenasClients = truenasClients.filter { knownInstanceIds.contains($0.key) }
         pterodactylClients = pterodactylClients.filter { knownInstanceIds.contains($0.key) }
         calagopusClients = calagopusClients.filter { knownInstanceIds.contains($0.key) }
+        openlistClients = openlistClients.filter { knownInstanceIds.contains($0.key) }
         genericClients = genericClients.filter { knownInstanceIds.contains($0.key) }
     }
 }
@@ -747,6 +761,13 @@ final class ServicesStore {
         return clientManager.calagopusClient(id: instance.id)
     }
 
+    func openlistClient(instanceId: UUID) async -> OpenListAPIClient? {
+        guard let instance = instancesById[instanceId], instance.type == .openlist else { return nil }
+        return clientManager.openlistClient(id: instance.id)
+    }
+
+
+
     func genericMediaClient(instanceId: UUID) async -> GenericAPIClient? {
         guard let instance = instancesById[instanceId],
               [.jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr].contains(instance.type) else {
@@ -822,6 +843,8 @@ final class ServicesStore {
             ok = await clientManager.pterodactylClient(id: instanceId).ping()
         case .calagopus:
             ok = await clientManager.calagopusClient(id: instanceId).ping()
+        case .openlist:
+            ok = await clientManager.openlistClient(id: instanceId).ping()
         case .jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr:
             ok = await clientManager.genericClient(id: instanceId, type: instance.type).ping()
         }
@@ -1297,6 +1320,27 @@ final class ServicesStore {
                 fallbackUrl: instance.fallbackUrl,
                 allowSelfSigned: instance.allowSelfSigned
             )
+
+        case .openlist:
+            let client = clientManager.openlistClient(id: instance.id)
+            let openlistToken = instance.token.isEmpty ? (instance.apiKey ?? "") : instance.token
+            await client.configure(
+                url: instance.url,
+                token: openlistToken,
+                fallbackUrl: instance.fallbackUrl,
+                username: instance.username,
+                password: instance.password,
+                allowSelfSigned: instance.allowSelfSigned
+            )
+            let instanceId = instance.id
+            await client.setTokenRefreshCallback { [weak self] newToken in
+                Task { @MainActor in
+                    guard let self, var current = self.instancesById[instanceId] else { return }
+                    current.token = newToken
+                    self.instancesById[instanceId] = current
+                    self.persistState()
+                }
+            }
 
         case .proxmox:
             let client = clientManager.proxmoxClient(id: instance.id)

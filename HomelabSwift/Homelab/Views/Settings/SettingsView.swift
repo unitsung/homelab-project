@@ -935,18 +935,25 @@ struct DebugLogsView: View {
                             .transition(.move(edge: .top).combined(with: .opacity))
                     }
 
-                    // Count badge — always visible when there are logs
-                    if !logStore.entries.isEmpty {
-                        let filtered = filteredEntries
-                        HStack {
+                    // Count badge + on-disk path (for simctl / agent pull)
+                    VStack(alignment: .leading, spacing: 4) {
+                        if !logStore.entries.isEmpty {
+                            let filtered = filteredEntries
                             Text("\(filtered.count) / \(logStore.entries.count)")
                                 .font(.system(.caption2, design: .monospaced, weight: .semibold))
                                 .foregroundStyle(AppTheme.textMuted)
-                            Spacer()
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 4)
+                        if let path = (logStore.documentsLogFileURL ?? logStore.primaryLogFileURL)?.path {
+                            Text(path)
+                                .font(.system(.caption2, design: .monospaced))
+                                .foregroundStyle(AppTheme.textMuted)
+                                .lineLimit(2)
+                                .textSelection(.enabled)
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 4)
 
                     // Empty state — no logs at all
                     if logStore.entries.isEmpty {
@@ -1043,6 +1050,13 @@ struct DebugLogsView: View {
                             HapticManager.light()
                         } label: {
                             Image(systemName: showFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                        }
+
+                        // Share log file (disk) for agent / Mac pull
+                        if let fileURL = logStore.documentsLogFileURL ?? logStore.primaryLogFileURL {
+                            ShareLink(item: fileURL) {
+                                Image(systemName: "square.and.arrow.up")
+                            }
                         }
 
                         // Copy logs

@@ -1679,6 +1679,77 @@ struct Translations {
     // Calagopus
     let serviceCalagopusDesc: String
     let loginHintCalagopus: String
+    let serviceOpenListDesc: String
+    let loginHintOpenList: String
+    let loginOpenListTokenOptional: String
+    let filesCopyLink: String
+    let filesOpenInSenPlayer: String
+    let filesSearchPlaceholder: String
+    let filesEmptyFolder: String
+    let filesRootTitle: String
+    let filesOpen: String
+    let filesPlay: String
+    let filesPlayWith: String
+    let filesPlayFooter: String
+    let filesDetails: String
+    let filesPreview: String
+    let filesOpenExternal: String
+    let filesPreviewFailed: String
+    let filesNoInlinePreview: String
+    let filesShowSource: String
+    let filesShowPreview: String
+    let filesPreviewType: String
+    let filesKindVideo: String
+    let filesKindAudio: String
+    let filesKindImage: String
+    let filesKindMarkdown: String
+    let filesKindHTML: String
+    let filesKindText: String
+    let filesKindPDF: String
+    let filesKindFile: String
+    let filesSelect: String
+    let filesDeselect: String
+    let filesSelectedCount: String
+    let filesLinkCopied: String
+    let filesDeleted: String
+    let filesDeleteConfirm: String
+    let filesNoPlayableURL: String
+    let filesPlayerOpenFailed: String
+    let filesOpenedInPlayer: String
+    let filesNameLabel: String
+    let filesPathLabel: String
+    let filesSizeLabel: String
+    let filesModifiedLabel: String
+    let filesNewFolder: String
+    let filesFolderName: String
+    let filesFolderCreated: String
+    let filesUpload: String
+    let filesUploadedCount: String
+    let filesProviderLabel: String
+    let filesCloudDirectLinkWarning: String
+    let filesNewTextFile: String
+    let filesFileName: String
+    let filesRename: String
+    let filesDownload: String
+    let filesCopy: String
+    let filesMove: String
+    let filesExtract: String
+    let filesMoveTo: String
+    let filesCopyTo: String
+    let filesExtractTo: String
+    let filesFileCreated: String
+    let filesRenamed: String
+    let filesMoved: String
+    let filesCopied: String
+    let filesExtractStarted: String
+    let filesDownloadedCount: String
+    let filesEdit: String
+    let filesSave: String
+    let filesBuiltInPlayer: String
+    let filesBuiltInPlayerHint: String
+    let filesPlaySectionBuiltIn: String
+    let filesPlaySectionExternal: String
+    let filesPlayerMayNeedInstall: String
     let calagopusNoServers: String
     let calagopusRunningServers: String
     let calagopusTotalServers: String

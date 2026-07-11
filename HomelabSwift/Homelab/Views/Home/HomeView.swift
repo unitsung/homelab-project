@@ -332,6 +332,7 @@ struct HomeView: View {
         case .truenas:           TrueNASDashboard(instanceId: route.instanceId)
         case .pterodactyl:       PterodactylDashboard(instanceId: route.instanceId)
         case .calagopus:         CalagopusDashboard(instanceId: route.instanceId)
+        case .openlist:          OpenListFileBrowserView(instanceId: route.instanceId)
         case .jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr:
                                  GenericMediaDashboard(serviceType: route.type, instanceId: route.instanceId)
         }

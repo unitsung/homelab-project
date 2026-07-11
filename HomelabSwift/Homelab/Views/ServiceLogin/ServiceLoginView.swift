@@ -49,6 +49,7 @@ struct ServiceLoginView: View {
             || serviceType == .dockhand
             || serviceType == .maltrail
             || serviceType == .uptimeKuma
+            || serviceType == .openlist
     }
 
     private var usesApiKeyAuth: Bool {
@@ -72,6 +73,9 @@ struct ServiceLoginView: View {
             || serviceType == .calagopus
     }
 
+    /// OpenList: password login by default; token field is optional alternative.
+    private var isOpenList: Bool { serviceType == .openlist }
+
     private var usesKomodoAuth: Bool {
         serviceType == .komodo
     }
@@ -94,6 +98,16 @@ struct ServiceLoginView: View {
 
         if serviceType == .unifiNetwork {
             return normalizedOptional(apiKey) != nil || (isEditing && existingInstance?.apiKey?.isEmpty == false)
+        }
+
+        if isOpenList {
+            let hasToken = normalizedOptional(apiKey) != nil
+                || (isEditing && !(existingInstance?.token.isEmpty ?? true))
+            let hasUser = normalizedOptional(username) != nil
+                || (isEditing && !(existingInstance?.username?.isEmpty ?? true))
+            let hasPass = normalizedOptional(password) != nil
+                || (isEditing && !(existingInstance?.password?.isEmpty ?? true))
+            return hasToken || (hasUser && hasPass)
         }
 
         if !isProxmox {
@@ -372,9 +386,21 @@ struct ServiceLoginView: View {
                     isSecure: !showPassword,
                     showToggle: true,
                     toggleAction: { showPassword.toggle() },
-                    showPassword: showPassword,
-                    onSubmit: handleSave
+                    showPassword: showPassword
                 )
+
+                if isOpenList {
+                    InputField(
+                        icon: "key.fill",
+                        placeholder: localizer.t.loginOpenListTokenOptional,
+                        text: $apiKey,
+                        isSecure: !showPassword,
+                        showToggle: true,
+                        toggleAction: { showPassword.toggle() },
+                        showPassword: showPassword,
+                        onSubmit: handleSave
+                    )
+                }
 
                 if serviceType == .dockhand || serviceType == .technitium {
                     InputField(
@@ -491,6 +517,7 @@ struct ServiceLoginView: View {
         case .truenas:           return localizer.t.loginHintTruenas
         case .pterodactyl:       return localizer.t.loginHintPterodactyl
         case .calagopus:         return localizer.t.loginHintCalagopus
+        case .openlist:          return localizer.t.loginHintOpenList
         case .qbittorrent, .radarr, .sonarr, .lidarr, .jellyseerr, .prowlarr, .bazarr:
                                  return nil
         default: return nil
@@ -781,6 +808,53 @@ struct ServiceLoginView: View {
                 apiKey: key,
                 fallbackUrl: fallbackUrl,
                 allowSelfSigned: allowSelfSigned
+            )
+
+
+        case .openlist:
+            let optionalToken = normalizedOptional(apiKey)
+                ?? (existingInstance.flatMap { $0.token.isEmpty ? nil : $0.token })
+            let user = normalizedOptional(username) ?? existingInstance?.username
+            let pass = normalizedOptional(password) ?? existingInstance?.password
+            let client = OpenListAPIClient(instanceId: existingInstanceId ?? UUID())
+
+            let jwt: String
+            if let optionalToken, !optionalToken.isEmpty, (pass == nil || pass?.isEmpty == true) {
+                // Token-only path (optional)
+                try await client.authenticateWithToken(
+                    url: url,
+                    token: optionalToken,
+                    fallbackUrl: fallbackUrl,
+                    allowSelfSigned: allowSelfSigned
+                )
+                jwt = optionalToken
+            } else {
+                guard let user, !user.isEmpty else {
+                    throw APIError.custom(localizer.t.loginErrorCredentials)
+                }
+                guard let pass, !pass.isEmpty else {
+                    throw APIError.custom(localizer.t.loginErrorCredentials)
+                }
+                jwt = try await client.authenticateWithCredentials(
+                    url: url,
+                    username: user,
+                    password: pass,
+                    fallbackUrl: fallbackUrl,
+                    allowSelfSigned: allowSelfSigned
+                )
+            }
+
+            return ServiceInstance(
+                id: existingInstanceId ?? UUID(),
+                type: .openlist,
+                label: label,
+                url: url,
+                token: jwt,
+                username: user,
+                apiKey: nil,
+                fallbackUrl: fallbackUrl,
+                allowSelfSigned: allowSelfSigned,
+                password: pass
             )
 
         case .truenas:

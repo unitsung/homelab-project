@@ -239,7 +239,7 @@ final class BaseNetworkEngine: Sendable {
         logRequest(req)
         let (data, response) = try await requestSession.data(for: req)
         logResponse(response, data: data)
-        try interceptResponse(response, data: data)
+        try interceptResponse(response, data: data, expectJSON: true)
 
         let decoder = JSONDecoder()
         do {
@@ -270,7 +270,8 @@ final class BaseNetworkEngine: Sendable {
         logRequest(req)
         let (data, response) = try await requestSession.data(for: req)
         logResponse(response, data: data)
-        try interceptResponse(response, data: data)
+        // Logs/text may be plain; do not treat HTML body as login-page error.
+        try interceptResponse(response, data: data, expectJSON: false)
 
         return String(data: data, encoding: .utf8) ?? ""
     }
@@ -296,7 +297,7 @@ final class BaseNetworkEngine: Sendable {
         logRequest(req)
         let (data, response) = try await requestSession.data(for: req)
         logResponse(response, data: data)
-        try interceptResponse(response, data: data)
+        try interceptResponse(response, data: data, expectJSON: false)
     }
 
     private func performDataRequest(
@@ -320,7 +321,8 @@ final class BaseNetworkEngine: Sendable {
         logRequest(req)
         let (data, response) = try await requestSession.data(for: req)
         logResponse(response, data: data)
-        try interceptResponse(response, data: data)
+        // File downloads / OpenList /p proxy may return text/html for real HTML files.
+        try interceptResponse(response, data: data, expectJSON: false)
         return data
     }
 
@@ -343,13 +345,14 @@ final class BaseNetworkEngine: Sendable {
         }
     }
 
-    private func interceptResponse(_ response: URLResponse, data: Data? = nil) throws {
+    private func interceptResponse(_ response: URLResponse, data: Data? = nil, expectJSON: Bool = true) throws {
         guard let http = response as? HTTPURLResponse else { return }
 
-        // Detection of HTML when expecting JSON (likely a redirect to a login page)
-        if let contentType = http.value(forHTTPHeaderField: "Content-Type"),
+        // Only for JSON API calls: HTML body usually means SSO/login interstitial.
+        // Raw downloads (OpenList /p text/html files, logs, etc.) must not hit this.
+        if expectJSON,
+           let contentType = http.value(forHTTPHeaderField: "Content-Type"),
            contentType.contains("text/html") {
-            // Check if this is a known HTML error or a potential login page
             let bodySnippet = data.flatMap { String(data: $0.prefix(500), encoding: .utf8) } ?? ""
             if bodySnippet.lowercased().contains("<html") {
                  throw APIError.custom("Received an HTML response instead of JSON. This often happens when the service is behind a login page or proxy (OAuth/SSO). Please check your configuration.")

@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A88B89BC3C824ECAA45C072B /* ServiceConnectionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BB4044E69A483BBECCDCA3 /* ServiceConnectionStatus.swift */; };
+		26EDBC42A78240CDA973CBC5 /* OpenListModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5EFF3944BBC4890BB67D78A /* OpenListModels.swift */; };
+		FE6118410C414AF9AC0E4599 /* OpenListAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A99711891C734A5A87DD5233 /* OpenListAPIClient.swift */; };
+		BFFEB7E5F83342F8BE276625 /* ExternalPlayerRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8332309F574441D8CE91F14 /* ExternalPlayerRouter.swift */; };
+		389C0B77B585429EAC7FC837 /* OpenListFileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD657ABFDBD42B2A2AFFA49 /* OpenListFileBrowserView.swift */; };
+		C8F52D3B0E2A5F9B9D4E6F7A8B9C0D1E /* OpenListFilePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E41C2A9D1F4E8A8C3D5E6F7A8B9C0D /* OpenListFilePreviewView.swift */; };
+		D1A2B3C4E5F60718293A4B5C6D7E8F90 /* OpenListMediaPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B3C4D5F60718293A4B5C6D7E8F901A /* OpenListMediaPlayerView.swift */; };
+		F3A4B5C6D7E8091A2B3C4D5E6F708192 /* OpenListFolderPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C6D7E8F901A2B3C4D5E6F708192A /* OpenListFolderPickerView.swift */; };
+		A1B2C3D4E5F60718293A4B5C6D7E8F01 /* OpenListPlayerPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F60718293A4B5C6D7E8F012A /* OpenListPlayerPickerView.swift */; };
 		001FA6007779556F8CF2BDC5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B518BC3D0A31F29612A69B75 /* Assets.xcassets */; };
 		00623F9E5FFF09815953B86C /* UniFiDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDFB37C2FF152CEF28395F2C /* UniFiDashboard.swift */; };
 		011C344816A77F708FD46AF1 /* PatchmonModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853EA1B757B0BD3540F2AEED /* PatchmonModels.swift */; };
@@ -207,6 +216,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E3BB4044E69A483BBECCDCA3 /* ServiceConnectionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceConnectionStatus.swift; sourceTree = "<group>"; };
+		A5EFF3944BBC4890BB67D78A /* OpenListModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListModels.swift; sourceTree = "<group>"; };
+		A99711891C734A5A87DD5233 /* OpenListAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListAPIClient.swift; sourceTree = "<group>"; };
+		A8332309F574441D8CE91F14 /* ExternalPlayerRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalPlayerRouter.swift; sourceTree = "<group>"; };
+		FBD657ABFDBD42B2A2AFFA49 /* OpenListFileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListFileBrowserView.swift; sourceTree = "<group>"; };
+		B7E41C2A9D1F4E8A8C3D5E6F7A8B9C0D /* OpenListFilePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListFilePreviewView.swift; sourceTree = "<group>"; };
+		E2B3C4D5F60718293A4B5C6D7E8F901A /* OpenListMediaPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListMediaPlayerView.swift; sourceTree = "<group>"; };
+		A4B5C6D7E8F901A2B3C4D5E6F708192A /* OpenListFolderPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListFolderPickerView.swift; sourceTree = "<group>"; };
+		B2C3D4E5F60718293A4B5C6D7E8F012A /* OpenListPlayerPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListPlayerPickerView.swift; sourceTree = "<group>"; };
 		04940FAEDE28A509EB1E0EEB /* NpmAccessListForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmAccessListForm.swift; sourceTree = "<group>"; };
 		04B5CCA8C815CB0FB9A9B076 /* DockhandComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockhandComponents.swift; sourceTree = "<group>"; };
 		0726BE937688EDCEF843DA4A /* MaltrailAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaltrailAPIClient.swift; sourceTree = "<group>"; };
@@ -675,7 +693,9 @@
 				95BCC083816D8AA934FDC8F5 /* Proxmox */,
 				4813335162F54D748D7BB96C /* TrueNAS */,
 				E4365D1267750E9B89EF936F /* UptimeKuma */,
-			);
+							2776FBCF30B244E380A7EF80 /* OpenList */,
+				E3BB4044E69A483BBECCDCA3 /* ServiceConnectionStatus.swift */,
+);
 			path = Models;
 			sourceTree = "<group>";
 		};
@@ -1086,7 +1106,8 @@
 				C7EDDE8C2FB40CF792552D6B /* UniFi */,
 				83DA3DAE15FBB9494FDF9EAD /* UptimeKuma */,
 				84FA10F3C1B14B2C55E58EE3 /* Wakapi */,
-			);
+							E92316577DB94C669427C827 /* OpenList */,
+);
 			path = Views;
 			sourceTree = "<group>";
 		};
@@ -1215,7 +1236,8 @@
 				37812033DFDA5B72BB1A466F /* UniFi */,
 				12DB927C145E608B87596524 /* UptimeKuma */,
 				ABC55F19459A78E216C60C0A /* Wakapi */,
-			);
+							40E156569B984E4690B09932 /* OpenList */,
+);
 			path = Networking;
 			sourceTree = "<group>";
 		};
@@ -1263,7 +1285,8 @@
 				6EF6E7AF1CDC6676B7421A7B /* HapticManager.swift */,
 				A1BF1197F8BB03BE213E2995 /* Logger.swift */,
 				6AD5A40912505AFD774ED713 /* SyntaxHighlighter.swift */,
-			);
+							A8332309F574441D8CE91F14 /* ExternalPlayerRouter.swift */,
+);
 			path = Utilities;
 			sourceTree = "<group>";
 		};
@@ -1342,6 +1365,34 @@
 				5F7EDC22BCE4C069B41BA65C /* RadarrModels.swift */,
 			);
 			path = Radarr;
+			sourceTree = "<group>";
+		};
+		2776FBCF30B244E380A7EF80 /* OpenList */ = {
+			isa = PBXGroup;
+			children = (
+							A5EFF3944BBC4890BB67D78A /* OpenListModels.swift */,
+);
+			path = OpenList;
+			sourceTree = "<group>";
+		};
+		40E156569B984E4690B09932 /* OpenList */ = {
+			isa = PBXGroup;
+			children = (
+							A99711891C734A5A87DD5233 /* OpenListAPIClient.swift */,
+);
+			path = OpenList;
+			sourceTree = "<group>";
+		};
+		E92316577DB94C669427C827 /* OpenList */ = {
+			isa = PBXGroup;
+			children = (
+							FBD657ABFDBD42B2A2AFFA49 /* OpenListFileBrowserView.swift */,
+							B7E41C2A9D1F4E8A8C3D5E6F7A8B9C0D /* OpenListFilePreviewView.swift */,
+							E2B3C4D5F60718293A4B5C6D7E8F901A /* OpenListMediaPlayerView.swift */,
+							A4B5C6D7E8F901A2B3C4D5E6F708192A /* OpenListFolderPickerView.swift */,
+							B2C3D4E5F60718293A4B5C6D7E8F012A /* OpenListPlayerPickerView.swift */,
+);
+			path = OpenList;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1613,7 +1664,16 @@
 				A15E4596A2950B61F233E229 /* UptimeKumaDashboard.swift in Sources */,
 				0608E2F28F00EDAF641EE43E /* UptimeKumaModels.swift in Sources */,
 				698E6B77D281367DA484C23B /* WakapiAPIClient.swift in Sources */,
-				E41C86CEB570A40EFB82ED17 /* WakapiDashboard.swift in Sources */,
+				E41C86CEB570A40EFB82ED17 /* WakapiDashboard.swift in Sources */,				A88B89BC3C824ECAA45C072B /* ServiceConnectionStatus.swift in Sources */,
+				26EDBC42A78240CDA973CBC5 /* OpenListModels.swift in Sources */,
+				FE6118410C414AF9AC0E4599 /* OpenListAPIClient.swift in Sources */,
+				BFFEB7E5F83342F8BE276625 /* ExternalPlayerRouter.swift in Sources */,
+				389C0B77B585429EAC7FC837 /* OpenListFileBrowserView.swift in Sources */,
+				C8F52D3B0E2A5F9B9D4E6F7A8B9C0D1E /* OpenListFilePreviewView.swift in Sources */,
+				D1A2B3C4E5F60718293A4B5C6D7E8F90 /* OpenListMediaPlayerView.swift in Sources */,
+				F3A4B5C6D7E8091A2B3C4D5E6F708192 /* OpenListFolderPickerView.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C6D7E8F01 /* OpenListPlayerPickerView.swift in Sources */,
+
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

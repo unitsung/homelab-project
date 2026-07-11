@@ -35,6 +35,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
     case truenas
     case pterodactyl
     case calagopus
+    case openlist
 
     public var id: String { rawValue }
 
@@ -83,6 +84,8 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
             return .pterodactyl
         case "calagopus":
             return .calagopus
+        case "openlist", "alist":
+            return .openlist
         default:
             return nil
         }
@@ -161,6 +164,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .truenas:            return "TrueNAS"
         case .pterodactyl:        return "Pterodactyl"
         case .calagopus:          return "Calagopus"
+        case .openlist:           return "OpenList"
         }
     }
 
@@ -200,6 +204,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .truenas:            return t.serviceTruenasDesc
         case .pterodactyl:        return t.servicePterodactylDesc
         case .calagopus:          return t.serviceCalagopusDesc
+        case .openlist:           return t.serviceOpenListDesc
         }
     }
 
@@ -244,6 +249,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .truenas:            return "externaldrive.connected.to.line.below.fill"
         case .pterodactyl:        return "gamecontroller.fill"
         case .calagopus:          return "bird.fill"
+        case .openlist:           return "folder.fill"
         }
     }
 
@@ -283,6 +289,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .truenas:            return "https://cdn.jsdelivr.net/gh/selfhst/icons/png/truenas-scale.png"
         case .pterodactyl:        return "https://cdn.jsdelivr.net/gh/selfhst/icons/png/pterodactyl.png"
         case .calagopus:          return "https://cdn.jsdelivr.net/gh/selfhst/icons/png/calagopus.png"
+        case .openlist:           return "https://cdn.jsdelivr.net/gh/selfhst/icons/png/alist.png"
         }
     }
 
@@ -328,6 +335,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .truenas:            slug = "truenas-scale"
         case .pterodactyl:        slug = "pterodactyl"
         case .calagopus:          slug = "calagopus"
+        case .openlist:           slug = "alist"
         }
         var orderedCandidates: [String] = []
         let primary = iconUrl.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -381,6 +389,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .truenas:            return "service-truenas"
         case .pterodactyl:        return "service-pterodactyl"
         case .calagopus:          return "service-calagopus"
+        case .openlist:           return "service-openlist"
         }
     }
 
@@ -420,6 +429,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .truenas:            return ServiceColorSet(primary: .truenasAccessibleAccent, dark: Color(hex: "#006EA3"), bg: Color(hex: "#0095D5").opacity(0.09))
         case .pterodactyl:        return ServiceColorSet(primary: Color(hex: "#0E4BEF"), dark: Color(hex: "#0B38C5"), bg: Color(hex: "#0E4BEF").opacity(0.09))
         case .calagopus:          return ServiceColorSet(primary: Color(hex: "#16A34A"), dark: Color(hex: "#15803D"), bg: Color(hex: "#16A34A").opacity(0.09))
+        case .openlist:           return ServiceColorSet(primary: Color(hex: "#3B82F6"), dark: Color(hex: "#1D4ED8"), bg: Color(hex: "#3B82F6").opacity(0.09))
         }
     }
 }
