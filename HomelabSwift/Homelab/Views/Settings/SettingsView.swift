@@ -252,7 +252,7 @@ struct SettingsView: View {
                 .foregroundStyle(AppTheme.accent)
                 .padding(.leading, 8)
 
-            HStack(spacing: 20) {
+            HStack(spacing: 12) {
                 ForEach(Language.allCases, id: \.self) { lang in
                     Button {
                         settingsStore.language = lang
@@ -260,8 +260,8 @@ struct SettingsView: View {
                         HapticManager.light()
                     } label: {
                         Text(lang.flagEmoji)
-                            .font(.system(size: 32))
-                            .frame(width: 56, height: 56)
+                            .font(.system(size: 26))
+                            .frame(width: 44, height: 44)
                             .background(settingsStore.language == lang ? AppTheme.accent.opacity(0.2) : Color(.tertiarySystemFill))
                             .clipShape(Circle())
                             .overlay(
@@ -653,7 +653,7 @@ struct SettingsView: View {
                         Text(localizer.t.backupInfoDesc)
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                            .lineLimit(1)
+                            .lineLimit(2)
                     }
 
                     Spacer()

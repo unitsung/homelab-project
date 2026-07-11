@@ -506,7 +506,7 @@ enum AppIconOption: String, CaseIterable {
 // MARK: - Language
 
 enum Language: String, CaseIterable, Codable {
-    case it, en, fr, es, de
+    case it, en, fr, es, de, zh
 
     var displayName: String {
         switch self {
@@ -515,6 +515,7 @@ enum Language: String, CaseIterable, Codable {
         case .fr: return "Français"
         case .es: return "Español"
         case .de: return "Deutsch"
+        case .zh: return "中文"
         }
     }
 
@@ -525,6 +526,7 @@ enum Language: String, CaseIterable, Codable {
         case .fr: return "🇫🇷"
         case .es: return "🇪🇸"
         case .de: return "🇩🇪"
+        case .zh: return "🇨🇳"
         }
     }
 }

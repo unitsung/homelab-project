@@ -1638,6 +1638,16 @@ struct ServiceLoginView: View {
         if message.contains("api token") && message.contains("format") {
             return localizer.t.proxmoxInvalidApiToken
         }
+        if let apiError = error as? APIError {
+            switch apiError {
+            case .custom("qbittorrent.auth.failed"):
+                return localizer.t.loginErrorQbittorrentAuth
+            case .custom("qbittorrent.cookie.missing"):
+                return localizer.t.loginErrorQbittorrentCookie
+            default:
+                break
+            }
+        }
         if let mapped = APIError.localizedNetworkError(error) {
             return mapped
         }

@@ -61,7 +61,12 @@ final class BaseNetworkEngine: Sendable {
     }
 
     static func authSession(allowSelfSigned: Bool, timeout: TimeInterval) -> URLSession {
-        makeSession(delegate: allowSelfSigned ? insecureDelegate : secureDelegate, timeout: timeout)
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = timeout
+        config.timeoutIntervalForResource = timeout
+        config.httpShouldSetCookies = true
+        config.httpCookieAcceptPolicy = .always
+        return URLSession(configuration: config, delegate: allowSelfSigned ? insecureDelegate : secureDelegate, delegateQueue: nil)
     }
 
     init(serviceType: ServiceType, instanceId: UUID, allowSelfSigned: Bool = true) {

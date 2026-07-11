@@ -128,6 +128,7 @@
 		A4503BD3109674FD3018F51C /* ProxmoxCephView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944D35E4ACAB84F64B2DD3B4 /* ProxmoxCephView.swift */; };
 		A9AED87CFEFFDD6E065E3A0A /* AdGuardHomeAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F5CFB96CB606EB9EC34EBB /* AdGuardHomeAPIClient.swift */; };
 		AAA9BC382610A55D8E374C95 /* Translations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7692F78990DA606D426BA429 /* Translations.swift */; };
+		ABB92C5DC84A0B8332F1A1BD /* Translations+Chinese.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F432CF5E6A0C6642FDFF0D /* Translations+Chinese.swift */; };
 		ABCECDC5B2772BE727043AA3 /* BeszelDetailSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3E6D321C7DB682436A5607 /* BeszelDetailSheets.swift */; };
 		ACC3251242810B5ADED0CDD9 /* ProxmoxServicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A302C47CB672F515E196D5 /* ProxmoxServicesView.swift */; };
 		AD2F16BDA6D33B25BA1DD4B7 /* GiteaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F6D851F1B957C876FD6F0B /* GiteaModels.swift */; };
@@ -249,7 +250,7 @@
 		38A351665E7EFAF8D4A3A05A /* LidarrModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidarrModels.swift; sourceTree = "<group>"; };
 		38F7AE0005466E2FF260B000 /* Translations+English.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Translations+English.swift"; sourceTree = "<group>"; };
 		39AD858A4CEA15DE099AC986 /* BackupModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupModels.swift; sourceTree = "<group>"; };
-		3A088F5140A5297EA91E3821 /* Homelab.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Homelab.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3A088F5140A5297EA91E3821 /* Homelab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Homelab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A9F6388FB1B6AA57648FF16 /* DockmonModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockmonModels.swift; sourceTree = "<group>"; };
 		3AD1D644D530DE462BB79AA2 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		3B344770A37AF6E6CF0CCB9E /* PatchmonDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchmonDashboard.swift; sourceTree = "<group>"; };
@@ -268,7 +269,7 @@
 		4881549A11CBCDEFA7DCFB72 /* PangolinDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PangolinDashboard.swift; sourceTree = "<group>"; };
 		49C497A6F9411623A39F8CA5 /* PterodactylAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PterodactylAPIClient.swift; sourceTree = "<group>"; };
 		4C74A7F7C1CB466CC7223840 /* JellystatDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellystatDashboard.swift; sourceTree = "<group>"; };
-		4E1A77FA193DE78992A80B91 /* HomelabTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HomelabTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4E1A77FA193DE78992A80B91 /* HomelabTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HomelabTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E1E8A717351D5E42B2696F1 /* BeszelAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeszelAPIClient.swift; sourceTree = "<group>"; };
 		4F2913EA81E6CCF74EFC883C /* NpmProxyHostForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmProxyHostForm.swift; sourceTree = "<group>"; };
 		514838C728FAF7E9BA95F1B1 /* QbittorrentDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QbittorrentDashboard.swift; sourceTree = "<group>"; };
@@ -366,6 +367,7 @@
 		C4834BF58C4F9B1399553F78 /* CategoryFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryFormView.swift; sourceTree = "<group>"; };
 		C7F560D9B1083811461B4B44 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		C89DAA067B6D6A378553CB61 /* KomodoAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KomodoAPIClient.swift; sourceTree = "<group>"; };
+		C9F432CF5E6A0C6642FDFF0D /* Translations+Chinese.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Translations+Chinese.swift"; sourceTree = "<group>"; };
 		C9FA03523F30D410383AC54B /* KomodoDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KomodoDashboard.swift; sourceTree = "<group>"; };
 		CBA3D966E73220F618CD9038 /* GiteaRepoDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiteaRepoDetail.swift; sourceTree = "<group>"; };
 		CF8FC831B3CEAF0F068CA2BD /* KomodoModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KomodoModels.swift; sourceTree = "<group>"; };
@@ -987,6 +989,7 @@
 				2B4E1F3D8C9220951D71974F /* Translations+German.swift */,
 				64D8F0162AE327AA60600505 /* Translations+Italian.swift */,
 				1D7E07D5410F384A295BD284 /* Translations+Spanish.swift */,
+				C9F432CF5E6A0C6642FDFF0D /* Translations+Chinese.swift */,
 			);
 			path = Localization;
 			sourceTree = "<group>";
@@ -1387,10 +1390,9 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2600;
+				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					F030701E1A7DE1C00D08FE68 = {
-						DevelopmentTeam = 74584D6P85;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -1598,6 +1600,7 @@
 				425401921C3462FF550B4A54 /* Translations+German.swift in Sources */,
 				8BE00328A6AC68DF3E40F05B /* Translations+Italian.swift in Sources */,
 				3C9BDFAE94048BBD360AF601 /* Translations+Spanish.swift in Sources */,
+				ABB92C5DC84A0B8332F1A1BD /* Translations+Chinese.swift in Sources */,
 				AAA9BC382610A55D8E374C95 /* Translations.swift in Sources */,
 				53AE4DC63535738D1804E28B /* TrueNASAPIClient.swift in Sources */,
 				0B2C4949117F87CDA9133773 /* TrueNASDashboard.swift in Sources */,
@@ -1641,24 +1644,19 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = C7F560D9B1083811461B4B44 /* Signing.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = (
-					AppIconDark,
-					AppIconClearLight,
-					AppIconClearDark,
-					AppIconTintedLight,
-					AppIconTintedDark,
-				);
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconDark AppIconClearLight AppIconClearDark AppIconTintedLight AppIconTintedDark";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Homelab/Homelab.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 5PY7FY4MQK;
 				INFOPLIST_FILE = Homelab/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -1674,7 +1672,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.homelab.homelab.tests;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Homelab.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Homelab";
 			};
 			name = Debug;
@@ -1683,24 +1681,19 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = C7F560D9B1083811461B4B44 /* Signing.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = (
-					AppIconDark,
-					AppIconClearLight,
-					AppIconClearDark,
-					AppIconTintedLight,
-					AppIconTintedDark,
-				);
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconDark AppIconClearLight AppIconClearDark AppIconTintedLight AppIconTintedDark";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Homelab/Homelab.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 5PY7FY4MQK;
 				INFOPLIST_FILE = Homelab/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -1716,7 +1709,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.homelab.homelab.tests;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Homelab.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Homelab";
 			};
 			name = Release;
@@ -1758,6 +1751,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1771,10 +1765,11 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				SWIFT_COMPILATION_MODE = incremental;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -1815,6 +1810,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -1835,10 +1831,11 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};

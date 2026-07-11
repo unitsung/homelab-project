@@ -1757,6 +1757,7 @@ private enum PangolinEditorCopy {
         case .es: return "Editar recurso publico"
         case .de: return "Offentliche Ressource bearbeiten"
         case .en: return "Edit Public Resource"
+        case .zh: return "编辑公共资源"
         }
     }
 
@@ -1767,6 +1768,7 @@ private enum PangolinEditorCopy {
         case .es: return "Editar recurso privado"
         case .de: return "Private Ressource bearbeiten"
         case .en: return "Edit Private Resource"
+        case .zh: return "编辑私有资源"
         }
     }
 
@@ -1777,6 +1779,7 @@ private enum PangolinEditorCopy {
         case .es: return "Nombre"
         case .de: return "Name"
         case .en: return "Name"
+        case .zh: return "名称"
         }
     }
 
@@ -1787,6 +1790,7 @@ private enum PangolinEditorCopy {
         case .es: return "Destino"
         case .de: return "Ziel"
         case .en: return "Target"
+        case .zh: return "目标"
         }
     }
 
@@ -1797,6 +1801,7 @@ private enum PangolinEditorCopy {
         case .es: return "IP del destino"
         case .de: return "Ziel-IP"
         case .en: return "Target IP"
+        case .zh: return "目标 IP"
         }
     }
 
@@ -1807,6 +1812,7 @@ private enum PangolinEditorCopy {
         case .es: return "Puerto del destino"
         case .de: return "Ziel-Port"
         case .en: return "Target Port"
+        case .zh: return "目标端口"
         }
     }
 
@@ -1817,6 +1823,7 @@ private enum PangolinEditorCopy {
         case .es: return "Destino activo"
         case .de: return "Ziel aktiv"
         case .en: return "Target Enabled"
+        case .zh: return "目标已启用"
         }
     }
 
@@ -1831,6 +1838,7 @@ private enum PangolinEditorCopy {
         case .es: return "SSO de Pangolin"
         case .de: return "Pangolin SSO"
         case .en: return "Pangolin SSO"
+        case .zh: return "Pangolin SSO"
         }
     }
 
@@ -1841,6 +1849,7 @@ private enum PangolinEditorCopy {
         case .es: return "Modo"
         case .de: return "Modus"
         case .en: return "Mode"
+        case .zh: return "模式"
         }
     }
 
@@ -1851,6 +1860,7 @@ private enum PangolinEditorCopy {
         case .es: return "Destino"
         case .de: return "Ziel"
         case .en: return "Destination"
+        case .zh: return "目标"
         }
     }
 
@@ -1865,6 +1875,7 @@ private enum PangolinEditorCopy {
         case .es: return "Puertos TCP"
         case .de: return "TCP-Ports"
         case .en: return "TCP Ports"
+        case .zh: return "TCP 端口"
         }
     }
 
@@ -1875,6 +1886,7 @@ private enum PangolinEditorCopy {
         case .es: return "Puertos UDP"
         case .de: return "UDP-Ports"
         case .en: return "UDP Ports"
+        case .zh: return "UDP 端口"
         }
     }
 
@@ -1885,6 +1897,7 @@ private enum PangolinEditorCopy {
         case .es: return "Puerto auth daemon"
         case .de: return "Auth-Daemon-Port"
         case .en: return "Auth Daemon Port"
+        case .zh: return "认证守护进程端口"
         }
     }
 
@@ -1895,6 +1908,7 @@ private enum PangolinEditorCopy {
         case .es: return "Modo auth daemon"
         case .de: return "Auth-Daemon-Modus"
         case .en: return "Auth Daemon Mode"
+        case .zh: return "认证守护进程模式"
         }
     }
 
@@ -1905,6 +1919,7 @@ private enum PangolinEditorCopy {
         case .es: return "Desactivar ICMP"
         case .de: return "ICMP deaktivieren"
         case .en: return "Disable ICMP"
+        case .zh: return "禁用 ICMP"
         }
     }
 
@@ -1923,6 +1938,7 @@ private enum PangolinEditorCopy {
         case .es: return "Sitio"
         case .de: return "Site"
         case .en: return "Site"
+        case .zh: return "站点"
         }
     }
 
@@ -1933,6 +1949,7 @@ private enum PangolinEditorCopy {
         case .es: return "Remoto"
         case .de: return "Remote"
         case .en: return "Remote"
+        case .zh: return "远程"
         }
     }
 
@@ -1943,6 +1960,7 @@ private enum PangolinEditorCopy {
         case .es: return "Ninguno"
         case .de: return "Keine"
         case .en: return "None"
+        case .zh: return "无"
         }
     }
 
@@ -1953,11 +1971,13 @@ private enum PangolinEditorCopy {
         case (.machine, .es): return "Cliente de maquina"
         case (.machine, .de): return "Maschinen-Client"
         case (.machine, .en): return "Machine Client"
+        case (.machine, .zh): return "机器客户端"
         case (.userDevice, .it): return "Dispositivo utente"
         case (.userDevice, .fr): return "Appareil utilisateur"
         case (.userDevice, .es): return "Dispositivo de usuario"
         case (.userDevice, .de): return "Benutzergerat"
         case (.userDevice, .en): return "User Device"
+        case (.userDevice, .zh): return "用户设备"
         }
     }
 
@@ -1968,6 +1988,7 @@ private enum PangolinEditorCopy {
         case .es: return "Agente \(value)"
         case .de: return "Agent \(value)"
         case .en: return "Agent \(value)"
+        case .zh: return "Agent \(value)"
         }
     }
 }
@@ -2532,6 +2553,92 @@ extension PangolinStrings {
                 healthPathFormat: "HC %@",
                 priorityFormat: "Priority %d",
                 trafficAmountFormat: "Traffic %@"
+            )
+        case .zh:
+            return PangolinStrings(
+                serviceDescription: "反向代理、隧道和零信任网络",
+                loginHint: "使用 Pangolin 集成 API 密钥。如果使用组织范围的密钥（无根访问权限），还需输入你的组织 ID。",
+                orgIdPlaceholder: "组织 ID（可选）",
+                sitesClientsLabel: "站点/客户端",
+                overviewSubtitle: "反向代理、隧道和零信任网络概览",
+                organizations: "组织",
+                sites: "站点",
+                privateResources: "私有资源",
+                createPrivateResource: "创建私有资源",
+                publicResources: "公共资源",
+                createPublicResource: "创建公共资源",
+                clients: "客户端",
+                domains: "域名",
+                traffic: "流量",
+                ingressEgress: "入站+出站",
+                org: "组织",
+                utility: "工具",
+                billing: "计费",
+                enabled: "已启用",
+                disabled: "已禁用",
+                enableAction: "启用资源",
+                disableAction: "禁用资源",
+                online: "在线",
+                offline: "离线",
+                blocked: "已阻止",
+                archived: "已归档",
+                pending: "待处理",
+                verified: "已验证",
+                failed: "失败",
+                managed: "托管",
+                manual: "手动",
+                wildcard: "通配符",
+                whitelist: "白名单",
+                healthCheck: "健康检查",
+                agentUpdate: "代理更新",
+                newtUpdate: "Newt 更新",
+                icmpOff: "ICMP 关闭",
+                noOrganizations: "此 API 密钥没有可用的 Pangolin 组织",
+                noSites: "未找到 Pangolin 站点",
+                noPrivateResources: "未配置私有资源",
+                noPublicResources: "未配置公共资源",
+                noClients: "没有已注册的客户端",
+                noDomains: "没有托管域名",
+                site: "站点",
+                protocolLabel: "协议",
+                domainLabel: "域名",
+                subdomainLabel: "子域名",
+                backendMethodLabel: "后端方法",
+                proxyPortLabel: "代理端口",
+                httpResource: "HTTP",
+                tcpResource: "TCP",
+                udpResource: "UDP",
+                httpMethod: "HTTP",
+                httpsMethod: "HTTPS",
+                h2cMethod: "H2C",
+                healthy: "健康",
+                unhealthy: "不健康",
+                allSitesOnline: "所有站点在线",
+                onlineSitesFormat: "%d 个站点在线",
+                onlineCountFormat: "%d 在线",
+                enabledCountFormat: "%d 已启用",
+                verifiedCountFormat: "%d 已验证",
+                targetsCountFormat: "%d 个目标",
+                linkedSitesFormat: "%d 个关联站点",
+                triesFormat: "%d 次尝试",
+                healthyCountFormat: "%d 健康",
+                unhealthyCountFormat: "%d 不健康",
+                newtVersionFormat: "Newt %@",
+                exitNodeFormat: "出口 %@",
+                endpointFormat: "端点 %@",
+                proxyPortFormat: "代理 %d",
+                destinationPortFormat: "目标 %d",
+                aliasFormat: "别名 %@",
+                dnsFormat: "DNS %@",
+                tcpPortsFormat: "TCP %@",
+                udpPortsFormat: "UDP %@",
+                authDaemonPortFormat: "认证守护 %d",
+                olmVersionFormat: "OLM %@",
+                resolverFormat: "解析器 %@",
+                rewriteFormat: "重写 %@",
+                healthPathFormat: "HC %@",
+                priorityFormat: "优先级 %d",
+                trafficAmountFormat: "流量 %@"
             )
         }
     }

@@ -79,5 +79,7 @@ struct HomelabApp: App {
                 }
             }
         }
+        .windowResizability(.contentSize)
+        .defaultSize(width: 430, height: 932)
     }
 }

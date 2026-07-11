@@ -964,6 +964,7 @@ struct Translations {
     let settingsFrench: String
     let settingsSpanish: String
     let settingsGerman: String
+    let settingsChinese: String
     let settingsServices: String
     let settingsConfiguredServices: String
     let settingsDisconnect: String
@@ -1212,6 +1213,8 @@ struct Translations {
     let errorBothFailed: String
     let errorUnknown: String
     let errorAtsRequiresSecure: String
+    let loginErrorQbittorrentAuth: String
+    let loginErrorQbittorrentCookie: String
     let unknown: String
     let none: String
     let statusOn: String
@@ -1700,6 +1703,7 @@ extension Translations {
         case .fr: return .french
         case .es: return .spanish
         case .de: return .german
+        case .zh: return .chinese
         }
     }
 
@@ -1717,6 +1721,7 @@ extension Translations {
 
 @dynamicMemberLookup
 @MainActor
+@Observable
 final class TranslationCatalog {
     private var translations: Translations
 
@@ -1741,7 +1746,7 @@ final class TranslationCatalog {
 @MainActor
 final class Localizer {
     static let shared = Localizer()
-    @ObservationIgnored private let catalog: TranslationCatalog
+    private let catalog: TranslationCatalog
     var language: Language {
         didSet {
             guard language != oldValue else { return }
@@ -2624,6 +2629,145 @@ extension ArrStrings {
                 requestDeclined: "Request declined",
                 showLess: "Show less",
                 showMore: { "Show \($0) more" }
+            )
+        case .zh:
+            return ArrStrings(
+                arrGroupTitle: "ARR 服务",
+                tutorialTitle: "Media ARR 数分钟内配置完成",
+                tutorialBody: "只配置你实际使用的服务。",
+                tutorialStepConnect: "为每个服务添加 URL 和凭据/API Key。",
+                tutorialStepOpen: "打开卡片可查看快速操作和状态。",
+                tutorialStepAutomations: "备份和设置保持同步。",
+                tutorialActionConfigure: "配置服务",
+                tutorialActionDismiss: "隐藏指南",
+                quickSetupTitle: "未配置的服务",
+                quickSetupSubtitle: "只添加你真正需要的服务。",
+                addService: { "添加 \($0)" },
+                connection: "连接",
+                download: "下载",
+                upload: "上传",
+                torrents: "种子",
+                searchTorrents: "搜索种子",
+                filterAll: "全部",
+                filterActive: "活跃",
+                filterDone: "完成",
+                filterPaused: "暂停",
+                recheck: "重新检查",
+                reannounce: "重新宣告",
+                deleteWithData: "删除+数据",
+                altLimitsToggled: "备用限制已切换",
+                allResumed: "所有种子已恢复",
+                allPaused: "所有种子已暂停",
+                torrentResumed: "种子已恢复",
+                torrentPaused: "种子已暂停",
+                torrentDeleted: "种子已删除",
+                torrentAndDataDeleted: "种子和数据已删除",
+                recheckStarted: "重新检查已启动",
+                reannounceQueued: "重新宣告已排队",
+                radarrVersion: "Radarr 版本",
+                sonarrVersion: "Sonarr 版本",
+                lidarrVersion: "Lidarr 版本",
+                branch: "分支",
+                searchMissing: "搜索缺失",
+                refreshIndex: "刷新索引",
+                rssSync: "RSS 同步",
+                rescan: "重新扫描",
+                downloadedScan: "已下载扫描",
+                healthCheck: "健康检查",
+                contentSearchTitle: "内容搜索",
+                contentSearchPlaceholder: { "在 \($0) 中搜索" },
+                searchNow: "搜索",
+                clearSearch: "清除",
+                searchNoResults: "无结果",
+                searchStatusInLibrary: "已入库",
+                searchStatusMonitored: "已监控",
+                searchStatusUnmonitored: "未监控",
+                searchStatusEnded: "已结束",
+                searchStatusPending: "待处理",
+                searchStatusApproved: "已批准",
+                searchStatusAvailable: "可用",
+                searchStatusProcessing: "处理中",
+                openDetails: "打开详情",
+                requestContent: "请求内容",
+                requestQueued: "请求已发送",
+                requestConfigurationTitle: { "配置 \($0) 的请求" },
+                requestConfigurationMessage: "选择用于此请求的配置文件和文件夹。",
+                requestQualityProfile: "质量配置",
+                requestRootFolder: "根文件夹",
+                requestLanguageProfile: "语言配置",
+                requestMetadataProfile: "元数据配置",
+                downloadingWithCount: { "下载中 (\($0))" },
+                latestAdditions: "最新添加",
+                tvSeriesLibrary: "电视剧库",
+                latestAlbums: "最新专辑",
+                recentHistory: "最近历史",
+                health: "健康",
+                upcoming: "即将推出",
+                noUpcoming: "暂无即将发布的版本",
+                movieSearchQueued: "电影搜索已排队",
+                movieRefreshQueued: "电影刷新已排队",
+                seriesSearchQueued: "剧集搜索已排队",
+                seriesRefreshQueued: "剧集刷新已排队",
+                albumSearchQueued: "专辑搜索已排队",
+                artistRefreshQueued: "艺术家刷新已排队",
+                rssSyncQueued: "RSS 同步已排队",
+                rescanQueued: "重新扫描已排队",
+                downloadedScanQueued: "已下载扫描已排队",
+                healthCheckQueued: "健康检查已排队",
+                requests: "请求",
+                approveOldestPending: "批准最早待处理",
+                declineOldestPending: "拒绝最早待处理",
+                recentMediaScan: "最近媒体扫描",
+                fullMediaScan: "完整媒体扫描",
+                indexers: "索引器",
+                apps: "应用",
+                issues: "问题",
+                testIndexers: "测试索引器",
+                syncApps: "同步应用",
+                indexerTestStarted: "索引器测试已启动",
+                applicationSyncStarted: "应用同步已启动",
+                subtitles: "字幕",
+                vpn: "VPN",
+                restartVpnTunnel: "重启 VPN 隧道",
+                provider: "提供商",
+                forwardedPort: "转发端口",
+                service: "服务",
+                newSession: "新会话",
+                sessionIds: "会话 ID",
+                statusLabel: "状态",
+                versionLabel: "版本",
+                messageLabel: "消息",
+                urlLabel: "URL",
+                fallbackURLLabel: "备用 URL",
+                apiKeyLabel: "API 密钥",
+                publicIPLabel: "公网 IP",
+                countryLabel: "国家",
+                serverLabel: "服务器",
+                dhtLabel: "DHT 节点",
+                diskFreeLabel: "磁盘可用",
+                altSpeedLabel: "备用速度",
+                etaLabel: "预计时间",
+                seedsLeechersLabel: "做种/下载",
+                ratioLabel: "分享率",
+                eventFallback: "事件",
+                openService: "打开服务",
+                openFallback: "打开备用",
+                sessions: "会话",
+                total: "总计",
+                pending: "待处理",
+                approved: "已批准",
+                available: "可用",
+                sessionCreatedPrefix: "会话已创建：",
+                sessionDeleted: "会话已删除",
+                oldestPendingApproved: "最早待处理请求已批准",
+                oldestPendingDeclined: "最早待处理请求已拒绝",
+                recentScanStarted: "最近扫描已启动",
+                fullScanStarted: "完整扫描已启动",
+                vpnRestartQueued: "VPN 隧道重启已启动",
+                requestApproved: "请求已批准",
+                requestDeclined: "请求已拒绝",
+                showLess: "收起",
+                showMore: { "显示其余 \($0) 项" }
             )
         }
     }

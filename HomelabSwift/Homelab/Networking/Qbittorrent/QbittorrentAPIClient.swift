@@ -204,8 +204,12 @@ actor QbittorrentAPIClient {
     }
 
     private func authHeaders() -> [String: String] {
+        let cookieString = sid.contains("=") ? sid : "SID=\(sid)"
+        let parts = sid.split(separator: "=", maxSplits: 1)
+        let sidValue = parts.count > 1 ? String(parts[1]) : sid
         return [
-            "Cookie": "SID=\(self.sid)"
+            "Cookie": cookieString,
+            "X-QBT-CSRF-TOKEN": sidValue
         ]
     }
 
@@ -231,15 +235,6 @@ actor QbittorrentAPIClient {
         value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
     
-    private func parseSIDCookie(from setCookieHeader: String) -> String? {
-        guard let range = setCookieHeader.range(of: "SID=") else { return nil }
-        let substring = setCookieHeader[range.upperBound...]
-        if let endItem = substring.firstIndex(where: { $0 == ";" || $0 == "," }) {
-            return String(substring[..<endItem])
-        }
-        return String(substring)
-    }
-
     private func authenticateAgainst(url: String, username: String, password: String) async throws -> String {
         let loginPath = "/api/v2/auth/login"
         guard let fullUrl = URL(string: url + loginPath) else { throw APIError.invalidURL }
@@ -267,15 +262,17 @@ actor QbittorrentAPIClient {
         }
         logResponse(httpResponse, data: data)
 
-        let cookies = httpResponse.value(forHTTPHeaderField: "Set-Cookie") ?? ""
-        if let extractedSid = parseSIDCookie(from: cookies), !extractedSid.isEmpty {
-            return extractedSid
+        if httpResponse.statusCode == 403 || httpResponse.statusCode == 401 {
+            throw APIError.custom("qbittorrent.auth.failed")
         }
 
-        if httpResponse.statusCode == 403 || httpResponse.statusCode == 401 {
-            throw APIError.unauthorized
+        if let cookies = HTTPCookieStorage.shared.cookies(for: fullUrl) {
+            for cookie in cookies where cookie.name.hasPrefix("QBT_SID_") || cookie.name == "SID" {
+                return "\(cookie.name)=\(cookie.value)"
+            }
         }
-        throw APIError.custom("Failed to retrieve authentication cookie (SID). Please check your credentials.")
+
+        throw APIError.custom("qbittorrent.cookie.missing")
     }
 
     private var canRefreshSession: Bool {
