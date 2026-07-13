@@ -1,5 +1,8 @@
-## ADDED Requirements
+# openlist-tasks Specification
 
+## Purpose
+TBD - created by archiving change openlist-settings-i18n-polish. Update Purpose after archive.
+## Requirements
 ### Requirement: 任务列表按类型与阶段加载
 
 系统 MUST 通过 OpenList 官方任务 API 按任务类型与阶段（进行中 / 已完成）加载任务列表，并展示名称、状态、进度与 `status` 文本。
@@ -30,9 +33,10 @@
 
 ### Requirement: 进行中自动刷新
 
-当用户停留在「进行中」阶段时，系统 SHOULD 周期性静默刷新任务列表（约 2–3 秒）。
+当用户停留在「进行中」阶段时，系统 MUST 周期性静默刷新任务列表（约 2–3 秒）。
 
 #### Scenario: 轮询进行中
 
 - **WHEN** 任务中心打开且阶段为进行中
 - **THEN** 系统 MUST 在页面未离开时持续刷新进度，直至用户离开或切换阶段
+

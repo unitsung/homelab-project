@@ -2,6 +2,7 @@
 change: openlist-settings-i18n-polish
 design-doc: docs/superpowers/specs/2026-07-13-openlist-settings-i18n-polish-design.md
 base-ref: 2d975c085555bef8219172f20de9262fd15646d7
+archived-with: 2026-07-13-openlist-settings-i18n-polish
 ---
 
 # 实施计划：openlist-settings-i18n-polish

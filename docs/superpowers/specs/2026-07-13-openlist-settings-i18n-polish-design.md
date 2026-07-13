@@ -2,6 +2,8 @@
 comet_change: openlist-settings-i18n-polish
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-07-13-openlist-settings-i18n-polish
+status: final
 ---
 
 # 技术设计：OpenList 体验、设置 UX 与中英本地化收尾
