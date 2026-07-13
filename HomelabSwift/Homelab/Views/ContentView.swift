@@ -29,7 +29,8 @@ struct ContentView: View {
                     SettingsView()
                 }
             }
-            .tabBarMinimizeBehavior(.onScrollDown)
+            // Keep the tab bar fixed — auto-minimize on scroll is confusing for multi-tab navigation.
+            .tabBarMinimizeBehavior(.never)
 
             // Update popup overlay
             if settingsStore.showUpdatePopup, let version = settingsStore.availableUpdateVersion {

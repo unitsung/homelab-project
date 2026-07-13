@@ -79,6 +79,11 @@ struct OpenListFileBrowserView: View {
     private var selectedItems: [FileItem] { displayedItems.filter { selectedIDs.contains($0.id) } }
     private var serviceColor: Color { ServiceType.openlist.colors.primary }
 
+    /// Edge-swipe walks folder hierarchy; the nav bar back button always leaves OpenList → Home.
+    private var shouldCaptureEdgeSwipeForFolderUp: Bool {
+        isSearching || path != "/"
+    }
+
     var body: some View {
         ServiceDashboardLayout(
             serviceType: .openlist,
@@ -91,7 +96,11 @@ struct OpenListFileBrowserView: View {
             }
 
             breadcrumbBar
-            actionToolbar
+
+            // Only mount when needed — empty ScrollView used to add/remove height between folders.
+            if canWrite && !isSelecting {
+                actionToolbar
+            }
 
             if isSelecting {
                 selectionBar
@@ -100,6 +109,7 @@ struct OpenListFileBrowserView: View {
             if displayedItems.isEmpty, case .loaded = state {
                 emptyState
             } else {
+                // Stable list identity — avoid remount/transition thrash when path changes.
                 LazyVStack(spacing: 8) {
                     ForEach(displayedItems) { item in
                         fileRow(item)
@@ -118,7 +128,14 @@ struct OpenListFileBrowserView: View {
         .navigationTitle(titleForPath)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                NavigationLink {
+                    OpenListTasksView(instanceId: instanceId)
+                } label: {
+                    Image(systemName: "list.bullet.rectangle.portrait")
+                }
+                .accessibilityLabel(localizer.t.filesTasks)
+
                 Button(isSelecting ? localizer.t.done : localizer.t.filesSelect) {
                     if isSelecting {
                         isSelecting = false
@@ -128,6 +145,13 @@ struct OpenListFileBrowserView: View {
                     }
                 }
             }
+        }
+        .background {
+            // Only edge-swipe is hierarchical; system back button stays “pop to Home”.
+            OpenListHierarchicalBackChrome(
+                interceptsSystemPop: shouldCaptureEdgeSwipeForFolderUp,
+                onBack: { Task { await handleEdgeSwipeBack() } }
+            )
         }
         .task {
             client = await servicesStore.openlistClient(instanceId: instanceId)
@@ -321,6 +345,7 @@ struct OpenListFileBrowserView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .disabled(index == breadcrumbs.count - 1)
                 }
             }
         }
@@ -330,30 +355,28 @@ struct OpenListFileBrowserView: View {
     private var actionToolbar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                if canWrite && !isSelecting {
-                    Button {
-                        newFolderName = ""
-                        showNewFolderAlert = true
-                    } label: {
-                        Label(localizer.t.filesNewFolder, systemImage: "folder.badge.plus")
-                            .font(.subheadline.weight(.semibold))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(serviceColor)
-
-                    Button {
-                        showFileImporter = true
-                    } label: {
-                        Label(localizer.t.filesUpload, systemImage: "plus.circle.fill")
-                            .font(.subheadline.weight(.semibold))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(serviceColor)
+                Button {
+                    newFolderName = ""
+                    showNewFolderAlert = true
+                } label: {
+                    Label(localizer.t.filesNewFolder, systemImage: "folder.badge.plus")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
                 }
+                .buttonStyle(.bordered)
+                .tint(serviceColor)
+
+                Button {
+                    showFileImporter = true
+                } label: {
+                    Label(localizer.t.filesUpload, systemImage: "plus.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(serviceColor)
             }
         }
     }
@@ -500,6 +523,19 @@ struct OpenListFileBrowserView: View {
     }
 
     // MARK: - Navigation / load
+
+    /// Left-edge swipe: cancel search, or go up one folder. Does not leave OpenList.
+    @MainActor
+    private func handleEdgeSwipeBack() async {
+        if isSearching {
+            isSearching = false
+            searchText = ""
+            searchResults = []
+            return
+        }
+        guard path != "/" else { return }
+        await navigate(to: OpenListPath.parent(of: path))
+    }
 
     @MainActor
     private func handleTap(_ item: FileItem) async {
@@ -668,7 +704,12 @@ struct OpenListFileBrowserView: View {
             if !silent { state = .error(.notConfigured) }
             return
         }
-        if !silent { state = .loading }
+        // Keep chrome + previous list when already loaded (no skeleton flash on refresh).
+        if !silent, case .loaded = state {
+            // soft refresh
+        } else if !silent {
+            state = .loading
+        }
         do {
             let result = try await client.list(path: path)
             items = result.items
@@ -681,15 +722,38 @@ struct OpenListFileBrowserView: View {
         }
     }
 
+    /// Folder change without skeleton flash or list remount animations.
     @MainActor
     private func navigate(to newPath: String) async {
+        let normalized = OpenListPath.normalize(newPath)
+        let from = path
+        if normalized == from, !isSearching { return }
+
         isSearching = false
         searchText = ""
         searchResults = []
         isSelecting = false
         selectedIDs.removeAll()
-        path = OpenListPath.normalize(newPath)
-        await reload(silent: false)
+        // Update path immediately so title/breadcrumb stay in sync; keep previous rows until fetch returns.
+        path = normalized
+
+        guard let client else {
+            state = .error(.notConfigured)
+            return
+        }
+        do {
+            let result = try await client.list(path: normalized)
+            // Direct assignment (no withAnimation / id remount) — avoids layout flicker.
+            items = result.items
+            canWrite = result.writable
+            state = .loaded(())
+        } catch let error as APIError {
+            path = from
+            state = .error(error)
+        } catch {
+            path = from
+            state = .error(.networkError(error))
+        }
     }
 
     @MainActor
@@ -697,7 +761,6 @@ struct OpenListFileBrowserView: View {
         let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty, let client else { return }
         isSearching = true
-        state = .loading
         do {
             searchResults = try await client.search(keyword: q, path: path)
             state = .loaded(())
@@ -853,6 +916,136 @@ struct OpenListFileBrowserView: View {
         guard let best = sorted.first else { return nil }
         guard let d = try? await client.detail(path: best.path) else { return nil }
         return d.contentURL ?? d.playURL
+    }
+}
+
+// MARK: - Hierarchical back (swipe / system pop)
+
+/// When browsing a subfolder, disable the nav-stack interactive pop and install a
+/// left-edge swipe that walks up one folder level (same as the custom back button).
+private struct OpenListHierarchicalBackChrome: UIViewControllerRepresentable {
+    var interceptsSystemPop: Bool
+    var onBack: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onBack: onBack)
+    }
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        let vc = UIViewController()
+        vc.view.backgroundColor = .clear
+        vc.view.isUserInteractionEnabled = false
+        return vc
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        context.coordinator.onBack = onBack
+        context.coordinator.interceptsSystemPop = interceptsSystemPop
+        DispatchQueue.main.async {
+            context.coordinator.sync(host: uiViewController)
+        }
+    }
+
+    static func dismantleUIViewController(_ uiViewController: UIViewController, coordinator: Coordinator) {
+        coordinator.teardown()
+    }
+
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        var onBack: () -> Void
+        var interceptsSystemPop = false
+
+        private weak var navigationController: UINavigationController?
+        private var edgeGesture: UIScreenEdgePanGestureRecognizer?
+        private var restoredInteractivePop: Bool?
+
+        init(onBack: @escaping () -> Void) {
+            self.onBack = onBack
+        }
+
+        func sync(host: UIViewController) {
+            guard let nav = resolveNavigationController(from: host) else { return }
+            navigationController = nav
+
+            if interceptsSystemPop {
+                if restoredInteractivePop == nil {
+                    restoredInteractivePop = nav.interactivePopGestureRecognizer?.isEnabled ?? true
+                }
+                nav.interactivePopGestureRecognizer?.isEnabled = false
+                installEdgeGesture(on: nav)
+                edgeGesture?.isEnabled = true
+            } else {
+                edgeGesture?.isEnabled = false
+                if let restored = restoredInteractivePop {
+                    nav.interactivePopGestureRecognizer?.isEnabled = restored
+                } else {
+                    nav.interactivePopGestureRecognizer?.isEnabled = true
+                }
+            }
+        }
+
+        func teardown() {
+            if let edgeGesture {
+                edgeGesture.view?.removeGestureRecognizer(edgeGesture)
+            }
+            edgeGesture = nil
+            if let nav = navigationController {
+                nav.interactivePopGestureRecognizer?.isEnabled = restoredInteractivePop ?? true
+            }
+            navigationController = nil
+        }
+
+        private func installEdgeGesture(on nav: UINavigationController) {
+            if edgeGesture != nil { return }
+            let gesture = UIScreenEdgePanGestureRecognizer(target: self, action: #selector(handleEdgePan(_:)))
+            gesture.edges = .left
+            gesture.delegate = self
+            nav.view.addGestureRecognizer(gesture)
+            edgeGesture = gesture
+        }
+
+        @objc private func handleEdgePan(_ gesture: UIScreenEdgePanGestureRecognizer) {
+            guard interceptsSystemPop else { return }
+            guard gesture.state == .ended || gesture.state == .cancelled else { return }
+            let translation = gesture.translation(in: gesture.view)
+            let velocity = gesture.velocity(in: gesture.view)
+            // Mimic system pop threshold.
+            if translation.x > 56 || velocity.x > 450 {
+                onBack()
+            }
+        }
+
+        func gestureRecognizer(
+            _ gestureRecognizer: UIGestureRecognizer,
+            shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+        ) -> Bool {
+            true
+        }
+
+        func gestureRecognizer(
+            _ gestureRecognizer: UIGestureRecognizer,
+            shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer
+        ) -> Bool {
+            // Prefer edge-back over competing horizontal pans when intercepting.
+            interceptsSystemPop && gestureRecognizer === edgeGesture
+        }
+
+        private func resolveNavigationController(from host: UIViewController) -> UINavigationController? {
+            if let nav = host.navigationController { return nav }
+            var parent = host.parent
+            while let current = parent {
+                if let nav = current as? UINavigationController { return nav }
+                if let nav = current.navigationController { return nav }
+                parent = current.parent
+            }
+            // SwiftUI hosting often needs a responder walk from the view.
+            var responder: UIResponder? = host.view
+            while let current = responder {
+                if let nav = current as? UINavigationController { return nav }
+                if let vc = current as? UIViewController, let nav = vc.navigationController { return nav }
+                responder = current.next
+            }
+            return nil
+        }
     }
 }
 

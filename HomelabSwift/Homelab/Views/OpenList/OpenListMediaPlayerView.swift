@@ -1,5 +1,6 @@
 import AVFoundation
 import AVKit
+import MediaPlayer
 import SwiftUI
 import UniformTypeIdentifiers
 #if canImport(UIKit)
@@ -23,7 +24,8 @@ struct OpenListMediaPlayerView: View {
     @State private var isPlaying = false
     @State private var duration: Double = 0
     @State private var current: Double = 0
-    @State private var volume: Float = 0.85
+    /// Tracks **system** output volume (0…1), not AVPlayer relative gain.
+    @State private var volume: Float = AVAudioSession.sharedInstance().outputVolume
     @State private var brightness: Double = 0.5
     @State private var showControls = true
     @State private var errorText: String?
@@ -41,6 +43,8 @@ struct OpenListMediaPlayerView: View {
     @State private var openingExternal: ExternalPlayerOption?
     /// Screen resolved from the hosting window (iOS 26: do not use UIScreen.main).
     @State private var hostScreen: UIScreen?
+    /// Hidden `MPVolumeView` host used to write system volume + mirror hardware buttons.
+    @State private var systemVolumeWriter = OpenListSystemVolumeWriter()
 
     // Embedded subtitle tracks
     @State private var subtitleGroup: AVMediaSelectionGroup?
@@ -88,6 +92,12 @@ struct OpenListMediaPlayerView: View {
                     }
                 }
                 .frame(width: 0, height: 0)
+
+                // Must stay in hierarchy so MPVolumeView can drive system volume.
+                OpenListSystemVolumeView(writer: systemVolumeWriter)
+                    .frame(width: 1, height: 1)
+                    .opacity(0.01)
+                    .allowsHitTesting(false)
 
                 if let errorText {
                     errorBlock(errorText)
@@ -282,7 +292,8 @@ struct OpenListMediaPlayerView: View {
         DragGesture(minimumDistance: 10)
             .onChanged { value in
                 if abs(value.translation.height) < abs(value.translation.width) * 1.2 { return }
-                let delta = -value.translation.height / max(height * 0.5, 1)
+                // ~40% of view height spans full 0…1 so upper/lower limits are reachable.
+                let delta = -value.translation.height / max(height * 0.4, 1)
                 switch kind {
                 case .brightness:
                     if case .brightness = sideHud {} else { dragStartValue = brightness }
@@ -290,13 +301,19 @@ struct OpenListMediaPlayerView: View {
                     setBrightness(next)
                     sideHud = .brightness(next)
                 case .volume:
-                    if case .volume = sideHud {} else { dragStartValue = Double(volume) }
+                    if case .volume = sideHud {} else {
+                        systemVolumeWriter.isAdjusting = true
+                        dragStartValue = Double(currentSystemVolume())
+                    }
                     let next = min(max(dragStartValue + Double(delta), 0), 1)
                     setVolume(Float(next))
                     sideHud = .volume(next)
                 }
             }
             .onEnded { _ in
+                systemVolumeWriter.isAdjusting = false
+                // Snap HUD to the real system volume after the write settles.
+                volume = currentSystemVolume()
                 withAnimation(.easeOut(duration: 0.3)) { sideHud = nil }
             }
     }
@@ -314,7 +331,15 @@ struct OpenListMediaPlayerView: View {
         case .volume(let v):
             isBright = false
             value = v
-            icon = v < 0.01 ? "speaker.slash.fill" : (v < 0.4 ? "speaker.wave.1.fill" : "speaker.wave.2.fill")
+            if v < 0.01 {
+                icon = "speaker.slash.fill"
+            } else if v < 0.34 {
+                icon = "speaker.wave.1.fill"
+            } else if v < 0.67 {
+                icon = "speaker.wave.2.fill"
+            } else {
+                icon = "speaker.wave.3.fill"
+            }
         }
         return HStack {
             if isBright {
@@ -649,6 +674,13 @@ struct OpenListMediaPlayerView: View {
 
         AppLogger.shared.info("play setup url=\(url.absoluteString) audio=\(isAudio)", source: "OpenListPlayer")
 
+        await configureAudioSession()
+        volume = currentSystemVolume()
+        systemVolumeWriter.onExternalChange = { newValue in
+            volume = newValue
+        }
+        systemVolumeWriter.startObserving()
+
         let fileExt = (title as NSString).pathExtension.lowercased()
         let unfriendly = Self.avPlayerUnfriendlyExtensions.contains(fileExt)
             || Self.avPlayerUnfriendlyExtensions.contains(url.pathExtension.lowercased())
@@ -676,7 +708,8 @@ struct OpenListMediaPlayerView: View {
 
         let item = AVPlayerItem(asset: asset)
         let av = AVPlayer(playerItem: item)
-        av.volume = volume
+        // Full system volume range: keep player gain at 1 and drive MPVolumeView instead.
+        av.volume = 1.0
         av.automaticallyWaitsToMinimizeStalling = true
         player = av
 
@@ -941,6 +974,9 @@ struct OpenListMediaPlayerView: View {
         hideTask = nil
         statusObservation?.invalidate()
         statusObservation = nil
+        systemVolumeWriter.stopObserving()
+        systemVolumeWriter.onExternalChange = nil
+        systemVolumeWriter.isAdjusting = false
         removeTimeObserverIfNeeded()
         player?.pause()
         player = nil
@@ -960,6 +996,8 @@ struct OpenListMediaPlayerView: View {
 
     private func teardown() {
         teardownKeepOrientation()
+        // Deactivate off the main path — sync setActive can hitch the UI.
+        Task { await Self.deactivateAudioSession() }
     }
 
     // MARK: - Actions
@@ -1000,8 +1038,87 @@ struct OpenListMediaPlayerView: View {
     }
 
     private func setVolume(_ v: Float) {
-        volume = max(0, min(1, v))
-        player?.volume = volume
+        let clamped = max(0, min(1, v))
+        volume = clamped
+        // Keep AVPlayer at full gain so the system slider is the real loudness control.
+        player?.volume = 1.0
+        systemVolumeWriter.setVolume(clamped)
+    }
+
+    private func currentSystemVolume() -> Float {
+        let session = AVAudioSession.sharedInstance().outputVolume
+        if session.isFinite, !session.isNaN {
+            return max(0, min(1, session))
+        }
+        return volume
+    }
+
+    private func configureAudioSession() async {
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: isAudio ? .default : .moviePlayback, options: [])
+            try await Self.activateAudioSession()
+        } catch {
+            AppLogger.shared.error("audio session: \(error.localizedDescription)", source: "OpenListPlayer")
+        }
+    }
+
+    /// Activates the shared session without blocking the main thread.
+    private static func activateAudioSession() async throws {
+        let session = AVAudioSession.sharedInstance()
+        if #available(iOS 27.0, *) {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                session.activate(options: []) { activated, error in
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else if activated {
+                        continuation.resume()
+                    } else {
+                        continuation.resume(
+                            throwing: NSError(
+                                domain: "OpenListPlayer",
+                                code: -1,
+                                userInfo: [NSLocalizedDescriptionKey: "Audio session failed to activate"]
+                            )
+                        )
+                    }
+                }
+            }
+        } else {
+            // iOS 26: keep sync setActive, but never on the main thread.
+            try await Task.detached(priority: .userInitiated) {
+                try AVAudioSession.sharedInstance().setActive(true)
+            }.value
+        }
+    }
+
+    /// Deactivates the shared session without blocking the main thread.
+    private static func deactivateAudioSession() async {
+        let session = AVAudioSession.sharedInstance()
+        if #available(iOS 27.0, *) {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                session.deactivate(options: .notifyOthersOnDeactivation) { _, error in
+                    if let error {
+                        AppLogger.shared.error(
+                            "audio session deactivate: \(error.localizedDescription)",
+                            source: "OpenListPlayer"
+                        )
+                    }
+                    continuation.resume()
+                }
+            }
+        } else {
+            do {
+                try await Task.detached(priority: .utility) {
+                    try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+                }.value
+            } catch {
+                AppLogger.shared.error(
+                    "audio session deactivate: \(error.localizedDescription)",
+                    source: "OpenListPlayer"
+                )
+            }
+        }
     }
 
     private func setBrightness(_ v: Double) {
@@ -1184,6 +1301,80 @@ struct SubtitleCue: Sendable {
 @MainActor
 enum OpenListOrientationLock {
     static var mask: UIInterfaceOrientationMask = [.portrait, .landscapeLeft, .landscapeRight, .portraitUpsideDown]
+}
+
+// MARK: - System volume (MPVolumeView)
+
+/// Holds a reference to the slider inside a hidden `MPVolumeView` so gestures can write system volume.
+@MainActor
+final class OpenListSystemVolumeWriter {
+    weak var slider: UISlider?
+    /// True while the in-player vertical drag is writing volume (ignore echo from KVO).
+    var isAdjusting = false
+    /// Fired on the main actor when hardware buttons (or other apps) change output volume.
+    var onExternalChange: ((Float) -> Void)?
+
+    private var observation: NSKeyValueObservation?
+
+    func setVolume(_ value: Float) {
+        let clamped = max(0, min(1, value))
+        guard let slider else { return }
+        // Only write when changed to reduce system volume HUD spam / work.
+        if abs(slider.value - clamped) < 0.001 { return }
+        slider.value = clamped
+    }
+
+    func startObserving() {
+        observation?.invalidate()
+        observation = AVAudioSession.sharedInstance().observe(\.outputVolume, options: [.new]) { [weak self] _, change in
+            guard let next = change.newValue else { return }
+            Task { @MainActor in
+                guard let self, !self.isAdjusting else { return }
+                self.onExternalChange?(max(0, min(1, next)))
+            }
+        }
+    }
+
+    func stopObserving() {
+        observation?.invalidate()
+        observation = nil
+    }
+}
+
+/// Embeds a zero-size `MPVolumeView` so we can drive the system volume slider.
+private struct OpenListSystemVolumeView: UIViewRepresentable {
+    let writer: OpenListSystemVolumeWriter
+
+    func makeUIView(context: Context) -> MPVolumeView {
+        let view = MPVolumeView(frame: CGRect(x: -1000, y: -1000, width: 1, height: 1))
+        view.showsVolumeSlider = true
+        view.alpha = 0.01
+        view.isUserInteractionEnabled = false
+        DispatchQueue.main.async {
+            self.bindSlider(in: view, attempt: 0)
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: MPVolumeView, context: Context) {
+        if writer.slider == nil {
+            DispatchQueue.main.async {
+                self.bindSlider(in: uiView, attempt: 0)
+            }
+        }
+    }
+
+    private func bindSlider(in volumeView: MPVolumeView, attempt: Int) {
+        if let slider = volumeView.subviews.compactMap({ $0 as? UISlider }).first {
+            writer.slider = slider
+            return
+        }
+        // Slider is created lazily after the volume view is in a window.
+        guard attempt < 12 else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.bindSlider(in: volumeView, attempt: attempt + 1)
+        }
+    }
 }
 
 // MARK: - Layer host

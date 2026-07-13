@@ -574,6 +574,143 @@ actor OpenListAPIClient {
         return (data.content ?? []).map(FileItem.from(search:))
     }
 
+    // MARK: - Tasks (official `/api/task/{type}/…`)
+
+    /// GET `/api/task/{type}/undone|done` — OpenList `taskRoute` handlers.
+    func listTasks(type: OpenListTaskType, phase: OpenListTaskPhase) async throws -> [OpenListTaskInfo] {
+        let path = "/api/task/\(type.apiSegment)/\(phase.apiSegment)"
+        let dtos: [OpenListTaskDTO] = try await getEnvelopeOptionalArray(path: path, method: "GET", body: nil)
+        return dtos.map { OpenListTaskInfo.from(dto: $0, type: type) }
+    }
+
+    /// POST `/api/task/{type}/cancel?tid=`
+    func cancelTask(type: OpenListTaskType, id: String) async throws {
+        try await postTaskAction(type: type, action: "cancel", tid: id)
+    }
+
+    /// POST `/api/task/{type}/retry?tid=`
+    func retryTask(type: OpenListTaskType, id: String) async throws {
+        try await postTaskAction(type: type, action: "retry", tid: id)
+    }
+
+    /// POST `/api/task/{type}/delete?tid=`
+    func deleteTask(type: OpenListTaskType, id: String) async throws {
+        try await postTaskAction(type: type, action: "delete", tid: id)
+    }
+
+    /// POST `/api/task/{type}/clear_done`
+    func clearDoneTasks(type: OpenListTaskType) async throws {
+        try await postVoidEnvelope(
+            path: "/api/task/\(type.apiSegment)/clear_done",
+            body: Data("{}".utf8)
+        )
+    }
+
+    /// POST `/api/task/{type}/clear_succeeded`
+    func clearSucceededTasks(type: OpenListTaskType) async throws {
+        try await postVoidEnvelope(
+            path: "/api/task/\(type.apiSegment)/clear_succeeded",
+            body: Data("{}".utf8)
+        )
+    }
+
+    /// POST `/api/task/{type}/retry_failed`
+    func retryFailedTasks(type: OpenListTaskType) async throws {
+        try await postVoidEnvelope(
+            path: "/api/task/\(type.apiSegment)/retry_failed",
+            body: Data("{}".utf8)
+        )
+    }
+
+    /// POST `/api/task/{type}/cancel_some` body: `[tid, …]`
+    func cancelTasks(type: OpenListTaskType, ids: [String]) async throws {
+        try await postTaskBatch(type: type, action: "cancel_some", ids: ids)
+    }
+
+    /// POST `/api/task/{type}/retry_some` body: `[tid, …]`
+    func retryTasks(type: OpenListTaskType, ids: [String]) async throws {
+        try await postTaskBatch(type: type, action: "retry_some", ids: ids)
+    }
+
+    /// POST `/api/task/{type}/delete_some` body: `[tid, …]`
+    func deleteTasks(type: OpenListTaskType, ids: [String]) async throws {
+        try await postTaskBatch(type: type, action: "delete_some", ids: ids)
+    }
+
+    private func postTaskAction(type: OpenListTaskType, action: String, tid: String) async throws {
+        let encoded = tid.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? tid
+        try await postVoidEnvelope(
+            path: "/api/task/\(type.apiSegment)/\(action)?tid=\(encoded)",
+            body: Data("{}".utf8)
+        )
+    }
+
+    private func postTaskBatch(type: OpenListTaskType, action: String, ids: [String]) async throws {
+        let cleaned = ids.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        guard !cleaned.isEmpty else { return }
+        let body = try JSONSerialization.data(withJSONObject: cleaned)
+        try await postVoidEnvelope(
+            path: "/api/task/\(type.apiSegment)/\(action)",
+            body: body
+        )
+    }
+
+    /// Like `getEnvelope` but treats missing/`null` data as an empty array.
+    private func getEnvelopeOptionalArray<T: Decodable>(
+        path: String,
+        method: String,
+        body: Data?
+    ) async throws -> [T] {
+        guard !baseURL.isEmpty else { throw APIError.notConfigured }
+        if token.isEmpty {
+            if !username.isEmpty, !password.isEmpty {
+                _ = try await loginAndStoreToken()
+            } else {
+                throw APIError.unauthorized
+            }
+        }
+        do {
+            return try await performOptionalArrayEnvelope(path: path, method: method, body: body)
+        } catch APIError.unauthorized where !username.isEmpty && !password.isEmpty {
+            _ = try await loginAndStoreToken()
+            return try await performOptionalArrayEnvelope(path: path, method: method, body: body)
+        }
+    }
+
+    private func performOptionalArrayEnvelope<T: Decodable>(
+        path: String,
+        method: String,
+        body: Data?
+    ) async throws -> [T] {
+        let data = try await engine.requestData(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: path,
+            method: method,
+            headers: authHeaders(),
+            body: body
+        )
+        if let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let code = obj["code"] as? Int {
+            guard code == 200 else {
+                if code == 401 || code == 403 { throw APIError.unauthorized }
+                let msg = (obj["message"] as? String)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                throw APIError.custom(msg.isEmpty ? "OpenList error \(code)" : msg)
+            }
+            if obj["data"] == nil || obj["data"] is NSNull {
+                return []
+            }
+        }
+        let envelope = try JSONDecoder().decode(OpenListEnvelope<[T]>.self, from: data)
+        guard envelope.code == 200 else {
+            if envelope.code == 401 || envelope.code == 403 { throw APIError.unauthorized }
+            let msg = envelope.message.trimmingCharacters(in: .whitespacesAndNewlines)
+            throw APIError.custom(msg.isEmpty ? "OpenList error \(envelope.code)" : msg)
+        }
+        return envelope.data ?? []
+    }
+
     // MARK: - Private
 
     private func loginAndStoreToken(otpCode: String? = nil) async throws -> String {

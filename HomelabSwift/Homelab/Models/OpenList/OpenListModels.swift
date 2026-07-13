@@ -87,6 +87,122 @@ struct OpenListLoginData: Decodable {
     let token: String
 }
 
+// MARK: - Task center (official `/api/task/{type}/…`)
+
+/// OpenList task managers exposed under `/api/task/*` (see server `SetupTaskRoute`).
+enum OpenListTaskType: String, CaseIterable, Identifiable, Sendable {
+    case copy
+    case offlineDownload = "offline_download"
+    case offlineDownloadTransfer = "offline_download_transfer"
+    case move
+    case upload
+    case decompress
+    case decompressUpload = "decompress_upload"
+
+    var id: String { rawValue }
+
+    /// Path segment after `/api/task/`.
+    var apiSegment: String { rawValue }
+}
+
+/// Undone vs done lists from OpenList task handlers.
+enum OpenListTaskPhase: String, CaseIterable, Identifiable, Sendable {
+    case undone
+    case done
+
+    var id: String { rawValue }
+    var apiSegment: String { rawValue }
+}
+
+/// `tache.State` values used by OpenList task responses.
+enum OpenListTaskState: Int, Sendable {
+    case pending = 0
+    case running = 1
+    case succeeded = 2
+    case canceling = 3
+    case canceled = 4
+    case errored = 5
+    case failing = 6
+    case failed = 7
+    case waitingRetry = 8
+    case beforeRetry = 9
+
+    var isActive: Bool {
+        switch self {
+        case .pending, .running, .canceling, .errored, .failing, .waitingRetry, .beforeRetry:
+            return true
+        case .succeeded, .canceled, .failed:
+            return false
+        }
+    }
+}
+
+/// Wire DTO for OpenList `TaskInfo` (server/handles/task.go).
+struct OpenListTaskDTO: Decodable, Sendable {
+    let id: String
+    let name: String?
+    let creator: String?
+    let creator_role: Int?
+    let state: Int?
+    let status: String?
+    let progress: Double?
+    let start_time: String?
+    let end_time: String?
+    let total_bytes: Int64?
+    let error: String?
+}
+
+/// App model for a single OpenList background task.
+struct OpenListTaskInfo: Identifiable, Hashable, Sendable {
+    let id: String
+    let name: String
+    let creator: String
+    let state: OpenListTaskState
+    let status: String
+    /// 0…100 (OpenList may return NaN → treated as 100 server-side).
+    let progress: Double
+    let startTime: Date?
+    let endTime: Date?
+    let totalBytes: Int64
+    let error: String
+    let type: OpenListTaskType
+
+    var progressFraction: Double {
+        let p = progress.isFinite ? progress : 0
+        return min(max(p / 100.0, 0), 1)
+    }
+
+    static func from(dto: OpenListTaskDTO, type: OpenListTaskType) -> OpenListTaskInfo {
+        let state = OpenListTaskState(rawValue: dto.state ?? 0) ?? .pending
+        var progress = dto.progress ?? 0
+        if progress.isNaN || !progress.isFinite { progress = state == .succeeded ? 100 : 0 }
+        return OpenListTaskInfo(
+            id: dto.id,
+            name: (dto.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
+            creator: dto.creator ?? "",
+            state: state,
+            status: (dto.status ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
+            progress: progress,
+            startTime: Self.parseTime(dto.start_time),
+            endTime: Self.parseTime(dto.end_time),
+            totalBytes: dto.total_bytes ?? 0,
+            error: (dto.error ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
+            type: type
+        )
+    }
+
+    private static func parseTime(_ raw: String?) -> Date? {
+        guard let raw, !raw.isEmpty else { return nil }
+        // RFC3339 with/without fractional seconds
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = iso.date(from: raw) { return d }
+        iso.formatOptions = [.withInternetDateTime]
+        if let d = iso.date(from: raw) { return d }
+        return nil
+    }
+}
+
 enum OpenListPath {
     /// Normalize API paths; empty and "/" both mean root. Does not invent server mounts.
     static func normalize(_ path: String) -> String {
