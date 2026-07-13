@@ -14,15 +14,9 @@ Hi everyone, thanks for these past few months—it’s been great. However, for 
 
 Homelab Dashboard is a fully native mobile app for monitoring and managing a self-hosted homelab from one place. The project ships two dedicated apps, one for iOS and one for Android, designed around the same product idea while respecting each platform's native UI patterns.
 
-## 💝 Support the App Store Launch
+> **Disclaimer:** Personal / hobby project. Provided as-is with no guarantees. Use at your own risk.
 
-A GoFundMe campaign has been launched to raise €100 only to cover the Apple Developer Program account and the App Store publication costs for the iOS app. Every contribution helps make an official App Store release possible.
-
-**[→ Donate on GoFundMe](https://gofund.me/25ff55d40)**
-
----
-
-> **Disclaimer:** This is a vibe-coding project built for fun and personal use. It is provided as-is with no guarantees. The author assumes no responsibility for any issues, data loss, or damages resulting from the use of this software.
+> **Fork note:** Continues the archived [JohnnWi/homelab-project](https://github.com/JohnnWi/homelab-project) under Apache License 2.0. See [`NOTICE`](NOTICE).
 
 <table align="center">
   <tr>
@@ -329,33 +323,26 @@ The app can then be refreshed and updated from the same source.
 
 ---
 
-## 🧭 Support & Privacy
+## 🧭 Support
 
-For help, bug reports, compatibility issues, or App Store support requests, use the public support page or GitHub Issues:
+This repository is a **maintained fork** of the original Homelab Dashboard by [JohnnWi](https://github.com/JohnnWi/homelab-project) (archived).
 
-- **Support:** [johnnwi.github.io/homelab-project/support.html](https://johnnwi.github.io/homelab-project/support.html)
-- **Privacy Policy:** [johnnwi.github.io/homelab-project/privacy.html](https://johnnwi.github.io/homelab-project/privacy.html)
-- **Issues:** [github.com/JohnnWi/homelab-project/issues](https://github.com/JohnnWi/homelab-project/issues)
-
----
-
-## 💖 Funding
-
-This project is a solo effort maintained by a university student.
-
-The GoFundMe campaign is dedicated only to covering the Apple Developer Program account and App Store publication costs:
-
-**[→ Donate on GoFundMe](https://gofund.me/25ff55d40)**
-
-Crypto donations are optional, unrestricted donations to support the project and its maintenance:
-
-**EVM Wallet (Ethereum, BSC, Polygon, etc.)**  
-`0x649641868e6876c2c1f04584a95679e01c1aaf0d`
+- **This fork:** [github.com/unitsung/homelab-project](https://github.com/unitsung/homelab-project)
+- **Issues:** [github.com/unitsung/homelab-project/issues](https://github.com/unitsung/homelab-project/issues)
+- **Upstream (archived):** [github.com/JohnnWi/homelab-project](https://github.com/JohnnWi/homelab-project)
 
 ---
 
-## 📄 License
+## 📄 License & attribution
 
-This project is licensed under the **Apache License 2.0**.
+Licensed under the **Apache License 2.0** — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+
+Apache 2.0 allows you to fork, modify, and redistribute (including commercially), provided you:
+
+1. Keep the license text (`LICENSE`)
+2. Keep attribution / copyright notices (`NOTICE`)
+3. Note that the software includes modifications (this fork)
+
+Original Homelab Dashboard copyright remains with the original authors; this fork adds maintenance and new features under the same license.
 
 See [LICENSE](LICENSE) for the full text.

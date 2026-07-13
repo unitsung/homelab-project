@@ -32,15 +32,17 @@ enum class ThemeMode {
 }
 
 enum class LanguageMode(val code: String, val flag: String) {
-    ITALIAN("it", "🇮🇹"),
     ENGLISH("en", "🇬🇧"),
-    FRENCH("fr", "🇫🇷"),
-    SPANISH("es", "🇪🇸"),
-    GERMAN("de", "🇩🇪");
+    CHINESE("zh", "🇨🇳");
 
     companion object {
         fun fromCode(code: String?): LanguageMode {
-            return entries.find { it.code.equals(code, ignoreCase = true) } ?: ENGLISH
+            if (code.isNullOrBlank()) return ENGLISH
+            val lower = code.lowercase()
+            if (lower.startsWith("zh")) return CHINESE
+            if (lower.startsWith("en")) return ENGLISH
+            // Legacy it/fr/es/de → English
+            return ENGLISH
         }
     }
 }

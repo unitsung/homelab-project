@@ -1,0 +1,18 @@
+{
+  "change": "openlist-settings-i18n-polish",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "fbc0b59c14ae9ca3c80e511720b19dee108fc03b597f0a731afe6553f476c2cc",
+  "files": [
+    { "path": "openspec/changes/openlist-settings-i18n-polish/proposal.md", "sha256": "a8d4c97b2d2f16f12a9e42c90cd384e23df7f9f4d73c649335c553112160f4ca" },
+    { "path": "openspec/changes/openlist-settings-i18n-polish/design.md", "sha256": "90625a44d70cbb8c9b2539eb4d244c5e1f33a45869997455832e3535761dd680" },
+    { "path": "openspec/changes/openlist-settings-i18n-polish/tasks.md", "sha256": "e6c17fcaf8f6e301cd6ed90ff7d30cf024c32244f4445443ac22affb8b01d749" },
+    { "path": "openspec/changes/openlist-settings-i18n-polish/specs/i18n-zh-en-only/spec.md", "sha256": "3f640b99fa2416751fe1fab764b0acf7c1ed5ed5531eb93e571d1a0786530c4a" },
+    { "path": "openspec/changes/openlist-settings-i18n-polish/specs/openlist-browser-nav/spec.md", "sha256": "824f64c8999a883c6d9947e18e74e66f01f44841e8ed66e378c93b4263fb87f3" },
+    { "path": "openspec/changes/openlist-settings-i18n-polish/specs/openlist-player-volume/spec.md", "sha256": "896145d7798d696f83d58e99972a4a4a6a2bea1b52caf04f48531e9cae3743ef" },
+    { "path": "openspec/changes/openlist-settings-i18n-polish/specs/openlist-tasks/spec.md", "sha256": "56a3829ba5a19a20742799dced4a2b175e7445366ed8159cd531a213fbe2d9f3" },
+    { "path": "openspec/changes/openlist-settings-i18n-polish/specs/settings-ux/spec.md", "sha256": "b7ffc6ab8fa45d102ad11b394756180e928923a5c3956ca843cd240c8bb8b7e4" }
+  ]
+}

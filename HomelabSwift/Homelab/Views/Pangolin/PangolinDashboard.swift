@@ -1752,10 +1752,6 @@ private struct PangolinPublicResourceCreateSheet: View {
 private enum PangolinEditorCopy {
     static func editPublicResource(_ language: Language) -> String {
         switch language {
-        case .it: return "Modifica risorsa pubblica"
-        case .fr: return "Modifier la ressource publique"
-        case .es: return "Editar recurso publico"
-        case .de: return "Offentliche Ressource bearbeiten"
         case .en: return "Edit Public Resource"
         case .zh: return "编辑公共资源"
         }
@@ -1763,10 +1759,6 @@ private enum PangolinEditorCopy {
 
     static func editPrivateResource(_ language: Language) -> String {
         switch language {
-        case .it: return "Modifica risorsa privata"
-        case .fr: return "Modifier la ressource privee"
-        case .es: return "Editar recurso privado"
-        case .de: return "Private Ressource bearbeiten"
         case .en: return "Edit Private Resource"
         case .zh: return "编辑私有资源"
         }
@@ -1774,10 +1766,6 @@ private enum PangolinEditorCopy {
 
     static func name(_ language: Language) -> String {
         switch language {
-        case .it: return "Nome"
-        case .fr: return "Nom"
-        case .es: return "Nombre"
-        case .de: return "Name"
         case .en: return "Name"
         case .zh: return "名称"
         }
@@ -1785,10 +1773,6 @@ private enum PangolinEditorCopy {
 
     static func target(_ language: Language) -> String {
         switch language {
-        case .it: return "Target"
-        case .fr: return "Cible"
-        case .es: return "Destino"
-        case .de: return "Ziel"
         case .en: return "Target"
         case .zh: return "目标"
         }
@@ -1796,10 +1780,6 @@ private enum PangolinEditorCopy {
 
     static func targetIp(_ language: Language) -> String {
         switch language {
-        case .it: return "IP target"
-        case .fr: return "IP cible"
-        case .es: return "IP del destino"
-        case .de: return "Ziel-IP"
         case .en: return "Target IP"
         case .zh: return "目标 IP"
         }
@@ -1807,10 +1787,6 @@ private enum PangolinEditorCopy {
 
     static func targetPort(_ language: Language) -> String {
         switch language {
-        case .it: return "Porta target"
-        case .fr: return "Port cible"
-        case .es: return "Puerto del destino"
-        case .de: return "Ziel-Port"
         case .en: return "Target Port"
         case .zh: return "目标端口"
         }
@@ -1818,10 +1794,6 @@ private enum PangolinEditorCopy {
 
     static func targetEnabled(_ language: Language) -> String {
         switch language {
-        case .it: return "Target attivo"
-        case .fr: return "Cible active"
-        case .es: return "Destino activo"
-        case .de: return "Ziel aktiv"
         case .en: return "Target Enabled"
         case .zh: return "目标已启用"
         }
@@ -1833,10 +1805,6 @@ private enum PangolinEditorCopy {
 
     static func pangolinSso(_ language: Language) -> String {
         switch language {
-        case .it: return "Pangolin SSO"
-        case .fr: return "SSO Pangolin"
-        case .es: return "SSO de Pangolin"
-        case .de: return "Pangolin SSO"
         case .en: return "Pangolin SSO"
         case .zh: return "Pangolin SSO"
         }
@@ -1844,10 +1812,6 @@ private enum PangolinEditorCopy {
 
     static func mode(_ language: Language) -> String {
         switch language {
-        case .it: return "Modalita"
-        case .fr: return "Mode"
-        case .es: return "Modo"
-        case .de: return "Modus"
         case .en: return "Mode"
         case .zh: return "模式"
         }
@@ -1855,10 +1819,6 @@ private enum PangolinEditorCopy {
 
     static func destination(_ language: Language) -> String {
         switch language {
-        case .it: return "Destinazione"
-        case .fr: return "Destination"
-        case .es: return "Destino"
-        case .de: return "Ziel"
         case .en: return "Destination"
         case .zh: return "目标"
         }
@@ -1870,10 +1830,6 @@ private enum PangolinEditorCopy {
 
     static func tcpPorts(_ language: Language) -> String {
         switch language {
-        case .it: return "Porte TCP"
-        case .fr: return "Ports TCP"
-        case .es: return "Puertos TCP"
-        case .de: return "TCP-Ports"
         case .en: return "TCP Ports"
         case .zh: return "TCP 端口"
         }
@@ -1881,10 +1837,6 @@ private enum PangolinEditorCopy {
 
     static func udpPorts(_ language: Language) -> String {
         switch language {
-        case .it: return "Porte UDP"
-        case .fr: return "Ports UDP"
-        case .es: return "Puertos UDP"
-        case .de: return "UDP-Ports"
         case .en: return "UDP Ports"
         case .zh: return "UDP 端口"
         }
@@ -1892,10 +1844,6 @@ private enum PangolinEditorCopy {
 
     static func authDaemonPort(_ language: Language) -> String {
         switch language {
-        case .it: return "Porta auth daemon"
-        case .fr: return "Port auth daemon"
-        case .es: return "Puerto auth daemon"
-        case .de: return "Auth-Daemon-Port"
         case .en: return "Auth Daemon Port"
         case .zh: return "认证守护进程端口"
         }
@@ -1903,10 +1851,6 @@ private enum PangolinEditorCopy {
 
     static func authDaemonMode(_ language: Language) -> String {
         switch language {
-        case .it: return "Modalita auth daemon"
-        case .fr: return "Mode auth daemon"
-        case .es: return "Modo auth daemon"
-        case .de: return "Auth-Daemon-Modus"
         case .en: return "Auth Daemon Mode"
         case .zh: return "认证守护进程模式"
         }
@@ -1914,10 +1858,6 @@ private enum PangolinEditorCopy {
 
     static func disableIcmp(_ language: Language) -> String {
         switch language {
-        case .it: return "Disabilita ICMP"
-        case .fr: return "Desactiver ICMP"
-        case .es: return "Desactivar ICMP"
-        case .de: return "ICMP deaktivieren"
         case .en: return "Disable ICMP"
         case .zh: return "禁用 ICMP"
         }
@@ -1933,10 +1873,6 @@ private enum PangolinEditorCopy {
 
     static func siteMode(_ language: Language) -> String {
         switch language {
-        case .it: return "Sito"
-        case .fr: return "Site"
-        case .es: return "Sitio"
-        case .de: return "Site"
         case .en: return "Site"
         case .zh: return "站点"
         }
@@ -1944,10 +1880,6 @@ private enum PangolinEditorCopy {
 
     static func remoteMode(_ language: Language) -> String {
         switch language {
-        case .it: return "Remoto"
-        case .fr: return "Distant"
-        case .es: return "Remoto"
-        case .de: return "Remote"
         case .en: return "Remote"
         case .zh: return "远程"
         }
@@ -1955,10 +1887,6 @@ private enum PangolinEditorCopy {
 
     static func none(_ language: Language) -> String {
         switch language {
-        case .it: return "Nessuno"
-        case .fr: return "Aucun"
-        case .es: return "Ninguno"
-        case .de: return "Keine"
         case .en: return "None"
         case .zh: return "无"
         }
@@ -1966,16 +1894,8 @@ private enum PangolinEditorCopy {
 
     static func clientSource(_ source: PangolinClientSource, language: Language) -> String {
         switch (source, language) {
-        case (.machine, .it): return "Client macchina"
-        case (.machine, .fr): return "Client machine"
-        case (.machine, .es): return "Cliente de maquina"
-        case (.machine, .de): return "Maschinen-Client"
         case (.machine, .en): return "Machine Client"
         case (.machine, .zh): return "机器客户端"
-        case (.userDevice, .it): return "Dispositivo utente"
-        case (.userDevice, .fr): return "Appareil utilisateur"
-        case (.userDevice, .es): return "Dispositivo de usuario"
-        case (.userDevice, .de): return "Benutzergerat"
         case (.userDevice, .en): return "User Device"
         case (.userDevice, .zh): return "用户设备"
         }
@@ -1983,10 +1903,6 @@ private enum PangolinEditorCopy {
 
     static func agent(_ value: String, language: Language) -> String {
         switch language {
-        case .it: return "Agent \(value)"
-        case .fr: return "Agent \(value)"
-        case .es: return "Agente \(value)"
-        case .de: return "Agent \(value)"
         case .en: return "Agent \(value)"
         case .zh: return "Agent \(value)"
         }
@@ -2124,350 +2040,6 @@ struct PangolinStrings {
 extension PangolinStrings {
     static func forLanguage(_ language: Language) -> PangolinStrings {
         switch language {
-        case .it:
-            return PangolinStrings(
-                serviceDescription: "Reverse proxy, tunneling e networking zero-trust",
-                loginHint: "Usa una Integration API key di Pangolin. Per una chiave con accesso a una sola organizzazione (Org-Scoped Key), inserisci anche l'ID Organizzazione.",
-                orgIdPlaceholder: "ID Organizzazione (opzionale)",
-                sitesClientsLabel: "Siti / client",
-                overviewSubtitle: "Panoramica di reverse proxy, tunneling e rete zero-trust",
-                organizations: "Organizzazioni",
-                sites: "Siti",
-                privateResources: "Risorse private",
-                createPrivateResource: "Crea risorsa privata",
-                publicResources: "Risorse pubbliche",
-                createPublicResource: "Crea risorsa pubblica",
-                clients: "Client",
-                domains: "Domini",
-                traffic: "Traffico",
-                ingressEgress: "Ingresso + uscita",
-                org: "Org",
-                utility: "Utility",
-                billing: "Billing",
-                enabled: "Attivo",
-                disabled: "Disattivato",
-                enableAction: "Attiva risorsa",
-                disableAction: "Disattiva risorsa",
-                online: "Online",
-                offline: "Offline",
-                blocked: "Bloccato",
-                archived: "Archiviato",
-                pending: "In attesa",
-                verified: "Verificato",
-                failed: "Errore",
-                managed: "Gestito",
-                manual: "Manuale",
-                wildcard: "Wildcard",
-                whitelist: "Whitelist",
-                healthCheck: "Health check",
-                agentUpdate: "Aggiornamento agent",
-                newtUpdate: "Aggiornamento Newt",
-                icmpOff: "ICMP disattivato",
-                noOrganizations: "Nessuna organizzazione Pangolin disponibile per questa API key",
-                noSites: "Nessun sito Pangolin trovato",
-                noPrivateResources: "Nessuna risorsa privata configurata",
-                noPublicResources: "Nessuna risorsa pubblica configurata",
-                noClients: "Nessun client registrato",
-                noDomains: "Nessun dominio gestito",
-                site: "Sito",
-                protocolLabel: "Protocollo",
-                domainLabel: "Dominio",
-                subdomainLabel: "Sottodominio",
-                backendMethodLabel: "Metodo backend",
-                proxyPortLabel: "Porta proxy",
-                httpResource: "HTTP",
-                tcpResource: "TCP",
-                udpResource: "UDP",
-                httpMethod: "HTTP",
-                httpsMethod: "HTTPS",
-                h2cMethod: "H2C",
-                healthy: "Sano",
-                unhealthy: "Non sano",
-                allSitesOnline: "Tutti i siti online",
-                onlineSitesFormat: "%d siti online",
-                onlineCountFormat: "%d online",
-                enabledCountFormat: "%d attivi",
-                verifiedCountFormat: "%d verificati",
-                targetsCountFormat: "%d target",
-                linkedSitesFormat: "%d siti collegati",
-                triesFormat: "%d tentativi",
-                healthyCountFormat: "%d sani",
-                unhealthyCountFormat: "%d non sani",
-                newtVersionFormat: "Newt %@",
-                exitNodeFormat: "Exit %@",
-                endpointFormat: "Endpoint %@",
-                proxyPortFormat: "Proxy %d",
-                destinationPortFormat: "Dest %d",
-                aliasFormat: "Alias %@",
-                dnsFormat: "DNS %@",
-                tcpPortsFormat: "TCP %@",
-                udpPortsFormat: "UDP %@",
-                authDaemonPortFormat: "Authd %d",
-                olmVersionFormat: "OLM %@",
-                resolverFormat: "Resolver %@",
-                rewriteFormat: "Rewrite %@",
-                healthPathFormat: "HC %@",
-                priorityFormat: "Priorità %d",
-                trafficAmountFormat: "Traffico %@"
-            )
-        case .fr:
-            return PangolinStrings(
-                serviceDescription: "Reverse proxy, tunneling et réseau zero-trust",
-                loginHint: "Utilisez une clé Integration API Pangolin. Pour une clé limitée à une organisation (Org-Scoped Key), indiquez aussi l'ID d'organisation.",
-                orgIdPlaceholder: "ID d'organisation (optionnel)",
-                sitesClientsLabel: "Sites / clients",
-                overviewSubtitle: "Vue d’ensemble du reverse proxy, du tunneling et du réseau zero-trust",
-                organizations: "Organisations",
-                sites: "Sites",
-                privateResources: "Ressources privées",
-                createPrivateResource: "Créer une ressource privée",
-                publicResources: "Ressources publiques",
-                createPublicResource: "Créer une ressource publique",
-                clients: "Clients",
-                domains: "Domaines",
-                traffic: "Trafic",
-                ingressEgress: "Entrant + sortant",
-                org: "Org",
-                utility: "Utility",
-                billing: "Facturation",
-                enabled: "Activé",
-                disabled: "Désactivé",
-                enableAction: "Activer la ressource",
-                disableAction: "Désactiver la ressource",
-                online: "En ligne",
-                offline: "Hors ligne",
-                blocked: "Bloqué",
-                archived: "Archivé",
-                pending: "En attente",
-                verified: "Vérifié",
-                failed: "Échec",
-                managed: "Géré",
-                manual: "Manuel",
-                wildcard: "Wildcard",
-                whitelist: "Liste blanche",
-                healthCheck: "Contrôle de santé",
-                agentUpdate: "Mise à jour agent",
-                newtUpdate: "Mise à jour Newt",
-                icmpOff: "ICMP désactivé",
-                noOrganizations: "Aucune organisation Pangolin disponible pour cette clé API",
-                noSites: "Aucun site Pangolin trouvé",
-                noPrivateResources: "Aucune ressource privée configurée",
-                noPublicResources: "Aucune ressource publique configurée",
-                noClients: "Aucun client inscrit",
-                noDomains: "Aucun domaine géré",
-                site: "Site",
-                protocolLabel: "Protocole",
-                domainLabel: "Domaine",
-                subdomainLabel: "Sous-domaine",
-                backendMethodLabel: "Méthode backend",
-                proxyPortLabel: "Port proxy",
-                httpResource: "HTTP",
-                tcpResource: "TCP",
-                udpResource: "UDP",
-                httpMethod: "HTTP",
-                httpsMethod: "HTTPS",
-                h2cMethod: "H2C",
-                healthy: "Sain",
-                unhealthy: "Dégradé",
-                allSitesOnline: "Tous les sites sont en ligne",
-                onlineSitesFormat: "%d sites en ligne",
-                onlineCountFormat: "%d en ligne",
-                enabledCountFormat: "%d activés",
-                verifiedCountFormat: "%d vérifiés",
-                targetsCountFormat: "%d cibles",
-                linkedSitesFormat: "%d sites liés",
-                triesFormat: "%d tentatives",
-                healthyCountFormat: "%d sains",
-                unhealthyCountFormat: "%d dégradés",
-                newtVersionFormat: "Newt %@",
-                exitNodeFormat: "Sortie %@",
-                endpointFormat: "Endpoint %@",
-                proxyPortFormat: "Proxy %d",
-                destinationPortFormat: "Destination %d",
-                aliasFormat: "Alias %@",
-                dnsFormat: "DNS %@",
-                tcpPortsFormat: "TCP %@",
-                udpPortsFormat: "UDP %@",
-                authDaemonPortFormat: "Authd %d",
-                olmVersionFormat: "OLM %@",
-                resolverFormat: "Résolveur %@",
-                rewriteFormat: "Réécriture %@",
-                healthPathFormat: "HC %@",
-                priorityFormat: "Priorité %d",
-                trafficAmountFormat: "Trafic %@"
-            )
-        case .es:
-            return PangolinStrings(
-                serviceDescription: "Reverse proxy, tunneling y red zero-trust",
-                loginHint: "Usa una clave Integration API de Pangolin. Para una clave de ámbito de organización (Org-Scoped Key), introduce también el ID de organización.",
-                orgIdPlaceholder: "ID de organización (opcional)",
-                sitesClientsLabel: "Sitios / clientes",
-                overviewSubtitle: "Resumen de reverse proxy, tunneling y red zero-trust",
-                organizations: "Organizaciones",
-                sites: "Sitios",
-                privateResources: "Recursos privados",
-                createPrivateResource: "Crear recurso privado",
-                publicResources: "Recursos públicos",
-                createPublicResource: "Crear recurso público",
-                clients: "Clientes",
-                domains: "Dominios",
-                traffic: "Tráfico",
-                ingressEgress: "Entrada + salida",
-                org: "Org",
-                utility: "Utility",
-                billing: "Facturación",
-                enabled: "Activo",
-                disabled: "Desactivado",
-                enableAction: "Activar recurso",
-                disableAction: "Desactivar recurso",
-                online: "En línea",
-                offline: "Sin conexión",
-                blocked: "Bloqueado",
-                archived: "Archivado",
-                pending: "Pendiente",
-                verified: "Verificado",
-                failed: "Error",
-                managed: "Gestionado",
-                manual: "Manual",
-                wildcard: "Wildcard",
-                whitelist: "Lista blanca",
-                healthCheck: "Health check",
-                agentUpdate: "Actualización del agente",
-                newtUpdate: "Actualización de Newt",
-                icmpOff: "ICMP desactivado",
-                noOrganizations: "No hay organizaciones Pangolin disponibles para esta API key",
-                noSites: "No se encontraron sitios Pangolin",
-                noPrivateResources: "No hay recursos privados configurados",
-                noPublicResources: "No hay recursos públicos configurados",
-                noClients: "No hay clientes registrados",
-                noDomains: "No hay dominios gestionados",
-                site: "Sitio",
-                protocolLabel: "Protocolo",
-                domainLabel: "Dominio",
-                subdomainLabel: "Subdominio",
-                backendMethodLabel: "Método backend",
-                proxyPortLabel: "Puerto proxy",
-                httpResource: "HTTP",
-                tcpResource: "TCP",
-                udpResource: "UDP",
-                httpMethod: "HTTP",
-                httpsMethod: "HTTPS",
-                h2cMethod: "H2C",
-                healthy: "Saludable",
-                unhealthy: "No saludable",
-                allSitesOnline: "Todos los sitios en línea",
-                onlineSitesFormat: "%d sitios en línea",
-                onlineCountFormat: "%d en línea",
-                enabledCountFormat: "%d activos",
-                verifiedCountFormat: "%d verificados",
-                targetsCountFormat: "%d destinos",
-                linkedSitesFormat: "%d sitios vinculados",
-                triesFormat: "%d intentos",
-                healthyCountFormat: "%d saludables",
-                unhealthyCountFormat: "%d no saludables",
-                newtVersionFormat: "Newt %@",
-                exitNodeFormat: "Salida %@",
-                endpointFormat: "Endpoint %@",
-                proxyPortFormat: "Proxy %d",
-                destinationPortFormat: "Destino %d",
-                aliasFormat: "Alias %@",
-                dnsFormat: "DNS %@",
-                tcpPortsFormat: "TCP %@",
-                udpPortsFormat: "UDP %@",
-                authDaemonPortFormat: "Authd %d",
-                olmVersionFormat: "OLM %@",
-                resolverFormat: "Resolver %@",
-                rewriteFormat: "Reescritura %@",
-                healthPathFormat: "HC %@",
-                priorityFormat: "Prioridad %d",
-                trafficAmountFormat: "Tráfico %@"
-            )
-        case .de:
-            return PangolinStrings(
-                serviceDescription: "Reverse Proxy, Tunneling und Zero-Trust-Networking",
-                loginHint: "Verwende einen Pangolin-Integration-API-Schlüssel. Bei einem auf eine Organisation begrenzten Schlüssel (Org-Scoped Key) auch die Organisations-ID eintragen.",
-                orgIdPlaceholder: "Organisations-ID (optional)",
-                sitesClientsLabel: "Sites / Clients",
-                overviewSubtitle: "Übersicht über Reverse Proxy, Tunneling und Zero-Trust-Netzwerk",
-                organizations: "Organisationen",
-                sites: "Sites",
-                privateResources: "Private Ressourcen",
-                createPrivateResource: "Private Ressource erstellen",
-                publicResources: "Öffentliche Ressourcen",
-                createPublicResource: "Öffentliche Ressource erstellen",
-                clients: "Clients",
-                domains: "Domains",
-                traffic: "Traffic",
-                ingressEgress: "Ingress + Egress",
-                org: "Org",
-                utility: "Utility",
-                billing: "Abrechnung",
-                enabled: "Aktiviert",
-                disabled: "Deaktiviert",
-                enableAction: "Ressource aktivieren",
-                disableAction: "Ressource deaktivieren",
-                online: "Online",
-                offline: "Offline",
-                blocked: "Blockiert",
-                archived: "Archiviert",
-                pending: "Ausstehend",
-                verified: "Verifiziert",
-                failed: "Fehler",
-                managed: "Verwaltet",
-                manual: "Manuell",
-                wildcard: "Wildcard",
-                whitelist: "Whitelist",
-                healthCheck: "Health Check",
-                agentUpdate: "Agent-Update",
-                newtUpdate: "Newt-Update",
-                icmpOff: "ICMP aus",
-                noOrganizations: "Keine Pangolin-Organisationen für diesen API-Schlüssel verfügbar",
-                noSites: "Keine Pangolin-Sites gefunden",
-                noPrivateResources: "Keine privaten Ressourcen konfiguriert",
-                noPublicResources: "Keine öffentlichen Ressourcen konfiguriert",
-                noClients: "Keine Clients registriert",
-                noDomains: "Keine verwalteten Domains",
-                site: "Site",
-                protocolLabel: "Protokoll",
-                domainLabel: "Domain",
-                subdomainLabel: "Subdomain",
-                backendMethodLabel: "Backend-Methode",
-                proxyPortLabel: "Proxy-Port",
-                httpResource: "HTTP",
-                tcpResource: "TCP",
-                udpResource: "UDP",
-                httpMethod: "HTTP",
-                httpsMethod: "HTTPS",
-                h2cMethod: "H2C",
-                healthy: "Gesund",
-                unhealthy: "Ungesund",
-                allSitesOnline: "Alle Sites online",
-                onlineSitesFormat: "%d Sites online",
-                onlineCountFormat: "%d online",
-                enabledCountFormat: "%d aktiviert",
-                verifiedCountFormat: "%d verifiziert",
-                targetsCountFormat: "%d Ziele",
-                linkedSitesFormat: "%d verknüpfte Sites",
-                triesFormat: "%d Versuche",
-                healthyCountFormat: "%d gesund",
-                unhealthyCountFormat: "%d ungesund",
-                newtVersionFormat: "Newt %@",
-                exitNodeFormat: "Exit %@",
-                endpointFormat: "Endpoint %@",
-                proxyPortFormat: "Proxy %d",
-                destinationPortFormat: "Ziel %d",
-                aliasFormat: "Alias %@",
-                dnsFormat: "DNS %@",
-                tcpPortsFormat: "TCP %@",
-                udpPortsFormat: "UDP %@",
-                authDaemonPortFormat: "Authd %d",
-                olmVersionFormat: "OLM %@",
-                resolverFormat: "Resolver %@",
-                rewriteFormat: "Rewrite %@",
-                healthPathFormat: "HC %@",
-                priorityFormat: "Priorität %d",
-                trafficAmountFormat: "Traffic %@"
-            )
         case .en:
             return PangolinStrings(
                 serviceDescription: "Reverse proxy, tunneling and zero-trust networking",
