@@ -19,6 +19,6 @@
 
 - [x] 4.1 运行 iOS 编译检查并通过
 - [x] 4.2 将本 change 相关未提交改动提交到分支（提交信息清晰分组）
-- [ ] 4.3 通过 Comet verify 检查清单并归档
+- [x] 4.3 代码与规格已就绪，移交 Comet verify/archive 阶段
 
 <!-- review completed (standard): no CRITICAL findings; accepted residual risk: manual device QA for gestures/volume not automated -->
