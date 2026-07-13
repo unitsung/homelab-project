@@ -18,7 +18,7 @@
 ## 4. 构建与收尾
 
 - [x] 4.1 运行 iOS 编译检查并通过
-- [ ] 4.2 将本 change 相关未提交改动提交到分支（提交信息清晰分组）
+- [x] 4.2 将本 change 相关未提交改动提交到分支（提交信息清晰分组）
 - [ ] 4.3 通过 Comet verify 检查清单并归档
 
 <!-- review: standard — light review after commits; no CRITICAL findings expected for polish/acceptance change -->
