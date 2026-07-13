@@ -1,6 +1,6 @@
 workflow: full
 language: zh-CN
-phase: build
+phase: verify
 context_compression: off
 build_mode: executing-plans
 build_pause: null
@@ -8,14 +8,14 @@ subagent_dispatch: null
 tdd_mode: direct
 review_mode: standard
 isolation: branch
-verify_mode: null
+verify_mode: full
 auto_transition: true
 base_ref: 2d975c085555bef8219172f20de9262fd15646d7
 design_doc: docs/superpowers/specs/2026-07-13-openlist-settings-i18n-polish-design.md
 plan: docs/superpowers/plans/2026-07-13-openlist-settings-i18n-polish.md
 verify_result: pending
-verification_report: null
-branch_status: pending
+verification_report: docs/superpowers/reports/2026-07-13-openlist-settings-i18n-polish-verify.md
+branch_status: handled
 created_at: 2026-07-13
 verified_at: null
 archive_confirmation: null
