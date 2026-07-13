@@ -130,18 +130,17 @@ final class SettingsStore {
         static let checkForUpdatesEnabled = "homelab_check_updates_enabled"
     }
 
-    private static let updateFeedURL = URL(string: "https://raw.githubusercontent.com/JohnnWi/homelab-project/main/app-version.json")
-    private static let defaultUpdatePage = "https://github.com/JohnnWi/homelab-project/releases"
+    // Point updates at this fork (upstream JohnnWi/homelab-project is archived).
+    private static let updateFeedURL = URL(string: "https://raw.githubusercontent.com/unitsung/homelab-project/main/app-version.json")
+    private static let defaultUpdatePage = "https://github.com/unitsung/homelab-project/releases"
     private static let updateCheckInterval: TimeInterval = 15 * 60
 
     // MARK: - Init
 
     init() {
-        let systemLang = Locale.preferredLanguages.first.flatMap { code -> Language? in
-            Language(rawValue: String(code.prefix(2)).lowercased())
-        } ?? .en
-        let savedLang = UserDefaults.standard.string(forKey: Keys.language) ?? systemLang.rawValue
-        self.language = Language(rawValue: savedLang) ?? systemLang
+        let systemLang = Language.resolve(code: Locale.preferredLanguages.first)
+        let savedLang = UserDefaults.standard.string(forKey: Keys.language)
+        self.language = Language.resolve(code: savedLang ?? systemLang.rawValue)
 
         let savedTheme = UserDefaults.standard.string(forKey: Keys.theme)
         self.theme = savedTheme.flatMap(ThemeMode.init) ?? .system
@@ -506,28 +505,30 @@ enum AppIconOption: String, CaseIterable {
 // MARK: - Language
 
 enum Language: String, CaseIterable, Codable {
-    case it, en, fr, es, de, zh
+    case en, zh
 
     var displayName: String {
         switch self {
-        case .it: return "Italiano"
         case .en: return "English"
-        case .fr: return "Français"
-        case .es: return "Español"
-        case .de: return "Deutsch"
         case .zh: return "中文"
         }
     }
 
     var flagEmoji: String {
         switch self {
-        case .it: return "🇮🇹"
         case .en: return "🇬🇧"
-        case .fr: return "🇫🇷"
-        case .es: return "🇪🇸"
-        case .de: return "🇩🇪"
         case .zh: return "🇨🇳"
         }
+    }
+
+    /// Map system / legacy saved codes onto the supported set (en, zh only).
+    static func resolve(code: String?) -> Language {
+        guard let code, !code.isEmpty else { return .en }
+        let lower = code.lowercased()
+        if lower.hasPrefix("zh") { return .zh }
+        if lower.hasPrefix("en") { return .en }
+        // Legacy it/fr/es/de (and anything else) → English.
+        return .en
     }
 }
 

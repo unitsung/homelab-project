@@ -20,38 +20,52 @@ struct SettingsView: View {
     @State private var showDebugAuthPin = false
     @State private var debugAuthPin = ""
     @State private var debugAuthError: String? = nil
+    /// Language / About start collapsed (common pattern for secondary settings).
+    @State private var isLanguageExpanded = false
+    @State private var isAboutExpanded = false
+
+    private var connectedInstanceCount: Int {
+        servicesStore.allInstances.count
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
                 AppTheme.background.ignoresSafeArea()
 
                 ScrollView {
-                    GlassGroup(spacing: 24) {
-                        VStack(spacing: 24) {
-                            // Title
-                            HStack {
-                                Text(localizer.t.tabSettings)
-                                    .font(.system(size: 32, weight: .bold))
-                                Spacer()
-                            }
-                            .padding(.top, 8)
+                    GlassGroup(spacing: 20) {
+                        VStack(alignment: .leading, spacing: 22) {
+                            // Large title (iOS Settings-style)
+                            Text(localizer.t.tabSettings)
+                                .font(.largeTitle.bold())
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top, 4)
 
                             updateBannerSection
+
+                            // 1. Service connections
                             servicesSection
-                            themeSection
-                            appIconSection
 
+                            // 2. Appearance (theme + icon)
+                            appearanceSection
 
+                            // 3. Language
                             languageSection
+
+                            // 4. Security & data
                             securitySection
                             backupSection
-                            contactsSection
+
+                            // 5. Developer
                             debugSection
-                            versionSection
+
+                            // 6. About (collapsed by default)
+                            aboutSection
                         }
                     }
-                    .padding(16)
-                    .padding(.bottom, 32)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 40)
                 }
                 .scrollDismissesKeyboard(.interactively)
                 .toolbar {
@@ -102,6 +116,23 @@ struct SettingsView: View {
 
     // MARK: - Sections
 
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(AppTheme.textSecondary)
+            .textCase(nil)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 4)
+    }
+
+    private func settingsIcon(_ systemName: String, color: Color = AppTheme.accent) -> some View {
+        Image(systemName: systemName)
+            .font(.body.weight(.semibold))
+            .foregroundStyle(.white)
+            .frame(width: 30, height: 30)
+            .background(color.gradient, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+    }
+
     @ViewBuilder
     private var updateBannerSection: some View {
         if let latest = settingsStore.availableUpdateVersion {
@@ -147,194 +178,400 @@ struct SettingsView: View {
         }
     }
 
-    private var themeSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(localizer.t.settingsTheme.sentenceCased())
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundStyle(AppTheme.accent)
-                .padding(.leading, 8)
+    // MARK: Services
 
-            HStack(spacing: 0) {
-                ForEach(ThemeMode.allCases, id: \.self) { mode in
-                    Button {
-                        settingsStore.theme = mode
-                        HapticManager.light()
-                    } label: {
-                        Text(themeLabel(mode))
-                            .font(.subheadline)
-                            .fontWeight(settingsStore.theme == mode ? .bold : .regular)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 4)
-                            .background(
-                                settingsStore.theme == mode ? AppTheme.accent.opacity(0.2) : Color.clear,
-                                in: RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            )
-                            .foregroundStyle(settingsStore.theme == mode ? AppTheme.accent : .primary)
+    private var servicesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionHeader(localizer.t.settingsServicesGroup)
+
+            NavigationLink {
+                AuthGatedConfiguredServicesView()
+            } label: {
+                HStack(spacing: 14) {
+                    settingsIcon("server.rack", color: Color(hex: "#3B82F6"))
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(localizer.t.settingsConfiguredServices)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(.primary)
+                        Text(localizer.t.settingsConfiguredServicesDesc)
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .lineLimit(2)
                     }
-                    .buttonStyle(.plain)
+
+                    Spacer(minLength: 8)
+
+                    if connectedInstanceCount > 0 {
+                        Text("\(connectedInstanceCount)")
+                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(AppTheme.accent.opacity(0.9), in: Capsule())
+                    }
+
+                    if settingsStore.isPinSet {
+                        Image(systemName: "lock.fill")
+                            .font(.caption2)
+                            .foregroundStyle(AppTheme.textMuted)
+                    }
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(AppTheme.textMuted)
                 }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 14)
+                .contentShape(Rectangle())
             }
-            .padding(4)
-            .glassCard(cornerRadius: 12)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .buttonStyle(.plain)
+            .glassCard(cornerRadius: 16)
         }
     }
 
+    // MARK: Appearance
 
-    @ViewBuilder
-    private var appIconSection: some View {
-        if UIApplication.shared.supportsAlternateIcons {
-            let columns = [
-                GridItem(.flexible(), spacing: 10),
-                GridItem(.flexible(), spacing: 10),
-                GridItem(.flexible(), spacing: 10)
-            ]
-            VStack(alignment: .leading, spacing: 8) {
-                Text(localizer.t.settingsAppIcon.sentenceCased())
-                    .font(.caption2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(AppTheme.accent)
-                    .padding(.leading, 8)
+    private var appearanceSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionHeader(localizer.t.settingsAppearance)
 
-                LazyVGrid(columns: columns, spacing: 10) {
-                    ForEach(AppIconOption.allCases, id: \.self) { iconOption in
-                        let selected = settingsStore.appIcon == iconOption
-                        Button {
-                            settingsStore.setAppIcon(iconOption)
-                            HapticManager.light()
-                        } label: {
-                            VStack(spacing: 0) {
-                                ZStack(alignment: .topTrailing) {
-                                    appIconPreview(for: iconOption)
-                                        .frame(width: 56, height: 56)
+            VStack(spacing: 0) {
+                // Theme
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(localizer.t.settingsTheme)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.primary)
 
-                                    if selected {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .font(.caption.weight(.bold))
-                                            .foregroundStyle(AppTheme.accent)
-                                            .offset(x: 4, y: -4)
+                    HStack(spacing: 6) {
+                        ForEach(ThemeMode.allCases, id: \.self) { mode in
+                            let selected = settingsStore.theme == mode
+                            Button {
+                                settingsStore.theme = mode
+                                HapticManager.light()
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: themeSymbol(mode))
+                                        .font(.caption.weight(.semibold))
+                                    Text(themeLabel(mode))
+                                        .font(.subheadline.weight(selected ? .semibold : .regular))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(
+                                    selected ? AppTheme.accent.opacity(0.16) : Color(.tertiarySystemFill),
+                                    in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                )
+                                .foregroundStyle(selected ? AppTheme.accent : .primary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                .padding(14)
+
+                if UIApplication.shared.supportsAlternateIcons {
+                    Divider().padding(.leading, 14)
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(localizer.t.settingsAppIcon)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.primary)
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(AppIconOption.allCases, id: \.self) { iconOption in
+                                    let selected = settingsStore.appIcon == iconOption
+                                    Button {
+                                        settingsStore.setAppIcon(iconOption)
+                                        HapticManager.light()
+                                    } label: {
+                                        VStack(spacing: 6) {
+                                            ZStack(alignment: .bottomTrailing) {
+                                                appIconPreview(for: iconOption)
+                                                    .frame(width: 52, height: 52)
+                                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                                    .overlay(
+                                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                            .stroke(
+                                                                selected ? AppTheme.accent : Color.primary.opacity(0.08),
+                                                                lineWidth: selected ? 2.5 : 1
+                                                            )
+                                                    )
+
+                                                if selected {
+                                                    Image(systemName: "checkmark.circle.fill")
+                                                        .font(.caption.weight(.bold))
+                                                        .symbolRenderingMode(.palette)
+                                                        .foregroundStyle(.white, AppTheme.accent)
+                                                        .offset(x: 4, y: 4)
+                                                }
+                                            }
+                                            Text(label(for: iconOption))
+                                                .font(.caption2)
+                                                .foregroundStyle(selected ? AppTheme.accent : AppTheme.textSecondary)
+                                                .lineLimit(1)
+                                        }
+                                        .frame(width: 64)
                                     }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel(label(for: iconOption))
+                                    .accessibilityAddTraits(selected ? .isSelected : [])
                                 }
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 14)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(selected ? AppTheme.accent.opacity(0.12) : Color.clear)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(
-                                        selected ? AppTheme.accent.opacity(0.45) : Color.primary.opacity(0.08),
-                                        lineWidth: 1
-                                    )
-                            )
+                            .padding(.vertical, 2)
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(label(for: iconOption))
-                        .accessibilityAddTraits(selected ? .isSelected : [])
                     }
+                    .padding(14)
                 }
-                .padding(10)
-                .glassCard(cornerRadius: 14)
             }
+            .glassCard(cornerRadius: 16)
         }
     }
+
+    // MARK: Language (collapsed by default; list + checkmark)
 
     private var languageSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(localizer.t.settingsLanguage.sentenceCased())
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundStyle(AppTheme.accent)
-                .padding(.leading, 8)
+            sectionHeader(localizer.t.settingsLanguage)
 
-            HStack(spacing: 12) {
-                ForEach(Language.allCases, id: \.self) { lang in
-                    Button {
-                        settingsStore.language = lang
-                        localizer.language = lang
-                        HapticManager.light()
-                    } label: {
-                        Text(lang.flagEmoji)
-                            .font(.system(size: 26))
-                            .frame(width: 44, height: 44)
-                            .background(settingsStore.language == lang ? AppTheme.accent.opacity(0.2) : Color(.tertiarySystemFill))
-                            .clipShape(Circle())
-                            .overlay(
-                                Circle()
-                                    .stroke(
-                                        settingsStore.language == lang ? AppTheme.accent.opacity(0.35) : .clear,
-                                        lineWidth: 1
-                                    )
-                            )
-                            .opacity(settingsStore.language == lang ? 1.0 : 0.6)
+            VStack(spacing: 0) {
+                collapsibleHeader(
+                    title: localizer.t.settingsLanguage,
+                    subtitle: languagePrimaryName(settingsStore.language),
+                    systemImage: "globe",
+                    color: Color(hex: "#0EA5E9"),
+                    isExpanded: isLanguageExpanded
+                ) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isLanguageExpanded.toggle()
                     }
-                    .buttonStyle(.plain)
+                    HapticManager.light()
+                }
+
+                if isLanguageExpanded {
+                    Divider().padding(.leading, 58)
+
+                    ForEach(Array(Language.allCases.enumerated()), id: \.element) { index, lang in
+                        Button {
+                            settingsStore.language = lang
+                            localizer.language = lang
+                            HapticManager.selection()
+                        } label: {
+                            HStack(spacing: 14) {
+                                Text(languagePrimaryName(lang))
+                                    .font(.body.weight(.medium))
+                                    .foregroundStyle(.primary)
+
+                                Spacer()
+
+                                Text(languageSecondaryName(lang))
+                                    .font(.subheadline)
+                                    .foregroundStyle(AppTheme.textMuted)
+
+                                Image(systemName: settingsStore.language == lang ? "checkmark" : "")
+                                    .font(.body.weight(.semibold))
+                                    .foregroundStyle(AppTheme.accent)
+                                    .frame(width: 22)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(settingsStore.language == lang ? .isSelected : [])
+
+                        if index < Language.allCases.count - 1 {
+                            Divider().padding(.leading, 16)
+                        }
+                    }
                 }
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
             .glassCard(cornerRadius: 16)
+            .animation(.easeInOut(duration: 0.2), value: isLanguageExpanded)
+        }
+    }
+
+    private func languagePrimaryName(_ lang: Language) -> String {
+        switch lang {
+        case .zh: return "中文"
+        case .en: return "English"
+        }
+    }
+
+    private func languageSecondaryName(_ lang: Language) -> String {
+        // Secondary label in the *other* script helps bilingual users.
+        switch lang {
+        case .zh: return "Chinese"
+        case .en: return "英语"
         }
     }
 
     private func label(for icon: AppIconOption) -> String {
         switch icon {
-        case .default:
-            return localizer.t.settingsAppIconDefault
-        case .dark:
-            return localizer.t.settingsAppIconDark
-        case .clearLight:
-            return localizer.t.settingsAppIconClearLight
-        case .clearDark:
-            return localizer.t.settingsAppIconClearDark
-        case .tintedLight:
-            return localizer.t.settingsAppIconTintedLight
-        case .tintedDark:
-            return localizer.t.settingsAppIconTintedDark
+        case .default: return localizer.t.settingsAppIconDefault
+        case .dark: return localizer.t.settingsAppIconDark
+        case .clearLight: return localizer.t.settingsAppIconClearLight
+        case .clearDark: return localizer.t.settingsAppIconClearDark
+        case .tintedLight: return localizer.t.settingsAppIconTintedLight
+        case .tintedDark: return localizer.t.settingsAppIconTintedDark
         }
     }
 
-    private var contactsSection: some View {
+    private func themeSymbol(_ mode: ThemeMode) -> String {
+        switch mode {
+        case .light: return "sun.max.fill"
+        case .dark: return "moon.fill"
+        case .system: return "circle.lefthalf.filled"
+        }
+    }
+
+    // MARK: About (collapsed by default — version / source / updates only)
+
+    private var aboutSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(localizer.t.settingsContacts.sentenceCased())
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundStyle(AppTheme.accent)
-                .padding(.leading, 8)
-                .padding(.top, 16)
+            sectionHeader(localizer.t.settingsAbout)
 
             VStack(spacing: 0) {
-                ContactRow(
-                    title: localizer.t.settingsContactTelegram,
-                    iconUrl: "https://cdn.jsdelivr.net/gh/selfhst/icons/png/telegram.png",
-                    fallbackSystemName: "paperplane.fill",
-                    url: "https://t.me/finalyxre",
-                    color: Color(hex: "#26A5E4")
-                )
-                Divider().padding(.horizontal, 16)
-                ContactRow(
-                    title: localizer.t.settingsContactReddit,
-                    iconUrl: "https://cdn.jsdelivr.net/gh/selfhst/icons/png/reddit.png",
-                    fallbackSystemName: "bubble.left.and.bubble.right.fill",
-                    url: "https://www.reddit.com/user/finalyxre/",
-                    color: Color(hex: "#FF4500")
-                )
-                Divider().padding(.horizontal, 16)
-                ContactRow(
-                    title: localizer.t.settingsContactLinuxUpdate,
-                    iconUrl: "https://cdn.jsdelivr.net/gh/selfhst/icons/png/github.png",
-                    fallbackSystemName: "chevron.left.slash.chevron.right",
-                    url: "https://github.com/JohnnWi/homelab-project",
-                    color: Color(hex: "#24292F")
-                )
+                collapsibleHeader(
+                    title: localizer.t.settingsAbout,
+                    subtitle: appVersionLabel,
+                    systemImage: "info.circle.fill",
+                    color: Color(hex: "#6366F1"),
+                    isExpanded: isAboutExpanded
+                ) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isAboutExpanded.toggle()
+                    }
+                    HapticManager.light()
+                }
+
+                if isAboutExpanded {
+                    Divider().padding(.leading, 58)
+
+                    // Version (not tappable)
+                    HStack(spacing: 14) {
+                        settingsIcon("app.badge.fill", color: Color(hex: "#6366F1"))
+                        Text(localizer.t.settingsVersion)
+                            .font(.body.weight(.medium))
+                        Spacer()
+                        Text(appVersionLabel)
+                            .font(.subheadline.monospacedDigit().weight(.semibold))
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .textSelection(.enabled)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 13)
+
+                    Divider().padding(.leading, 58)
+
+                    settingsLinkRow(
+                        title: localizer.t.settingsAboutSource,
+                        subtitle: "github.com/unitsung/homelab-project",
+                        systemImage: "chevron.left.forwardslash.chevron.right",
+                        color: Color(hex: "#111827"),
+                        url: "https://github.com/unitsung/homelab-project"
+                    )
+
+                    Divider().padding(.leading, 58)
+
+                    Button {
+                        HapticManager.light()
+                        Task { await settingsStore.checkForUpdatesIfNeeded(force: true) }
+                    } label: {
+                        HStack(spacing: 14) {
+                            settingsIcon("arrow.triangle.2.circlepath", color: Color(hex: "#0EA5E9"))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(localizer.t.settingsCheckForUpdatesNow)
+                                    .font(.body.weight(.medium))
+                                    .foregroundStyle(.primary)
+                                Text(localizer.t.settingsCheckForUpdatesDesc)
+                                    .font(.caption)
+                                    .foregroundStyle(AppTheme.textSecondary)
+                                    .lineLimit(2)
+                            }
+                            Spacer()
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .glassCard()
+            .glassCard(cornerRadius: 16)
+            .animation(.easeInOut(duration: 0.2), value: isAboutExpanded)
         }
+    }
+
+    private func collapsibleHeader(
+        title: String,
+        subtitle: String,
+        systemImage: String,
+        color: Color,
+        isExpanded: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                settingsIcon(systemImage, color: color)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(AppTheme.textMuted)
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(isExpanded ? localizer.t.settingsCollapse : localizer.t.settingsExpand)
+    }
+
+    private func settingsLinkRow(
+        title: String,
+        subtitle: String,
+        systemImage: String,
+        color: Color,
+        url: String
+    ) -> some View {
+        Button {
+            if let u = URL(string: url) {
+                HapticManager.light()
+                UIApplication.shared.open(u)
+            }
+        } label: {
+            HStack(spacing: 14) {
+                settingsIcon(systemImage, color: color)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(.primary)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(AppTheme.textMuted)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
@@ -346,146 +583,49 @@ struct SettingsView: View {
                 .scaledToFit()
         } else {
             Image(systemName: settingsStore.appIcon == icon ? "app.badge.fill" : "app")
-                .font(.system(size: 30, weight: .semibold))
+                .font(.system(size: 28, weight: .semibold))
                 .foregroundStyle(settingsStore.appIcon == icon ? AppTheme.accent : AppTheme.textMuted)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(.tertiarySystemFill))
         }
     }
-
-    private var versionSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(localizer.t.settingsVersion.sentenceCased())
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundStyle(AppTheme.accent)
-                .padding(.leading, 8)
-                .padding(.top, 16)
-
-            HStack(spacing: 12) {
-                Image(systemName: "app.badge")
-                    .font(.title3)
-                    .foregroundStyle(AppTheme.accent)
-                    .frame(width: 32, height: 32)
-                    .background(AppTheme.accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-
-                Text(appVersion)
-                    .font(.system(.body, design: .monospaced).weight(.semibold))
-                    .foregroundStyle(.primary)
-
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .glassCard(tint: AppTheme.accent.opacity(0.05))
-
-        }
-    }
-
-
-    private var servicesSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(localizer.t.settingsConfiguredServices.sentenceCased())
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundStyle(AppTheme.accent)
-                .padding(.leading, 8)
-                .padding(.top, 16)
-
-            VStack(spacing: 0) {
-                NavigationLink {
-                    AuthGatedConfiguredServicesView()
-                } label: {
-                    HStack(spacing: 16) {
-                        Image(systemName: "server.rack")
-                            .font(.title3)
-                            .foregroundStyle(AppTheme.accent)
-                            .frame(width: 40, height: 40)
-                            .background(AppTheme.accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-
-                        Text(localizer.t.settingsConfiguredServices)
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(.primary)
-
-                        Spacer()
-
-                        if settingsStore.isPinSet {
-                            Image(systemName: "lock.fill")
-                                .font(.caption2)
-                                .foregroundStyle(AppTheme.textMuted)
-                        }
-
-                        Image(systemName: "chevron.right")
-                            .font(.caption.bold())
-                            .foregroundStyle(AppTheme.textMuted)
-                            .accessibilityHidden(true)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-            .glassCard()
-        }
-    }
-
 
     private var debugSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(localizer.t.settingsDebug.sentenceCased())
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundStyle(AppTheme.accent)
-                .padding(.leading, 8)
-                .padding(.top, 16)
+            sectionHeader(localizer.t.settingsDebug)
 
-            VStack(spacing: 0) {
-                Button {
-                    HapticManager.light()
-                    if settingsStore.isPinSet {
-                        showDebugAuthPin = true
-                    } else {
-                        showDebugLogs = true
-                    }
-                } label: {
-                    HStack(spacing: 16) {
-                        Image(systemName: "terminal.fill")
-                            .font(.title3)
-                            .foregroundStyle(AppTheme.accent)
-                            .frame(width: 40, height: 40)
-                            .background(AppTheme.accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-
-                        Text(localizer.t.settingsDebugLogs)
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(.primary)
-
-                        Spacer()
-
-                        Image(systemName: "chevron.right")
-                            .font(.caption.bold())
-                            .foregroundStyle(AppTheme.textMuted)
-                            .accessibilityHidden(true)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .contentShape(Rectangle())
+            Button {
+                HapticManager.light()
+                if settingsStore.isPinSet {
+                    showDebugAuthPin = true
+                } else {
+                    showDebugLogs = true
                 }
-                .buttonStyle(.plain)
+            } label: {
+                HStack(spacing: 14) {
+                    settingsIcon("terminal.fill", color: Color(hex: "#64748B"))
+                    Text(localizer.t.settingsDebugLogs)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(AppTheme.textMuted)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 14)
+                .contentShape(Rectangle())
             }
-            .glassCard()
+            .buttonStyle(.plain)
+            .glassCard(cornerRadius: 16)
         }
     }
-
 
     // MARK: - Security Section
 
     private var securitySection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(localizer.t.securityTitle.sentenceCased())
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundStyle(AppTheme.accent)
-                .padding(.leading, 8)
-                .padding(.top, 16)
+            sectionHeader(localizer.t.securityTitle)
 
             VStack(spacing: 0) {
                 // Biometric toggle
@@ -632,42 +772,34 @@ struct SettingsView: View {
 
     private var backupSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(localizer.t.backupTitle.uppercased())
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundStyle(AppTheme.accent)
-                .padding(.leading, 8)
+            sectionHeader(localizer.t.backupTitle)
 
             NavigationLink(destination: BackupView()) {
-                HStack(spacing: 16) {
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .font(.title3)
-                        .foregroundStyle(AppTheme.accent)
-                        .frame(width: 40, height: 40)
-                        .background(AppTheme.accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                HStack(spacing: 14) {
+                    settingsIcon("externaldrive.fill.badge.timemachine", color: Color(hex: "#10B981"))
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 3) {
                         Text(localizer.t.backupTitle)
-                            .font(.body.weight(.medium))
+                            .font(.body.weight(.semibold))
                             .foregroundStyle(.primary)
                         Text(localizer.t.backupInfoDesc)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppTheme.textSecondary)
                             .lineLimit(2)
                     }
 
-                    Spacer()
+                    Spacer(minLength: 8)
 
                     Image(systemName: "chevron.right")
-                        .font(.caption.bold())
+                        .font(.caption.weight(.bold))
                         .foregroundStyle(AppTheme.textMuted)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 14)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .glassCard()
+            .glassCard(cornerRadius: 16)
         }
     }
 
@@ -771,12 +903,24 @@ struct SettingsView: View {
         }
     }
 
+    /// Marketing version, e.g. `1.6.2`.
     private var appVersion: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-        if let version, !version.isEmpty {
-            return version
-        }
+        if let version, !version.isEmpty { return version }
         return "—"
+    }
+
+    /// Build number (CFBundleVersion), e.g. `39`.
+    private var appBuild: String {
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+            ?? Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String
+        if let build, !build.isEmpty { return build }
+        return "—"
+    }
+
+    /// Industry-common label: `1.6.2 (39)`.
+    private var appVersionLabel: String {
+        "\(appVersion) (\(appBuild))"
     }
 
 }
@@ -793,6 +937,7 @@ enum ChangePinStep {
 
 struct ContactRow: View {
     let title: String
+    var subtitle: String? = nil
     let iconUrl: String
     let fallbackSystemName: String
     let url: String
@@ -847,9 +992,17 @@ struct ContactRow: View {
                 }
                 .frame(width: 40, height: 40)
 
-                Text(title)
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(.primary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(.primary)
+                    if let subtitle, !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .lineLimit(1)
+                    }
+                }
 
                 Spacer()
 
