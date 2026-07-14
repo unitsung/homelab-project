@@ -18,8 +18,8 @@ verification_report: docs/superpowers/reports/2026-07-14-home-dashboard-redesign
 branch_status: handled
 created_at: 2026-07-14
 verified_at: 2026-07-14
-archive_confirmation: pending
-archived: false
+archive_confirmation: confirmed
+archived: true
 direct_override: null
 handoff_context: openspec/changes/home-dashboard-redesign/.comet/handoff/design-context.json
 handoff_hash: 75f341a659bf0055814b555d13af8083a3421cf214b33f014d80153e5798176d

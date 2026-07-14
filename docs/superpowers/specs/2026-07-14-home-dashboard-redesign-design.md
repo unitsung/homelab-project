@@ -2,6 +2,8 @@
 comet_change: home-dashboard-redesign
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-07-14-home-dashboard-redesign
+status: final
 ---
 
 # Home Dashboard 首页重构技术设计

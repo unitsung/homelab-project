@@ -1,0 +1,8 @@
+{
+  "openspec_proposal": "openspec/changes/sonarr-default-hidden/proposal.md",
+  "openspec_design": "openspec/changes/sonarr-default-hidden/design.md",
+  "openspec_tasks": "openspec/changes/sonarr-default-hidden/tasks.md",
+  "openspec_delta_spec": "openspec/changes/sonarr-default-hidden/specs/media-service-visibility/spec.md",
+  "handoff_context": "openspec/changes/sonarr-default-hidden/.comet/handoff/design-context.json",
+  "handoff_markdown": "openspec/changes/sonarr-default-hidden/.comet/handoff/design-context.md"
+}

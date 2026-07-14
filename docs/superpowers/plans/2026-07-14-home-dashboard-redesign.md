@@ -2,6 +2,7 @@
 change: home-dashboard-redesign
 design-doc: docs/superpowers/specs/2026-07-14-home-dashboard-redesign-design.md
 base-ref: c137cbaaead4d7fdde9489a7b4941a10cff135d0
+archived-with: 2026-07-14-home-dashboard-redesign
 ---
 
 # Home Dashboard 首页重构 Implementation Plan
