@@ -1372,7 +1372,7 @@ final class ServicesStore {
                 allowSelfSigned: instance.allowSelfSigned
             )
             let instanceId = instance.id
-            await client.setTokenRefreshCallback { [weak self] newToken in
+            await client.setTokenRefreshCallback { [weak self] (newToken: String) in
                 Task { @MainActor in
                     guard let self, var current = self.instancesById[instanceId] else { return }
                     current.token = newToken
