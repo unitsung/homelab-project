@@ -53,20 +53,20 @@ base-ref: fd7bcdfd34b5f2360f6e6341a2859fe254f5c093
 - Consumes: Design Doc 文档要点
 - Produces: 读者可见的路线图/决策一致表述
 
-- [ ] **Step 1: 更新路线图**
+- [x] **Step 1: 更新路线图**
 
 在 `docs/myhomelab-roadmap.md`：
 1. 顶部平台表述改为：**统一 iOS 架构**（非独立 macOS 产品路线；Android 不做）。删除或改写「iPhone + Mac 双端 / iOS + macOS 统一」中暗示独立 macOS 产品线的句子。
 2. 阶段列表中 **P5 中文化/飞牛风** 标明 **已取消**，不得仍列为待执行。
 3. `## Phase 5` 章节标题或正文注明已取消及原因（产品决策），避免执行清单仍像待办。
 
-- [ ] **Step 2: 更新 decisions.md**
+- [x] **Step 2: 更新 decisions.md**
 
 在 `docs/decisions.md`：
 1. 「一期」平台行改为统一 iOS 架构决策（可保留历史备注，但结论必须明确）。
 2. P5 相关条目与路线图一致：已取消。
 
-- [ ] **Step 3: 勾选 tasks 1.1–1.2 并提交**
+- [x] **Step 3: 勾选 tasks 1.1–1.2 并提交**
 
 ```bash
 # 编辑 tasks.md 将 1.1 1.2 标为 [x]
@@ -93,7 +93,7 @@ EOF
 - Consumes: 现有 `localizer.t.tabHome` / `launcherTitle`
 - Produces: 中文「总览」/「服务总览」；英文 Overview / Service Overview；图标 `square.grid.2x2.fill`
 
-- [ ] **Step 1: 改中英文文案**
+- [x] **Step 1: 改中英文文案**
 
 `Translations+Chinese.swift`：
 ```swift
@@ -109,7 +109,7 @@ tabHome: "Overview",
 launcherTitle: "Service Overview",
 ```
 
-- [ ] **Step 2: 改 Tab 图标**
+- [x] **Step 2: 改 Tab 图标**
 
 `ContentView.swift`：
 ```swift
@@ -118,11 +118,11 @@ Tab(localizer.t.tabHome, systemImage: "square.grid.2x2.fill") {
 }
 ```
 
-- [ ] **Step 3: 确认 Tab 顺序未改**
+- [x] **Step 3: 确认 Tab 顺序未改**
 
 四个 `Tab(...)` 顺序仍为：Home → Media → Bookmarks → Settings。
 
-- [ ] **Step 4: 勾选 2.1–2.2 并提交**
+- [x] **Step 4: 勾选 2.1–2.2 并提交**
 
 ```bash
 git add HomelabSwift/Homelab/Localization/Translations+Chinese.swift \
@@ -150,11 +150,11 @@ EOF
 - Consumes: `launcherTitle`、`connectedHomeCount`、`hasServices`
 - Produces: 清晰标题区；footer 不重复连接数；无服务可读空态
 
-- [ ] **Step 1: Header**
+- [x] **Step 1: Header**
 
 保持大标题 `localizer.t.launcherTitle`、连接数徽章、排序按钮；微调 `.padding(.bottom, …)` 使标题区与下方内容分层更清晰（例如 bottom 20）。**不要**改徽章计算逻辑。
 
-- [ ] **Step 2: Footer 去重**
+- [x] **Step 2: Footer 去重**
 
 删除或改写当前：
 ```swift
@@ -162,7 +162,7 @@ Text("\(localizer.t.launcherServices) • \(connectedHomeCount) \(localizer.t.la
 ```
 改为不重复展示 `connectedHomeCount` 的轻量文案，例如仅在有服务时显示简短 `launcherServices` 类说明，或缩小为次要 spacing spacer。推荐：有服务时 footer 仅保留底部安全间距（无数字文案）；无服务时由空态承担说明。
 
-- [ ] **Step 3: 空态**
+- [x] **Step 3: 空态**
 
 当 `!hasServices` 时，在 `serviceGrid` 位置或之前展示 `VStack`：
 - 主文案：说明尚无首页服务 / 可去添加（复用现有键如 `launcherTapToConnect` 或新增 `overviewEmptyTitle` / `overviewEmptyMessage`）
@@ -170,7 +170,7 @@ Text("\(localizer.t.launcherServices) • \(connectedHomeCount) \(localizer.t.la
 
 若新增键，同步 `Translations.swift` + 中英文文件。
 
-- [ ] **Step 4: 勾选 3.x 并提交**
+- [x] **Step 4: 勾选 3.x 并提交**
 
 ```bash
 git add HomelabSwift/Homelab/Views/Home/HomeView.swift \
@@ -201,7 +201,7 @@ EOF
   - 降级：`.dockhand` / `.dockmon` / `.komodo` 的 summary API（与现有 `fetchSummary` 一致）
 - Produces: 可选只读摘要条 UI + 状态模型
 
-- [ ] **Step 1: 定义轻量状态**
+- [x] **Step 1: 定义轻量状态**
 
 在 `HomeView` 内：
 ```swift
@@ -220,7 +220,7 @@ private struct OverviewStripModel: Equatable {
 )
 ```
 
-- [ ] **Step 2: 实现 `fetchOverviewStrip()`**
+- [x] **Step 2: 实现 `fetchOverviewStrip()`**
 
 规则：
 1. `isViewVisible == false` 则 return
@@ -231,7 +231,7 @@ private struct OverviewStripModel: Equatable {
 
 在现有 `.task(id: summaryRefreshID)` 中 `await fetchOverviewStrip()`（可与 `fetchAllSummaryData` 顺序或并行；MVP 顺序可接受）。
 
-- [ ] **Step 3: UI `overviewStatusStrip`**
+- [x] **Step 3: UI `overviewStatusStrip`**
 
 放在 `headerSection` 与 `tailscaleSection` 之间：
 - `isLoading`：小 `SkeletonLoader` 或 `ProgressView`
@@ -240,13 +240,13 @@ private struct OverviewStripModel: Equatable {
 - `showGuidance`：次要 caption 引导添加 Beszel/Portainer
 - 使用现有 `glassCard` / `AppTheme` 风格，高度紧凑（非大监控卡）
 
-- [ ] **Step 4: 手动逻辑自检清单（写在 commit body 或 tasks 注释）**
+- [x] **Step 4: 手动逻辑自检清单（写在 commit body 或 tasks 注释）**
 
 - 无 Beszel/Portainer：无虚假数字
 - 仅 Beszel / 仅 Portainer / 两者
 - 不可达：不崩溃
 
-- [ ] **Step 5: 勾选 4.x 并提交**
+- [x] **Step 5: 勾选 4.x 并提交**
 
 ```bash
 git add HomelabSwift/Homelab/Views/Home/HomeView.swift \
@@ -271,7 +271,7 @@ EOF
 - Consumes: 全部实现
 - Produces: 编译通过证据 + 手动验收说明
 
-- [ ] **Step 1: 编译**
+- [x] **Step 1: 编译**
 
 ```bash
 cd HomelabSwift
@@ -287,11 +287,11 @@ xcodebuild build \
 
 Expected: `** BUILD SUCCEEDED **`
 
-- [ ] **Step 2: 记录手动验收**
+- [x] **Step 2: 记录手动验收**
 
 在 tasks.md 5.2 旁或验证草稿中勾选说明：冷启动、Tab 顺序/文案/图标、空态、摘要条三场景、书签可进。
 
-- [ ] **Step 3: 勾选 5.x 并提交**
+- [x] **Step 3: 勾选 5.x 并提交**
 
 ```bash
 git add openspec/changes/home-service-overview/tasks.md
