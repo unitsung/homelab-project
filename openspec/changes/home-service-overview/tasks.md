@@ -25,3 +25,10 @@
 
 - [x] 5.1 iOS 编译检查（本 change 触达 Swift/文档时执行 compile）
 - [x] 5.2 对照 `home-dashboard-overview` spec 做手动验收清单勾选说明（含摘要条场景）
+
+<!-- review_mode: standard
+Light review (executing-plans final):
+- No CRITICAL issues (security/data loss/build fail)
+- Notes accepted: strip may double-fetch with card summaries (MVP); preferred-instance reachability falls back when unknown
+- Build: SUCCEEDED with Xcode-beta
+-->
