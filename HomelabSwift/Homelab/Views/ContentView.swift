@@ -13,7 +13,7 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             TabView {
-                Tab(localizer.t.tabHome, systemImage: "house.fill") {
+                Tab(localizer.t.tabHome, systemImage: "square.grid.2x2.fill") {
                     HomeView()
                 }
 

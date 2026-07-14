@@ -36,6 +36,12 @@ struct Translations {
     let launcherTapToConnect: String
     let launcherServices: String
     let homeReorderServices: String
+    let overviewEmptyTitle: String
+    let overviewEmptyMessage: String
+    let overviewStripGuidance: String
+    let overviewCpuLabel: String
+    let overviewMemoryLabel: String
+    let overviewContainersLabel: String
 
     // Tailscale
     let tailscaleConnect: String
