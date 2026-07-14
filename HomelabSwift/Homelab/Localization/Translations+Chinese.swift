@@ -62,6 +62,7 @@ extension Translations {
         servicePortainerDesc: "Docker 容器管理",
         servicePiholeDesc: "全网广告拦截",
         serviceAdguardDesc: "DNS 隐私与拦截",
+        serviceArcaneDesc: "Docker 容器管理",
         serviceBeszelDesc: "服务器监控",
         serviceHealthchecksDesc: "定时任务监控",
         serviceGiteaDesc: "自托管 Git 托管",
@@ -1742,3 +1743,4 @@ extension Translations {
         calagopusStatusSuspended: "已暂停"
     )
 }
+

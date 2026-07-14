@@ -74,6 +74,7 @@ struct Translations {
     let servicePortainerDesc: String
     let servicePiholeDesc: String
     let serviceAdguardDesc: String
+    let serviceArcaneDesc: String
     let serviceBeszelDesc: String
     let serviceHealthchecksDesc: String
     let serviceGiteaDesc: String

@@ -62,6 +62,7 @@ extension Translations {
         servicePortainerDesc: "Docker container management",
         servicePiholeDesc: "Network-wide ad blocking",
         serviceAdguardDesc: "DNS privacy and blocking",
+        serviceArcaneDesc: "Docker Container Management",
         serviceBeszelDesc: "Server monitoring",
         serviceHealthchecksDesc: "Cron job monitoring",
         serviceGiteaDesc: "Self-hosted Git hosting",

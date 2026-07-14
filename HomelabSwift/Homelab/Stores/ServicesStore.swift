@@ -376,6 +376,8 @@ private final class ServiceClientManager {
             calagopusClients.removeValue(forKey: id)
         case .openlist:
             openlistClients.removeValue(forKey: id)
+        case .arcane:
+            break
         case .jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr:
             genericClients.removeValue(forKey: id)
         }
@@ -845,6 +847,8 @@ final class ServicesStore {
             ok = await clientManager.calagopusClient(id: instanceId).ping()
         case .openlist:
             ok = await clientManager.openlistClient(id: instanceId).ping()
+        case .arcane:
+            break
         case .jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr:
             ok = await clientManager.genericClient(id: instanceId, type: instance.type).ping()
         }
@@ -1341,6 +1345,9 @@ final class ServicesStore {
                     self.persistState()
                 }
             }
+
+        case .arcane:
+            break
 
         case .proxmox:
             let client = clientManager.proxmoxClient(id: instance.id)

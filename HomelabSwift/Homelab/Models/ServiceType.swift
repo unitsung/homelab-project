@@ -36,6 +36,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
     case pterodactyl
     case calagopus
     case openlist
+    case arcane
 
     public var id: String { rawValue }
 
@@ -86,6 +87,8 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
             return .calagopus
         case "openlist", "alist":
             return .openlist
+        case "arcane":
+            return .arcane
         default:
             return nil
         }
@@ -165,6 +168,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .pterodactyl:        return "Pterodactyl"
         case .calagopus:          return "Calagopus"
         case .openlist:           return "OpenList"
+        case .arcane:             return "Arcane"
         }
     }
 
@@ -205,6 +209,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .pterodactyl:        return t.servicePterodactylDesc
         case .calagopus:          return t.serviceCalagopusDesc
         case .openlist:           return t.serviceOpenListDesc
+        case .arcane:             return t.serviceArcaneDesc
         }
     }
 
@@ -250,6 +255,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .pterodactyl:        return "gamecontroller.fill"
         case .calagopus:          return "bird.fill"
         case .openlist:           return "folder.fill"
+        case .arcane:             return "shippingbox.fill"
         }
     }
 
@@ -290,6 +296,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .pterodactyl:        return "https://cdn.jsdelivr.net/gh/selfhst/icons/png/pterodactyl.png"
         case .calagopus:          return "https://cdn.jsdelivr.net/gh/selfhst/icons/png/calagopus.png"
         case .openlist:           return "https://cdn.jsdelivr.net/gh/selfhst/icons/png/alist.png"
+        case .arcane:             return "https://cdn.jsdelivr.net/gh/selfhst/icons/png/arcane.png"
         }
     }
 
@@ -336,6 +343,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .pterodactyl:        slug = "pterodactyl"
         case .calagopus:          slug = "calagopus"
         case .openlist:           slug = "alist"
+        case .arcane:             slug = "arcane"
         }
         var orderedCandidates: [String] = []
         let primary = iconUrl.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -390,6 +398,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .pterodactyl:        return "service-pterodactyl"
         case .calagopus:          return "service-calagopus"
         case .openlist:           return "service-openlist"
+        case .arcane:             return "service-arcane"
         }
     }
 
@@ -430,6 +439,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .pterodactyl:        return ServiceColorSet(primary: Color(hex: "#0E4BEF"), dark: Color(hex: "#0B38C5"), bg: Color(hex: "#0E4BEF").opacity(0.09))
         case .calagopus:          return ServiceColorSet(primary: Color(hex: "#16A34A"), dark: Color(hex: "#15803D"), bg: Color(hex: "#16A34A").opacity(0.09))
         case .openlist:           return ServiceColorSet(primary: Color(hex: "#3B82F6"), dark: Color(hex: "#1D4ED8"), bg: Color(hex: "#3B82F6").opacity(0.09))
+        case .arcane:             return ServiceColorSet(primary: Color(hex: "#F97316"), dark: Color(hex: "#C2410C"), bg: Color(hex: "#F97316").opacity(0.08))
         }
     }
 }
