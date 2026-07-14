@@ -34,6 +34,7 @@ private final class ServiceClientManager {
     private var pterodactylClients: [UUID: PterodactylAPIClient] = [:]
     private var calagopusClients: [UUID: CalagopusAPIClient] = [:]
     private var openlistClients: [UUID: OpenListAPIClient] = [:]
+    private var arcaneClients: [UUID: ArcaneAPIClient] = [:]
 
     func portainerClient(id: UUID) -> PortainerAPIClient {
         if let client = portainerClients[id] {
@@ -304,6 +305,14 @@ private final class ServiceClientManager {
         return client
     }
 
+    func arcaneClient(id: UUID) -> ArcaneAPIClient {
+        if let client = arcaneClients[id] {
+            return client
+        }
+        let client = ArcaneAPIClient(instanceId: id)
+        arcaneClients[id] = client
+        return client
+    }
 
     func genericClient(id: UUID, type: ServiceType) -> GenericAPIClient {
         if let client = genericClients[id] {
@@ -377,7 +386,7 @@ private final class ServiceClientManager {
         case .openlist:
             openlistClients.removeValue(forKey: id)
         case .arcane:
-            break
+            arcaneClients.removeValue(forKey: id)
         case .jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr:
             genericClients.removeValue(forKey: id)
         }
@@ -416,6 +425,7 @@ private final class ServiceClientManager {
         pterodactylClients = pterodactylClients.filter { knownInstanceIds.contains($0.key) }
         calagopusClients = calagopusClients.filter { knownInstanceIds.contains($0.key) }
         openlistClients = openlistClients.filter { knownInstanceIds.contains($0.key) }
+        arcaneClients = arcaneClients.filter { knownInstanceIds.contains($0.key) }
         genericClients = genericClients.filter { knownInstanceIds.contains($0.key) }
     }
 }
@@ -768,6 +778,10 @@ final class ServicesStore {
         return clientManager.openlistClient(id: instance.id)
     }
 
+    func arcaneClient(instanceId: UUID) async -> ArcaneAPIClient? {
+        guard let instance = instancesById[instanceId], instance.type == .arcane else { return nil }
+        return clientManager.arcaneClient(id: instance.id)
+    }
 
 
     func genericMediaClient(instanceId: UUID) async -> GenericAPIClient? {
@@ -848,7 +862,7 @@ final class ServicesStore {
         case .openlist:
             ok = await clientManager.openlistClient(id: instanceId).ping()
         case .arcane:
-            break
+            ok = await clientManager.arcaneClient(id: instanceId).ping()
         case .jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr:
             ok = await clientManager.genericClient(id: instanceId, type: instance.type).ping()
         }
@@ -1347,7 +1361,25 @@ final class ServicesStore {
             }
 
         case .arcane:
-            break
+            let client = clientManager.arcaneClient(id: instance.id)
+            await client.configure(
+                url: instance.url,
+                apiKey: instance.apiKey,
+                token: instance.token,
+                fallbackUrl: instance.fallbackUrl,
+                username: instance.username,
+                password: instance.password,
+                allowSelfSigned: instance.allowSelfSigned
+            )
+            let instanceId = instance.id
+            await client.setTokenRefreshCallback { [weak self] newToken in
+                Task { @MainActor in
+                    guard let self, var current = self.instancesById[instanceId] else { return }
+                    current.token = newToken
+                    self.instancesById[instanceId] = current
+                    self.persistState()
+                }
+            }
 
         case .proxmox:
             let client = clientManager.proxmoxClient(id: instance.id)
