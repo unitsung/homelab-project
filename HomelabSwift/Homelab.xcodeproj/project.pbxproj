@@ -714,6 +714,7 @@
 				4813335162F54D748D7BB96C /* TrueNAS */,
 				E4365D1267750E9B89EF936F /* UptimeKuma */,
 							2776FBCF30B244E380A7EF80 /* OpenList */,
+				AC100000000000000000000000000001 /* Arcane */,
 				E3BB4044E69A483BBECCDCA3 /* ServiceConnectionStatus.swift */,
 );
 			path = Models;
@@ -1125,6 +1126,8 @@
 				83DA3DAE15FBB9494FDF9EAD /* UptimeKuma */,
 				84FA10F3C1B14B2C55E58EE3 /* Wakapi */,
 							E92316577DB94C669427C827 /* OpenList */,
+				AC300000000000000000000000000001 /* Arcane */,
+				DB100000000000000000000000000001 /* Dashboard */,
 );
 			path = Views;
 			sourceTree = "<group>";
@@ -1255,6 +1258,7 @@
 				12DB927C145E608B87596524 /* UptimeKuma */,
 				ABC55F19459A78E216C60C0A /* Wakapi */,
 							40E156569B984E4690B09932 /* OpenList */,
+				AC200000000000000000000000000001 /* Arcane */,
 );
 			path = Networking;
 			sourceTree = "<group>";
