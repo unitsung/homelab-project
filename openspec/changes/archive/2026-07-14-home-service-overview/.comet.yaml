@@ -1,6 +1,6 @@
 workflow: full
 language: zh-CN
-phase: verify
+phase: archive
 context_compression: off
 build_mode: executing-plans
 build_pause: null
@@ -13,13 +13,13 @@ auto_transition: true
 base_ref: fd7bcdfd34b5f2360f6e6341a2859fe254f5c093
 design_doc: docs/superpowers/specs/2026-07-14-home-service-overview-design.md
 plan: docs/superpowers/plans/2026-07-14-home-service-overview.md
-verify_result: pending
+verify_result: pass
 verification_report: docs/superpowers/reports/2026-07-14-home-service-overview-verify.md
-branch_status: pending
+branch_status: handled
 created_at: 2026-07-13
-verified_at: null
-archive_confirmation: null
-archived: false
+verified_at: 2026-07-14
+archive_confirmation: confirmed
+archived: true
 direct_override: null
 handoff_context: openspec/changes/home-service-overview/.comet/handoff/design-context.json
 handoff_hash: 17031f409fd48cbe8e3fea7d74e534f8a220cf3e5d35798493be2950ed71d955

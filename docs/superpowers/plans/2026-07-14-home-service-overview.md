@@ -2,6 +2,7 @@
 change: home-service-overview
 design-doc: docs/superpowers/specs/2026-07-14-home-service-overview-design.md
 base-ref: fd7bcdfd34b5f2360f6e6341a2859fe254f5c093
+archived-with: 2026-07-14-home-service-overview
 ---
 
 # Home 服务总览 + MVP 状态摘要条 Implementation Plan

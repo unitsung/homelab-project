@@ -2,6 +2,8 @@
 comet_change: home-service-overview
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-07-14-home-service-overview
+status: final
 ---
 
 # Home 服务总览（含 MVP 状态摘要条）技术设计

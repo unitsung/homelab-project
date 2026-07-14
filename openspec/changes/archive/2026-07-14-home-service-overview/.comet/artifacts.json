@@ -4,5 +4,6 @@
   "openspec_tasks": "openspec/changes/home-service-overview/tasks.md",
   "openspec_delta_spec": "openspec/changes/home-service-overview/specs/home-dashboard-overview/spec.md",
   "handoff_context": "openspec/changes/home-service-overview/.comet/handoff/design-context.json",
-  "handoff_markdown": "openspec/changes/home-service-overview/.comet/handoff/design-context.md"
+  "handoff_markdown": "openspec/changes/home-service-overview/.comet/handoff/design-context.md",
+  "archive_directory": "openspec/changes/archive/2026-07-14-home-service-overview"
 }
