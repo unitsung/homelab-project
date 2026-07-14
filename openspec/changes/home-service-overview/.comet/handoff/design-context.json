@@ -1,0 +1,14 @@
+{
+  "change": "home-service-overview",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "17031f409fd48cbe8e3fea7d74e534f8a220cf3e5d35798493be2950ed71d955",
+  "files": [
+    { "path": "openspec/changes/home-service-overview/proposal.md", "sha256": "c1b79ac470dad476f91378011f41e210d2b666baa1ba804cd48604c9da5091d8" },
+    { "path": "openspec/changes/home-service-overview/design.md", "sha256": "810a582bf9abdbbed7d345906e45930404cb51b887ef99a5c0244c4b82c6234e" },
+    { "path": "openspec/changes/home-service-overview/tasks.md", "sha256": "dc91965ed85ac64c7b9397e56a1ae1f7e653947b3ead5242350ebc1c18b10cc9" },
+    { "path": "openspec/changes/home-service-overview/specs/home-dashboard-overview/spec.md", "sha256": "a8f3674966b535b3ca9c3e1333bb3793abf21c9abd294deda8d92f1c18949bc4" }
+  ]
+}

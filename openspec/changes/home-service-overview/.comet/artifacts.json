@@ -1,0 +1,8 @@
+{
+  "openspec_proposal": "openspec/changes/home-service-overview/proposal.md",
+  "openspec_design": "openspec/changes/home-service-overview/design.md",
+  "openspec_tasks": "openspec/changes/home-service-overview/tasks.md",
+  "openspec_delta_spec": "openspec/changes/home-service-overview/specs/home-dashboard-overview/spec.md",
+  "handoff_context": "openspec/changes/home-service-overview/.comet/handoff/design-context.json",
+  "handoff_markdown": "openspec/changes/home-service-overview/.comet/handoff/design-context.md"
+}
