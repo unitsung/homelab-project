@@ -9,12 +9,12 @@
 
 | 项 | 决策 |
 |---|---|
-| **一期** | **iOS + macOS** 统一架构，同一套 Swift 业务层 |
-| **UI** | 共享 ViewModel / Service / Model；布局与 Router 做平台差异（Tab / Sidebar 等） |
+| **一期** | **统一 iOS 架构**，同一套 Swift 业务层（**非独立 macOS 产品路线**） |
+| **UI** | 共享 ViewModel / Service / Model；布局与 Router 做平台差异 |
 | **Android** | **不做**（仓库 Android 代码可保留不删，但不作为本产品路线） |
 | **工程** | 以 `HomelabSwift` 为主；不因本产品去推进 `HomelabAndroid` 新功能 |
 
-说明：当前就是「Mac for iPhone」式双端——**一套逻辑，手机和 Mac 都能用**。
+说明：产品平台为 **统一 iOS**；历史「iOS + macOS 双端」表述废止为产品路线（代码层若有多端复用不等于独立 macOS 里程碑）。
 
 ---
 
@@ -66,21 +66,21 @@
 ## 5. 实现顺序（不变）
 
 ```text
-P0  配置 / Keychain / 连接状态 / Mock（Swift 双端）
+P0  配置 / Keychain / 连接状态 / Mock（Swift / iOS）
 P1  OpenList API 文件浏览（不绑定具体挂载路径）
 P1b Quark Auto Save（可按精力）
 P2  Immich
 P3  Jellyfin
 P4  Beszel + OMV SMART + Healthchecks(rsync) + 下载/容器摘要
-P5  中文化 / 飞牛风 UI 收口
-P6  iPhone + Mac 布局与真机回归（无 Android）
+P5  中文化 / 飞牛风 UI 收口  ← **已取消**
+P6  iOS 布局与真机回归（无 Android；非独立 macOS 路线）
 ```
 
 ---
 
-## 6. 验收口径（双端）
+## 6. 验收口径（iOS）
 
-- iPhone 与 Mac **同一套** Service / 配置 / 业务模型  
+- iOS **统一** Service / 配置 / 业务模型  
 - 文件：OpenList 打开即为 API 返回的根目录内容（服务端挂什么见什么）  
 - 冷备：Healthchecks 显示最近成功；异常色标  
 - 不引入 Android 构建为发布门槛  

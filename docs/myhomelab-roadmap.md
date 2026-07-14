@@ -4,11 +4,11 @@
 > 状态：决策已锁定，见 [`decisions.md`](./decisions.md)。  
 > 约束：NAS 为 PVE 上 **OMV 8.0 + ZFS**；优先只读监控与服务聚合；禁止 OMV 配置写入、磁盘操作、ZFS 删除等高风险能力。  
 > 产品决策：现有 Portainer / Proxmox / Pi-hole 等 **全部保留可用**；Docker 管理目标栈为 **Dockge**（非 Portainer 优先）。  
-> **平台：iOS + macOS 统一架构；Android 不做。所有服务：App 只调 API、不绑死目录/路径。rsync 冷备用 Healthchecks 最简监控。**
+> **平台：统一 iOS 架构（非独立 macOS 产品路线；Android 不做）。所有服务：App 只调 API、不绑死目录/路径。rsync 冷备用 Healthchecks 最简监控。**
 
 ## 总目标
 
-把现有 Homelab Dashboard 收敛为 **iPhone + Mac** 统一架构的家庭服务控制台（Android 不在本产品路线）：
+把现有 Homelab Dashboard 收敛为 **统一 iOS 架构**的家庭服务控制台（非独立 macOS 产品路线；Android 不在本产品路线）：
 
 | 能力 | 本期 |
 |---|---|
@@ -32,8 +32,8 @@ P1b Quark Auto Save 任务列表 / 添加任务 / 手动执行
 P2  Immich 照片概览
 P3  Jellyfin 影视概览
 P4  OMV 8 只读 + Beszel + Dockge 监控/管理首页
-P5  中文化、飞牛风 UI
-P6  iPhone + Mac 布局与真机回归（无 Android）
+P5  中文化、飞牛风 UI  ← **已取消**（产品决策，不再作为待执行阶段）
+P6  iOS 布局与真机回归（无 Android；不做独立 macOS 产品线）
 ```
 
 每阶段验收：**可独立运行、可配置真实服务、单服务失败不影响其他模块、保留 Mock 供 UI 开发**。
@@ -425,20 +425,20 @@ struct DashboardSnapshot: Codable, Sendable {
 
 ---
 
-## Phase 5：中文化与飞牛风 UI
+## Phase 5：中文化与飞牛风 UI（**已取消**）
 
-- 用户可见文案走现有 `Translations` 体系（渐进）
-- 产品名保留英文：OpenList、Immich、Jellyfin、Docker、ZFS、qBittorrent、Dockge、Quark Auto Save
-- Container→容器，Pool→存储池，Volume→数据卷，Stack→栈（或「Compose 栈」）
-- 浅色大留白卡片；深色模式不阻塞
+> **产品决策：P5 已取消**，不再作为待执行阶段。中文文案继续沿用现有 `Translations` 渐进完善，不做单独「飞牛风」专项收口。
+
+- （历史意图，仅供参考）用户可见文案走 `Translations`；产品名保留英文服务名
+- 首页服务总览布局与 MVP 状态摘要条见 change `home-service-overview`，不属于 P5
 
 ---
 
-## Phase 6：iPhone + Mac 适配与发布
+## Phase 6：iOS 适配与发布
 
-- **统一架构**：共享模型 / Service / ViewModel；平台差异只在 Router、系统 API、布局
-- macOS：宽屏 Dashboard、Sidebar、快捷键（菜单栏状态可后置）
-- iOS：Tab（主页/文件/下载/媒体/设置）、下拉刷新、URL Scheme、SideStore 回归
+- **统一 iOS 架构**：共享模型 / Service / ViewModel；平台差异只在 Router、系统 API、布局
+- **不做独立 macOS 产品路线**（若未来 Catalyst/多端复用，不单独开 macOS 路线里程碑）
+- iOS：Tab（总览/媒体/书签/设置等）、下拉刷新、URL Scheme、SideStore 回归
 - **Android：不做**（不作为发布门槛）
 - Socket.IO（Dockge）若做需验证后台挂起与重连
 
