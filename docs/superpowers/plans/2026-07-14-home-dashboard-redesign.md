@@ -36,7 +36,7 @@ base-ref: c137cbaaead4d7fdde9489a7b4941a10cff135d0
 **Interfaces:**
 - Produces: `ArcaneContainer` (Identifiable, Codable), `ArcaneContainerStats` (Codable), `ArcaneContainerDetail` (Codable), `ContainerAction` (String enum: start/stop/restart/kill/pause/unpause)
 
-- [ ] **Step 1: 创建 ArcaneModels.swift**
+- [x] **Step 1: 创建 ArcaneModels.swift**
 
 ```swift
 import Foundation
@@ -86,7 +86,7 @@ enum ContainerAction: String, Codable {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Models/Arcane/ArcaneModels.swift
@@ -95,7 +95,7 @@ git commit -m "feat: add Arcane data models (Container, Stats, ContainerAction)"
 
 ---
 
-### Task 2: ServiceType.arcane 扩展
+Task 2: ServiceType.arcane 扩展 ✅
 
 **Files:**
 - Modify: `HomelabSwift/Homelab/Models/ServiceType.swift`
@@ -106,7 +106,7 @@ git commit -m "feat: add Arcane data models (Container, Stats, ContainerAction)"
 **Interfaces:**
 - Produces: `ServiceType.arcane` case with displayName "Arcane", symbolName "shippingbox.fill", colors (primary: #F97316 orange), iconUrl, localizedDescription
 
-- [ ] **Step 1: 在 Translations.swift 中添加翻译 key**
+- [x] **Step 1: 在 Translations.swift 中添加翻译 key**
 
 在 `Translations.swift` 中添加两个新 property：
 
@@ -126,7 +126,7 @@ var serviceArcaneDesc: String { "Docker 容器管理" }
 var serviceArcaneDesc: String { "Docker Container Management" }
 ```
 
-- [ ] **Step 2: 在 ServiceType.swift 中添加 .arcane case**
+- [x] **Step 2: 在 ServiceType.swift 中添加 .arcane case**
 
 将 `.arcane` case 添加到 `ServiceType` enum 中（在 `.openlist` 之后）：
 
@@ -134,7 +134,7 @@ var serviceArcaneDesc: String { "Docker Container Management" }
 case arcane
 ```
 
-- [ ] **Step 3: 在 ServiceType.swift 的各计算属性中添加 arcane 分支**
+- [x] **Step 3: 在 ServiceType.swift 的各计算属性中添加 arcane 分支**
 
 `displayName`:
 ```swift
@@ -177,7 +177,7 @@ case "arcane":
     return .arcane
 ```
 
-- [ ] **Step 4: 在 ServicesStore.swift 中为 arcane 添加 switch case 桩代码**
+- [x] **Step 4: 在 ServicesStore.swift 中为 arcane 添加 switch case 桩代码**
 
 在 `removeClient` 和 `checkReachability` 的 switch 中添加：
 ```swift
@@ -193,7 +193,7 @@ case .arcane:
 
 (后续 Task 会替换为完整实现)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Models/ServiceType.swift HomelabSwift/Homelab/Localization/Translations.swift HomelabSwift/Homelab/Localization/Translations+Chinese.swift HomelabSwift/Homelab/Localization/Translations+English.swift HomelabSwift/Homelab/Stores/ServicesStore.swift
@@ -211,7 +211,7 @@ git commit -m "feat: add ServiceType.arcane with displayName, icon, colors, and 
 - Consumes: `ArcaneContainer`, `ArcaneContainerStats`, `ArcaneContainerDetail`, `ContainerAction` from Task 1
 - Produces: `actor ArcaneAPIClient` with methods: `configure(...)`, `ping()`, `getContainers() -> [ArcaneContainer]`, `getContainer(id:) -> ArcaneContainer`, `getContainerStats(id:) -> ArcaneContainerStats`, `getContainerLogs(id:tail:) -> String`, `containerAction(id:action:)`, `login(username:password:) async throws`, `setAPIKey(_:)`, `setTokenRefreshCallback(_:)`
 
-- [ ] **Step 1: 创建 ArcaneAPIClient.swift**
+- [x] **Step 1: 创建 ArcaneAPIClient.swift**
 
 ```swift
 import Foundation
@@ -340,7 +340,7 @@ actor ArcaneAPIClient {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Networking/Arcane/ArcaneAPIClient.swift
@@ -358,7 +358,7 @@ git commit -m "feat: implement ArcaneAPIClient (API Key + JWT dual auth, contain
 - Consumes: `ArcaneAPIClient` from Task 3, `ServiceType.arcane` from Task 2
 - Produces: `arcaneClient(instanceId:) -> ArcaneAPIClient?` accessible via ServicesStore
 
-- [ ] **Step 1: 在 ServiceClientManager 中添加 arcane 客户端管理**
+- [x] **Step 1: 在 ServiceClientManager 中添加 arcane 客户端管理**
 
 在 `ServiceClientManager` 的 property 区域添加：
 ```swift
@@ -386,7 +386,7 @@ case .arcane:
 arcaneClients = arcaneClients.filter { knownInstanceIds.contains($0.key) }
 ```
 
-- [ ] **Step 2: 在 ServicesStore 中添加公开访问方法**
+- [x] **Step 2: 在 ServicesStore 中添加公开访问方法**
 
 ```swift
 func arcaneClient(instanceId: UUID) async -> ArcaneAPIClient? {
@@ -395,7 +395,7 @@ func arcaneClient(instanceId: UUID) async -> ArcaneAPIClient? {
 }
 ```
 
-- [ ] **Step 3: 替换 Step 4 中的 arcane configureClient 桩代码**
+- [x] **Step 3: 替换 Step 4 中的 arcane configureClient 桩代码**
 
 在 `configureClient` switch 中替换 `.arcane` case：
 ```swift
@@ -421,7 +421,7 @@ case .arcane:
     }
 ```
 
-- [ ] **Step 4: 替换 checkReachability 中的 arcane 桩**
+- [x] **Step 4: 替换 checkReachability 中的 arcane 桩**
 
 在 `checkReachability` switch 中替换：
 ```swift
@@ -429,7 +429,7 @@ case .arcane:
     ok = await clientManager.arcaneClient(id: instanceId).ping()
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Stores/ServicesStore.swift
@@ -446,7 +446,7 @@ git commit -m "feat: integrate ArcaneAPIClient into ServicesStore lifecycle"
 **Interfaces:**
 - Produces: `@Observable final class DashboardRefreshCoordinator` with `var refreshTrigger = UUID()`, `func start()`, `func stop()`, `var isRefreshing = false`
 
-- [ ] **Step 1: 创建 DashboardRefreshCoordinator.swift**
+- [x] **Step 1: 创建 DashboardRefreshCoordinator.swift**
 
 ```swift
 import Foundation
@@ -477,7 +477,7 @@ final class DashboardRefreshCoordinator {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Stores/DashboardRefreshCoordinator.swift
@@ -494,7 +494,7 @@ git commit -m "feat: add DashboardRefreshCoordinator for 10s poll cycle"
 **Interfaces:**
 - Produces: `struct DashboardCard<Content: View>: View` with `title: String`, `icon: String`, `@ViewBuilder content: () -> Content`
 
-- [ ] **Step 1: 创建 DashboardCard.swift**
+- [x] **Step 1: 创建 DashboardCard.swift**
 
 ```swift
 import SwiftUI
@@ -518,7 +518,7 @@ struct DashboardCard<Content: View>: View {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Views/Dashboard/DashboardCard.swift
@@ -536,7 +536,7 @@ git commit -m "feat: add reusable DashboardCard component with glass effect"
 - Consumes: `DashboardRefreshCoordinator` (Task 5), `DashboardCard` (Task 6), `ServicesStore` (existing), `BeszelAPIClient` (existing via servicesStore)
 - Produces: `struct SystemHealthCard: View` - 显示 OMV 在线状态、主机名、运行时间
 
-- [ ] **Step 1: 创建 SystemHealthCard.swift**
+- [x] **Step 1: 创建 SystemHealthCard.swift**
 
 ```swift
 import SwiftUI
@@ -604,7 +604,7 @@ struct SystemHealthCard: View {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Views/Dashboard/SystemHealthCard.swift
@@ -622,7 +622,7 @@ git commit -m "feat: add SystemHealthCard showing OMV status, hostname, uptime"
 - Consumes: `DashboardRefreshCoordinator` (Task 5), `DashboardCard` (Task 6), `ServicesStore`
 - Produces: `struct CPUMonitorCard: View` - Swift Charts Gauge 环形百分比
 
-- [ ] **Step 1: 创建 CPUMonitorCard.swift**
+- [x] **Step 1: 创建 CPUMonitorCard.swift**
 
 ```swift
 import SwiftUI
@@ -665,7 +665,7 @@ struct CPUMonitorCard: View {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Views/Dashboard/CPUMonitorCard.swift
@@ -683,7 +683,7 @@ git commit -m "feat: add CPUMonitorCard with Swift Charts Gauge"
 - Consumes: `DashboardRefreshCoordinator` (Task 5), `DashboardCard` (Task 6), `ServicesStore`
 - Produces: `struct MemoryMonitorCard: View` - Swift Charts BarMark 堆叠条形图
 
-- [ ] **Step 1: 创建 MemoryMonitorCard.swift**
+- [x] **Step 1: 创建 MemoryMonitorCard.swift**
 
 ```swift
 import SwiftUI
@@ -739,7 +739,7 @@ struct MemoryMonitorCard: View {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Views/Dashboard/MemoryMonitorCard.swift
@@ -757,7 +757,7 @@ git commit -m "feat: add MemoryMonitorCard with stacked BarMark chart"
 - Consumes: `DashboardRefreshCoordinator` (Task 5), `DashboardCard` (Task 6), `ServicesStore`
 - Produces: `struct DiskMonitorCard: View` - Swift Charts SectorMark 甜甜圈
 
-- [ ] **Step 1: 创建 DiskMonitorCard.swift**
+- [x] **Step 1: 创建 DiskMonitorCard.swift**
 
 ```swift
 import SwiftUI
@@ -806,7 +806,7 @@ struct DiskMonitorCard: View {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Views/Dashboard/DiskMonitorCard.swift
@@ -824,7 +824,7 @@ git commit -m "feat: add DiskMonitorCard with SectorMark donut chart"
 - Consumes: `DashboardRefreshCoordinator` (Task 5), `DashboardCard` (Task 6), `ServicesStore`
 - Produces: `struct TemperatureCard: View` - 自定义温度传感器列表视图
 
-- [ ] **Step 1: 创建 TemperatureCard.swift**
+- [x] **Step 1: 创建 TemperatureCard.swift**
 
 ```swift
 import SwiftUI
@@ -889,7 +889,7 @@ struct TemperatureCard: View {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Views/Dashboard/TemperatureCard.swift
@@ -907,7 +907,7 @@ git commit -m "feat: add TemperatureCard with sensor list and linear gauges"
 - Consumes: `DashboardRefreshCoordinator` (Task 5), `DashboardCard` (Task 6), `ArcaneAPIClient` (Task 3 via ServicesStore)
 - Produces: `struct DockerOverviewCard: View` - 运行/总数徽章 + 横向容器状态滚动列表
 
-- [ ] **Step 1: 创建 DockerOverviewCard.swift**
+- [x] **Step 1: 创建 DockerOverviewCard.swift**
 
 ```swift
 import SwiftUI
@@ -975,7 +975,7 @@ struct DockerOverviewCard: View {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Views/Dashboard/DockerOverviewCard.swift
@@ -993,7 +993,7 @@ git commit -m "feat: add DockerOverviewCard with container status scroll list"
 - Consumes: `DashboardCard` (Task 6), `ServicesStore`, `ServiceType.homeServices`
 - Produces: `struct ServiceEntryCard: View` - 5 个核心服务 icon 导航入口
 
-- [ ] **Step 1: 创建 ServiceEntryCard.swift**
+- [x] **Step 1: 创建 ServiceEntryCard.swift**
 
 ```swift
 import SwiftUI
@@ -1028,7 +1028,7 @@ struct ServiceEntryCard: View {
 
 注意：`HomeServiceRoute` 定义为 `struct HomeServiceRoute: Hashable { let type: ServiceType; let instanceId: UUID }`，需要将其从 `HomeView.swift` 的 `private` 提升为 `internal`，或在新 HomeView 中重新声明。
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Views/Dashboard/ServiceEntryCard.swift
@@ -1046,7 +1046,7 @@ git commit -m "feat: add ServiceEntryCard with 5 core service shortcuts"
 - Consumes: `ArcaneAPIClient` (Task 3 via ServicesStore), `ArcaneContainer` (Task 1)
 - Produces: `struct ArcaneDashboard: View` - 容器列表，支持启停操作
 
-- [ ] **Step 1: 创建 ArcaneDashboard.swift**
+- [x] **Step 1: 创建 ArcaneDashboard.swift**
 
 ```swift
 import SwiftUI
@@ -1134,7 +1134,7 @@ struct ArcaneDashboard: View {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Views/Arcane/ArcaneDashboard.swift
@@ -1152,7 +1152,7 @@ git commit -m "feat: add ArcaneDashboard with container list and start/stop cont
 - Consumes: All Dashboard cards (Tasks 6-13), `DashboardRefreshCoordinator` (Task 5), `ServicesStore` (existing)
 - Produces: 新的 `HomeView` - ScrollView + LazyVGrid 2-col 卡片流
 
-- [ ] **Step 1: 创建新 HomeView 替换旧实现**
+- [x] **Step 1: 创建新 HomeView 替换旧实现**
 
 ```swift
 import SwiftUI
@@ -1281,7 +1281,7 @@ struct HomeServiceRoute: Hashable {
 }
 ```
 
-- [ ] **Step 2: 移除 HomeView.swift 中残留的旧代码**
+- [x] **Step 2: 移除 HomeView.swift 中残留的旧代码**
 
 删除以下不再需要的类型和代码：
 - `OverviewStripModel` - 移除整个 struct
@@ -1299,7 +1299,7 @@ struct HomeServiceRoute: Hashable {
 - `HomeServiceRoute` struct（移到文件顶部 `internal` 级别）
 - ServiceIconView（提取为独立 struct 复用，供 ServiceEntryCard 引用）
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add HomelabSwift/Homelab/Views/Home/HomeView.swift
@@ -1312,7 +1312,7 @@ git commit -m "feat: refactor HomeView to Dashboard card grid layout with 10s po
 
 **Description:** 运行 Android/iOS 编译检查确保全部通过（仅 iOS 变更，但仍验证 Android 不受影响）。
 
-- [ ] **Step 1: iOS 编译检查**
+- [x] **Step 1: iOS 编译检查**
 
 ```bash
 cd HomelabSwift
@@ -1328,11 +1328,11 @@ xcodebuild build \
 
 预期：BUILD SUCCEEDED
 
-- [ ] **Step 2: 检查是否需要 git commit 修复**
+- [x] **Step 2: 检查是否需要 git commit 修复**
 
 如有编译错误，修复后提交。
 
-- [ ] **Step 3: 所有提交完成后查看 git log 确认**
+- [x] **Step 3: 所有提交完成后查看 git log 确认**
 
 ```bash
 git log --oneline -20
