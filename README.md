@@ -302,6 +302,10 @@ The app can then be refreshed and updated from the same source.
 
 ## 🛠️ Getting Started
 
+### Contributing
+
+Want to fix a bug or add a feature? See **[`CONTRIBUTING.md`](CONTRIBUTING.md)** for branch naming, PR target (`main`), and local build checks. Maintainer / agent workflow details are in [`AGENTS.md`](AGENTS.md).
+
 ### Repository Layout
 
 - `HomelabSwift/`: native iOS app built with SwiftUI.
@@ -329,6 +333,7 @@ This repository is a **maintained fork** of the original Homelab Dashboard by [J
 
 - **This fork:** [github.com/unitsung/homelab-project](https://github.com/unitsung/homelab-project)
 - **Issues:** [github.com/unitsung/homelab-project/issues](https://github.com/unitsung/homelab-project/issues)
+- **Contributing:** [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - **Upstream (archived):** [github.com/JohnnWi/homelab-project](https://github.com/JohnnWi/homelab-project)
 
 ---

@@ -12,11 +12,14 @@ This repository is the single working copy for Homelab development.
 
 ## Branch Strategy
 
+External contributors: see [`CONTRIBUTING.md`](CONTRIBUTING.md) (GitHub Flow: PR to `main`, no long-lived `dev`).
+
 - Use `main` for normal owner-directed changes, release preparation, and release follow-up commits.
 - Create a short-lived branch for larger/riskier work, external PR review, or changes that should not block release work.
 - Prefer branch names like `feat/service-name`, `fix/issue-name`, `docs/topic`, or `ci/topic`.
 - Use a separate git worktree only when another uncommitted task is already in progress and switching branches would risk mixing changes.
 - Do not merge or close external PRs without reviewing the diff and running the relevant checks.
+- Do not introduce a long-lived `dev` / `develop` branch; keep GitHub Flow (`main` + short-lived topic branches + release tags).
 
 ## Development Rules
 
