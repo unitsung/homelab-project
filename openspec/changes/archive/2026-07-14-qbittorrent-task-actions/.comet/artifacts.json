@@ -4,5 +4,6 @@
   "openspec_tasks": "openspec/changes/qbittorrent-task-actions/tasks.md",
   "openspec_delta_spec": "openspec/changes/qbittorrent-task-actions/specs/qbittorrent-task-management/spec.md",
   "handoff_context": "openspec/changes/qbittorrent-task-actions/.comet/handoff/design-context.json",
-  "handoff_markdown": "openspec/changes/qbittorrent-task-actions/.comet/handoff/design-context.md"
+  "handoff_markdown": "openspec/changes/qbittorrent-task-actions/.comet/handoff/design-context.md",
+  "archive_directory": "openspec/changes/archive/2026-07-14-qbittorrent-task-actions"
 }

@@ -2,6 +2,8 @@
 comet_change: qbittorrent-task-actions
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-07-14-qbittorrent-task-actions
+status: final
 ---
 
 # qBittorrent 任务添加与操作技术设计

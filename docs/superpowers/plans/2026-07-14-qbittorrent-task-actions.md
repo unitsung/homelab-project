@@ -2,6 +2,7 @@
 change: qbittorrent-task-actions
 design-doc: docs/superpowers/specs/2026-07-14-qbittorrent-task-actions-design.md
 base-ref: 232ef4699fb9cadcc824afd54e4d3769a7c4dce9
+archived-with: 2026-07-14-qbittorrent-task-actions
 ---
 
 # qBittorrent 任务添加与操作 Implementation Plan
