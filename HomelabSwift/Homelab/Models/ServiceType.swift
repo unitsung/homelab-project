@@ -109,10 +109,6 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
     }
 
     public static let mediaServices: [ServiceType] = [
-        .radarr,
-        .sonarr,
-        .lidarr,
-        .qbittorrent,
         .jellyseerr,
         .prowlarr,
         .bazarr,
@@ -121,7 +117,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
     ]
 
     public static var homeServices: [ServiceType] {
-        allCases.filter { !mediaServices.contains($0) }
+        [.truenas, .openlist, .proxmox, .beszel, .portainer, .qbittorrent, .radarr, .sonarr, .lidarr]
     }
 
     public var isMediaService: Bool {
