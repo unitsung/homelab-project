@@ -851,7 +851,7 @@ private struct OverviewStripModel: Equatable {
     }
 }
 
-private struct HomeServiceRoute: Hashable {
+struct HomeServiceRoute: Hashable {
     let type: ServiceType
     let instanceId: UUID
 }
