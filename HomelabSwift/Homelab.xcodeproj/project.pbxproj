@@ -200,6 +200,19 @@
 		FCD41D6BE7DB010018902C63 /* PinEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 465DB3CC355F5F7FDDF6DE00 /* PinEntryView.swift */; };
 		FD2293CC8607CE165F202493 /* PiholeDomainListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D702ABD0D754FC3DEF8A7B4 /* PiholeDomainListView.swift */; };
 		FDB0C4600B5089FA648DEE0C /* PiholeDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226A2E333FD0452D26FF967 /* PiholeDomain.swift */; };
+		B1B2C3D4E5F601020304050607080901 /* ArcaneModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601020304050607080901 /* ArcaneModels.swift */; };
+		B2B3C4D5E6F702030405060708090902 /* ArcaneAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F702030405060708090902 /* ArcaneAPIClient.swift */; };
+		B3B4C5D6E7F8030405060708090A0B03 /* ArcaneDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B4C5D6E7F8030405060708090A0B03 /* ArcaneDashboard.swift */; };
+		B4B5C6D7E8F90405060708090A0B0C04 /* DashboardCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C6D7E8F90405060708090A0B0C04 /* DashboardCard.swift */; };
+		B5B6C7D8E9FA05060708090A0B0C0D05 /* SystemHealthCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5B6C7D8E9FA05060708090A0B0C0D05 /* SystemHealthCard.swift */; };
+		B6B7C8D9EAFB060708090A0B0C0D0E06 /* CPUMonitorCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B7C8D9EAFB060708090A0B0C0D0E06 /* CPUMonitorCard.swift */; };
+		B7B8C9DAEBFC0708090A0B0C0D0E0F07 /* MemoryMonitorCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9DAEBFC0708090A0B0C0D0E0F07 /* MemoryMonitorCard.swift */; };
+		B8B9CADBECFD08090A0B0C0D0E0F1008 /* DiskMonitorCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B9CADBECFD08090A0B0C0D0E0F1008 /* DiskMonitorCard.swift */; };
+		B9BACBDCEDFE090A0B0C0D0E0F101109 /* TemperatureCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9BACBDCEDFE090A0B0C0D0E0F101109 /* TemperatureCard.swift */; };
+		B0B1C2D3E4F50A0B0C0D0E0F1011120A /* DockerOverviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B1C2D3E4F50A0B0C0D0E0F1011120A /* DockerOverviewCard.swift */; };
+		B1C2D3E4F5060B0C0D0E0F101112130B /* ServiceEntryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C2D3E4F5060B0C0D0E0F101112130B /* ServiceEntryCard.swift */; };
+		B2D3E4F506170C0D0E0F10111213140C /* DashboardRefreshCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D3E4F506170C0D0E0F10111213140C /* DashboardRefreshCoordinator.swift */; };
+		B3E4F50617280D0E0F1011121314150D /* DashboardSystemStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E4F50617280D0E0F1011121314150D /* DashboardSystemStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -411,6 +424,19 @@
 		FE7A7BFF374B6DE9CE7384EE /* PiHoleDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiHoleDashboard.swift; sourceTree = "<group>"; };
 		FEF0A029C7F3CF79994A268B /* NpmRedirectionHostForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmRedirectionHostForm.swift; sourceTree = "<group>"; };
 		FEF389260911EADF7079A97B /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F601020304050607080901 /* ArcaneModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaneModels.swift; sourceTree = "<group>"; };
+		A2B3C4D5E6F702030405060708090902 /* ArcaneAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaneAPIClient.swift; sourceTree = "<group>"; };
+		A3B4C5D6E7F8030405060708090A0B03 /* ArcaneDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaneDashboard.swift; sourceTree = "<group>"; };
+		A4B5C6D7E8F90405060708090A0B0C04 /* DashboardCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardCard.swift; sourceTree = "<group>"; };
+		A5B6C7D8E9FA05060708090A0B0C0D05 /* SystemHealthCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemHealthCard.swift; sourceTree = "<group>"; };
+		A6B7C8D9EAFB060708090A0B0C0D0E06 /* CPUMonitorCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUMonitorCard.swift; sourceTree = "<group>"; };
+		A7B8C9DAEBFC0708090A0B0C0D0E0F07 /* MemoryMonitorCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryMonitorCard.swift; sourceTree = "<group>"; };
+		A8B9CADBECFD08090A0B0C0D0E0F1008 /* DiskMonitorCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskMonitorCard.swift; sourceTree = "<group>"; };
+		A9BACBDCEDFE090A0B0C0D0E0F101109 /* TemperatureCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureCard.swift; sourceTree = "<group>"; };
+		A0B1C2D3E4F50A0B0C0D0E0F1011120A /* DockerOverviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockerOverviewCard.swift; sourceTree = "<group>"; };
+		A1C2D3E4F5060B0C0D0E0F101112130B /* ServiceEntryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceEntryCard.swift; sourceTree = "<group>"; };
+		A2D3E4F506170C0D0E0F10111213140C /* DashboardRefreshCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardRefreshCoordinator.swift; sourceTree = "<group>"; };
+		A3E4F50617280D0E0F1011121314150D /* DashboardSystemStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSystemStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -838,6 +864,8 @@
 			children = (
 				258507E3A00D686FDEF7E9CE /* ServicesStore.swift */,
 				151F3E3C716170F5B65A688F /* SettingsStore.swift */,
+				A2D3E4F506170C0D0E0F10111213140C /* DashboardRefreshCoordinator.swift */,
+				A3E4F50617280D0E0F1011121314150D /* DashboardSystemStore.swift */,
 			);
 			path = Stores;
 			sourceTree = "<group>";
@@ -1386,6 +1414,48 @@
 			path = OpenList;
 			sourceTree = "<group>";
 		};
+		AC100000000000000000000000000001 /* Arcane */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F601020304050607080901 /* ArcaneModels.swift */,
+			);
+			path = Arcane;
+			sourceTree = "<group>";
+		};
+
+		AC200000000000000000000000000001 /* Arcane */ = {
+			isa = PBXGroup;
+			children = (
+				A2B3C4D5E6F702030405060708090902 /* ArcaneAPIClient.swift */,
+			);
+			path = Arcane;
+			sourceTree = "<group>";
+		};
+
+		AC300000000000000000000000000001 /* Arcane */ = {
+			isa = PBXGroup;
+			children = (
+				A3B4C5D6E7F8030405060708090A0B03 /* ArcaneDashboard.swift */,
+			);
+			path = Arcane;
+			sourceTree = "<group>";
+		};
+
+		DB100000000000000000000000000001 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				A4B5C6D7E8F90405060708090A0B0C04 /* DashboardCard.swift */,
+				A5B6C7D8E9FA05060708090A0B0C0D05 /* SystemHealthCard.swift */,
+				A6B7C8D9EAFB060708090A0B0C0D0E06 /* CPUMonitorCard.swift */,
+				A7B8C9DAEBFC0708090A0B0C0D0E0F07 /* MemoryMonitorCard.swift */,
+				A8B9CADBECFD08090A0B0C0D0E0F1008 /* DiskMonitorCard.swift */,
+				A9BACBDCEDFE090A0B0C0D0E0F101109 /* TemperatureCard.swift */,
+				A0B1C2D3E4F50A0B0C0D0E0F1011120A /* DockerOverviewCard.swift */,
+				A1C2D3E4F5060B0C0D0E0F101112130B /* ServiceEntryCard.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1661,6 +1731,19 @@
 				F3A4B5C6D7E8091A2B3C4D5E6F708192 /* OpenListFolderPickerView.swift in Sources */,
 				A1B2C3D4E5F60718293A4B5C6D7E8F01 /* OpenListPlayerPickerView.swift in Sources */,
 				D4E5F60718293A4B5C6D7E8F901A2B3C /* OpenListTasksView.swift in Sources */,
+				B1B2C3D4E5F601020304050607080901 /* ArcaneModels.swift in Sources */,
+				B2B3C4D5E6F702030405060708090902 /* ArcaneAPIClient.swift in Sources */,
+				B3B4C5D6E7F8030405060708090A0B03 /* ArcaneDashboard.swift in Sources */,
+				B4B5C6D7E8F90405060708090A0B0C04 /* DashboardCard.swift in Sources */,
+				B5B6C7D8E9FA05060708090A0B0C0D05 /* SystemHealthCard.swift in Sources */,
+				B6B7C8D9EAFB060708090A0B0C0D0E06 /* CPUMonitorCard.swift in Sources */,
+				B7B8C9DAEBFC0708090A0B0C0D0E0F07 /* MemoryMonitorCard.swift in Sources */,
+				B8B9CADBECFD08090A0B0C0D0E0F1008 /* DiskMonitorCard.swift in Sources */,
+				B9BACBDCEDFE090A0B0C0D0E0F101109 /* TemperatureCard.swift in Sources */,
+				B0B1C2D3E4F50A0B0C0D0E0F1011120A /* DockerOverviewCard.swift in Sources */,
+				B1C2D3E4F5060B0C0D0E0F101112130B /* ServiceEntryCard.swift in Sources */,
+				B2D3E4F506170C0D0E0F10111213140C /* DashboardRefreshCoordinator.swift in Sources */,
+				B3E4F50617280D0E0F1011121314150D /* DashboardSystemStore.swift in Sources */,
 
 			);
 			runOnlyForDeploymentPostprocessing = 0;
