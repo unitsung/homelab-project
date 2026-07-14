@@ -1,0 +1,14 @@
+{
+  "change": "qbittorrent-task-actions",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "cb91ba10cdd4681346ea0a0b3e85f14a881795f9d418129c6dd5c0bf476c4d59",
+  "files": [
+    { "path": "openspec/changes/qbittorrent-task-actions/proposal.md", "sha256": "056c451472472896730a9b9a9f7fcc524f494aa021d4177fa7225900f15d337d" },
+    { "path": "openspec/changes/qbittorrent-task-actions/design.md", "sha256": "13e81e41d76230ac7cd3a8df542b11f031e9429e2de10d6b0b08a6f8438b1e09" },
+    { "path": "openspec/changes/qbittorrent-task-actions/tasks.md", "sha256": "44a3b3d2397bf6888ee0e4bdf0e3ba26679ad726c0df7bfd98849153d1edfb85" },
+    { "path": "openspec/changes/qbittorrent-task-actions/specs/qbittorrent-task-management/spec.md", "sha256": "010fc2be5c0defecf6522dbaad7da579e9428aebd8f9ef25115c497b767bbbb6" }
+  ]
+}

@@ -100,56 +100,75 @@ actor QbittorrentAPIClient {
         }
     }
 
-    func pauseAll() async throws {
+    func addTorrents(urls: String) async throws {
         try await requestVoidWithSessionRefresh {
             try await engine.requestVoid(
                 baseURL: baseURL,
                 fallbackURL: fallbackURL,
-                path: "/api/v2/torrents/pause",
+                path: "/api/v2/torrents/add",
                 method: "POST",
                 headers: formHeaders(),
-                body: formBody(["hashes": "all"])
+                body: formBody(["urls": urls])
             )
         }
+    }
+
+    func pauseAll() async throws {
+        try await postTorrentControl(primaryPath: "/api/v2/torrents/pause", fallbackPath: "/api/v2/torrents/stop", hashes: "all")
     }
 
     func resumeAll() async throws {
-        try await requestVoidWithSessionRefresh {
-            try await engine.requestVoid(
-                baseURL: baseURL,
-                fallbackURL: fallbackURL,
-                path: "/api/v2/torrents/resume",
-                method: "POST",
-                headers: formHeaders(),
-                body: formBody(["hashes": "all"])
-            )
-        }
+        try await postTorrentControl(primaryPath: "/api/v2/torrents/resume", fallbackPath: "/api/v2/torrents/start", hashes: "all")
     }
 
     func pauseTorrent(hash: String) async throws {
-        try await requestVoidWithSessionRefresh {
-            try await engine.requestVoid(
-                baseURL: baseURL,
-                fallbackURL: fallbackURL,
-                path: "/api/v2/torrents/pause",
-                method: "POST",
-                headers: formHeaders(),
-                body: formBody(["hashes": hash])
-            )
-        }
+        try await postTorrentControl(primaryPath: "/api/v2/torrents/pause", fallbackPath: "/api/v2/torrents/stop", hashes: hash)
     }
 
     func resumeTorrent(hash: String) async throws {
-        try await requestVoidWithSessionRefresh {
-            try await engine.requestVoid(
-                baseURL: baseURL,
-                fallbackURL: fallbackURL,
-                path: "/api/v2/torrents/resume",
-                method: "POST",
-                headers: formHeaders(),
-                body: formBody(["hashes": hash])
-            )
+        try await postTorrentControl(primaryPath: "/api/v2/torrents/resume", fallbackPath: "/api/v2/torrents/start", hashes: hash)
+    }
+
+    /// qB 4.x uses pause/resume; 5.x often exposes stop/start. Try primary then fallback on 404/405.
+    private func postTorrentControl(primaryPath: String, fallbackPath: String, hashes: String) async throws {
+        do {
+            try await requestVoidWithSessionRefresh {
+                try await engine.requestVoid(
+                    baseURL: baseURL,
+                    fallbackURL: fallbackURL,
+                    path: primaryPath,
+                    method: "POST",
+                    headers: formHeaders(),
+                    body: formBody(["hashes": hashes])
+                )
+            }
+        } catch {
+            guard shouldTryTorrentControlFallback(error) else { throw error }
+            try await requestVoidWithSessionRefresh {
+                try await engine.requestVoid(
+                    baseURL: baseURL,
+                    fallbackURL: fallbackURL,
+                    path: fallbackPath,
+                    method: "POST",
+                    headers: formHeaders(),
+                    body: formBody(["hashes": hashes])
+                )
+            }
         }
+    }
+
+    private func shouldTryTorrentControlFallback(_ error: Error) -> Bool {
+        if let apiError = error as? APIError {
+            switch apiError {
+            case .httpError(let statusCode, _):
+                return statusCode == 404 || statusCode == 405
+            case .bothURLsFailed(let primaryError, let fallbackError):
+                return shouldTryTorrentControlFallback(primaryError) || shouldTryTorrentControlFallback(fallbackError)
+            default:
+                return false
+            }
+        }
+        return false
     }
 
     func recheckTorrent(hash: String) async throws {

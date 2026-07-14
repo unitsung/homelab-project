@@ -1920,6 +1920,14 @@ struct ArrStrings {
     let recheck: String
     let reannounce: String
     let deleteWithData: String
+    let addTorrent: String
+    let addTorrentTitle: String
+    let addTorrentPlaceholder: String
+    let addTorrentSubmit: String
+    let addTorrentInvalid: String
+    let torrentAdded: String
+    let deleteWithDataConfirmTitle: String
+    let deleteWithDataConfirmMessage: String
 
     let altLimitsToggled: String
     let allResumed: String
@@ -2073,6 +2081,14 @@ extension ArrStrings {
                 recheck: "Recheck",
                 reannounce: "Reannounce",
                 deleteWithData: "Delete + Data",
+                addTorrent: "Add",
+                addTorrentTitle: "Add torrents",
+                addTorrentPlaceholder: "Paste magnet: or http(s) links (one per line)",
+                addTorrentSubmit: "Add",
+                addTorrentInvalid: "Enter a valid magnet or http(s) link",
+                torrentAdded: "Torrent added",
+                deleteWithDataConfirmTitle: "Delete torrent and files?",
+                deleteWithDataConfirmMessage: "This removes the torrent and its downloaded data from disk.",
                 altLimitsToggled: "Alternative limits toggled",
                 allResumed: "All torrents resumed",
                 allPaused: "All torrents paused",
@@ -2212,6 +2228,14 @@ extension ArrStrings {
                 recheck: "重新检查",
                 reannounce: "重新宣告",
                 deleteWithData: "删除+数据",
+                addTorrent: "添加",
+                addTorrentTitle: "添加任务",
+                addTorrentPlaceholder: "粘贴 magnet: 或 http(s) 链接（每行一个）",
+                addTorrentSubmit: "添加",
+                addTorrentInvalid: "请输入合法的磁力或 http(s) 链接",
+                torrentAdded: "任务已添加",
+                deleteWithDataConfirmTitle: "删除任务及文件？",
+                deleteWithDataConfirmMessage: "将从列表移除任务，并删除磁盘上的下载数据。",
                 altLimitsToggled: "备用限制已切换",
                 allResumed: "所有种子已恢复",
                 allPaused: "所有种子已暂停",

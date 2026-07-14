@@ -16,6 +16,10 @@ struct QbittorrentDashboard: View {
     @State private var isViewVisible = false
     @State private var isRunningTorrentAction = false
     @State private var actionMessage: String?
+    @State private var showAddSheet = false
+    @State private var addURLsText = ""
+    @State private var addValidationError: String?
+    @State private var pendingDeleteWithFilesHash: String?
     private var arr: ArrStrings { localizer.arr }
     
     // Keep transfer stats closer to real time while refreshing the heavier torrent list less often.
@@ -63,6 +67,80 @@ struct QbittorrentDashboard: View {
             guard scenePhase == .active, isViewVisible else { return }
             Task { await fetchData(silent: true, includeTorrents: true) }
         }
+        .sheet(isPresented: $showAddSheet) {
+            addTorrentSheet
+        }
+        .confirmationDialog(
+            arr.deleteWithDataConfirmTitle,
+            isPresented: Binding(
+                get: { pendingDeleteWithFilesHash != nil },
+                set: { if !$0 { pendingDeleteWithFilesHash = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button(arr.deleteWithData, role: .destructive) {
+                guard let hash = pendingDeleteWithFilesHash else { return }
+                pendingDeleteWithFilesHash = nil
+                Task {
+                    await performTorrentAction(successMessage: arr.torrentAndDataDeleted) {
+                        try await requireClient().deleteTorrent(hash: hash, deleteFiles: true)
+                    }
+                }
+            }
+            Button(localizer.t.cancel, role: .cancel) {
+                pendingDeleteWithFilesHash = nil
+            }
+        } message: {
+            Text(arr.deleteWithDataConfirmMessage)
+        }
+    }
+
+    private var addTorrentSheet: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Text(arr.addTorrentPlaceholder)
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.textMuted)
+
+                TextEditor(text: $addURLsText)
+                    .font(.body.monospaced())
+                    .frame(minHeight: 140)
+                    .padding(8)
+                    .background(AppTheme.surface.opacity(0.9), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
+                    )
+
+                if let addValidationError {
+                    Text(addValidationError)
+                        .font(.caption)
+                        .foregroundStyle(Color.red)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(16)
+            .background(AppTheme.background)
+            .navigationTitle(arr.addTorrentTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(localizer.t.cancel) {
+                        showAddSheet = false
+                        addURLsText = ""
+                        addValidationError = nil
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(arr.addTorrentSubmit) {
+                        Task { await submitAddTorrents() }
+                    }
+                    .disabled(isRunningTorrentAction)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
     
     @MainActor
@@ -296,6 +374,20 @@ struct QbittorrentDashboard: View {
                     .font(.title2.bold())
                 Spacer()
                 Button {
+                    addURLsText = ""
+                    addValidationError = nil
+                    showAddSheet = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundStyle(AppTheme.primary)
+                        .padding(8)
+                        .background(AppTheme.primary.opacity(0.15), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(arr.addTorrent)
+                .disabled(isRunningTorrentAction)
+
+                Button {
                     Task {
                         guard !isRunningTorrentAction else { return }
                         isRunningTorrentAction = true
@@ -455,11 +547,7 @@ struct QbittorrentDashboard: View {
                     }
 
                     Button(arr.deleteWithData, role: .destructive) {
-                        Task {
-                            await performTorrentAction(successMessage: arr.torrentAndDataDeleted) {
-                                try await requireClient().deleteTorrent(hash: torrent.hash, deleteFiles: true)
-                            }
-                        }
+                        pendingDeleteWithFilesHash = torrent.hash
                     }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -564,6 +652,38 @@ struct QbittorrentDashboard: View {
             state = .error(.custom(error.localizedDescription))
             HapticManager.error()
         }
+    }
+
+    @MainActor
+    private func submitAddTorrents() async {
+        let normalized = Self.normalizedTorrentURLs(from: addURLsText)
+        guard !normalized.isEmpty else {
+            addValidationError = arr.addTorrentInvalid
+            HapticManager.error()
+            return
+        }
+        addValidationError = nil
+        await performTorrentAction(successMessage: arr.torrentAdded) {
+            try await requireClient().addTorrents(urls: normalized.joined(separator: "\n"))
+        }
+        if case .loaded = state {
+            showAddSheet = false
+            addURLsText = ""
+        }
+    }
+
+    /// Validates magnet / http(s) lines for add form.
+    static func normalizedTorrentURLs(from raw: String) -> [String] {
+        raw
+            .split(whereSeparator: \.isNewline)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .filter { line in
+                let lower = line.lowercased()
+                return lower.hasPrefix("magnet:")
+                    || lower.hasPrefix("http://")
+                    || lower.hasPrefix("https://")
+            }
     }
 
     private func requireClient() throws -> QbittorrentAPIClient {
