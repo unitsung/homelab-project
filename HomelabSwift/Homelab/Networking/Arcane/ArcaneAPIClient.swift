@@ -83,6 +83,18 @@ actor ArcaneAPIClient {
         }
     }
 
+    private func authenticatedRequestData(path: String, method: String = "GET", body: Data? = nil) async throws -> Data {
+        do {
+            return try await engine.requestData(baseURL: baseURL, fallbackURL: fallbackURL, path: path, method: method, headers: authHeaders(), body: body)
+        } catch {
+            if isAuthError(error), let storedUsername = username, let storedPassword = storedPassword {
+                try await login(username: storedUsername, password: storedPassword)
+                return try await engine.requestData(baseURL: baseURL, fallbackURL: fallbackURL, path: path, method: method, headers: authHeaders(), body: body)
+            }
+            throw error
+        }
+    }
+
     private func isAuthError(_ error: Error) -> Bool {
         guard let apiError = error as? APIError else { return false }
         switch apiError {
@@ -106,11 +118,11 @@ actor ArcaneAPIClient {
     }
 
     func getContainerLogs(id: String, tail: Int = 100) async throws -> String {
-        return try await engine.requestString(
-            baseURL: baseURL, fallbackURL: fallbackURL,
-            path: "/api/containers/\(id)/logs?tail=\(tail)",
-            headers: authHeaders()
-        )
+        let data = try await authenticatedRequestData(path: "/api/containers/\(id)/logs?tail=\(tail)")
+        guard let string = String(data: data, encoding: .utf8) else {
+            throw APIError.custom("Unable to decode logs as UTF-8 string")
+        }
+        return string
     }
 
     func containerAction(id: String, action: ContainerAction) async throws {
