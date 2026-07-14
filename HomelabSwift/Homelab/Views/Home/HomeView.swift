@@ -14,6 +14,7 @@ struct HomeView: View {
     @State private var summaryLoading = false
     @State private var summaryRefreshID = UUID()
     @State private var isViewVisible = false
+    @State private var overviewStrip = OverviewStripModel()
 
     private let columns = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
     private let tailscaleIconURL = URL(string: "https://cdn.jsdelivr.net/gh/selfhst/icons/png/tailscale.png")
@@ -77,10 +78,15 @@ struct HomeView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     headerSection
+                    overviewStatusStrip
                     if (hasUnreachableService || servicesStore.isTailscaleConnected) && !suppressTailscaleSection {
                         tailscaleSection
                     }
-                    serviceGrid
+                    if hasServices {
+                        serviceGrid
+                    } else {
+                        emptyOverviewSection
+                    }
                     footerSection
                 }
                 .padding(.horizontal, 16)
@@ -103,7 +109,9 @@ struct HomeView: View {
             .onDisappear { isViewVisible = false }
             .task(id: summaryRefreshID) {
                 guard isViewVisible else { return }
-                await fetchAllSummaryData()
+                async let strip: Void = fetchOverviewStrip()
+                async let cards: Void = fetchAllSummaryData()
+                _ = await (strip, cards)
             }
             .onChange(of: reachabilityHash) { _, _ in
                 if isViewVisible {
@@ -163,7 +171,87 @@ struct HomeView: View {
             }
         }
         .padding(.top, 8)
-        .padding(.bottom, 16)
+        .padding(.bottom, 20)
+    }
+
+    private var overviewStatusStrip: some View {
+        Group {
+            if overviewStrip.isLoading && !overviewStrip.hasMetrics && !overviewStrip.showGuidance {
+                HStack {
+                    SkeletonLoader(height: 14, cornerRadius: 4)
+                        .frame(width: 120)
+                    Spacer()
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity)
+                .glassCard()
+                .padding(.bottom, 16)
+            } else if overviewStrip.hasMetrics {
+                HStack(spacing: 12) {
+                    if let cpu = overviewStrip.systemCPU {
+                        overviewMetricChip(title: localizer.t.overviewCpuLabel, value: cpu)
+                    }
+                    if let memory = overviewStrip.systemMemory {
+                        overviewMetricChip(title: localizer.t.overviewMemoryLabel, value: memory)
+                    }
+                    if let running = overviewStrip.containersRunning, let total = overviewStrip.containersTotal {
+                        overviewMetricChip(
+                            title: localizer.t.overviewContainersLabel,
+                            value: "\(running)/\(total)"
+                        )
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .glassCard(tint: AppTheme.accent.opacity(0.06))
+                .padding(.bottom, 16)
+                .accessibilityElement(children: .combine)
+            } else if overviewStrip.showGuidance {
+                Text(localizer.t.overviewStripGuidance)
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textMuted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.bottom, 14)
+            }
+        }
+    }
+
+    private func overviewMetricChip(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(AppTheme.textMuted)
+            Text(value)
+                .font(.subheadline.bold())
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(AppTheme.surface.opacity(0.9), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private var emptyOverviewSection: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "square.grid.2x2")
+                .font(.title2)
+                .foregroundStyle(AppTheme.textMuted)
+                .accessibilityHidden(true)
+            Text(localizer.t.overviewEmptyTitle)
+                .font(.headline)
+                .foregroundStyle(.primary)
+            Text(localizer.t.overviewEmptyMessage)
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.textMuted)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 36)
+        .padding(.horizontal, 12)
+        .glassCard()
+        .padding(.bottom, 8)
     }
 
     private var tailscaleSection: some View {
@@ -292,12 +380,9 @@ struct HomeView: View {
     }
 
     private var footerSection: some View {
-        Text("\(localizer.t.launcherServices) • \(connectedHomeCount) \(localizer.t.launcherConnected.sentenceCased())")
-            .font(.caption)
-            .foregroundStyle(AppTheme.textMuted)
-            .frame(maxWidth: .infinity)
-            .padding(.top, 28)
-            .padding(.bottom, 40)
+        Color.clear
+            .frame(height: 40)
+            .padding(.top, hasServices ? 20 : 8)
     }
 
     @ViewBuilder
@@ -335,6 +420,124 @@ struct HomeView: View {
         case .openlist:          OpenListFileBrowserView(instanceId: route.instanceId)
         case .jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr:
                                  GenericMediaDashboard(serviceType: route.type, instanceId: route.instanceId)
+        }
+    }
+
+    // MARK: - Overview Status Strip
+
+    private func fetchOverviewStrip() async {
+        guard isViewVisible else { return }
+        await MainActor.run {
+            overviewStrip.isLoading = true
+        }
+
+        let system = await fetchBeszelSystemMetrics()
+        let containers = await fetchContainerStripMetrics()
+
+        let hasConfiguredSource =
+            firstReachableInstance(for: [.beszel]) != nil
+            || firstReachableInstance(for: [.portainer, .dockhand, .dockmon, .komodo]) != nil
+            || servicesStore.hasInstances(for: .beszel)
+            || servicesStore.hasInstances(for: .portainer)
+            || servicesStore.hasInstances(for: .dockhand)
+            || servicesStore.hasInstances(for: .dockmon)
+            || servicesStore.hasInstances(for: .komodo)
+
+        let hasMetrics = system.cpu != nil || system.memory != nil || containers != nil
+        await MainActor.run {
+            overviewStrip.systemCPU = system.cpu
+            overviewStrip.systemMemory = system.memory
+            overviewStrip.containersRunning = containers?.running
+            overviewStrip.containersTotal = containers?.total
+            // Guidance only when no relevant services configured; never invent metrics.
+            overviewStrip.showGuidance = !hasMetrics && !hasConfiguredSource
+            overviewStrip.isLoading = false
+        }
+    }
+
+    private func firstReachableInstance(for types: [ServiceType]) -> (ServiceType, ServiceInstance)? {
+        for type in types {
+            let instances = servicesStore.instances(for: type)
+            if let preferred = servicesStore.preferredInstance(for: type),
+               servicesStore.reachability(for: preferred.id) != false {
+                // Prefer preferred when reachable or still unknown (nil)
+                if servicesStore.reachability(for: preferred.id) == true {
+                    return (type, preferred)
+                }
+            }
+            if let online = instances.first(where: { servicesStore.reachability(for: $0.id) == true }) {
+                return (type, online)
+            }
+        }
+        // Fall back to preferred even if reachability unknown so strip can attempt fetch
+        for type in types {
+            if let preferred = servicesStore.preferredInstance(for: type) {
+                return (type, preferred)
+            }
+            if let first = servicesStore.instances(for: type).first {
+                return (type, first)
+            }
+        }
+        return nil
+    }
+
+    private func fetchBeszelSystemMetrics() async -> (cpu: String?, memory: String?) {
+        guard let (_, instance) = firstReachableInstance(for: [.beszel]),
+              let client = await servicesStore.beszelClient(instanceId: instance.id) else {
+            return (nil, nil)
+        }
+        do {
+            let response = try await client.getSystems()
+            let system = response.items.first(where: \.isOnline) ?? response.items.first
+            guard let info = system?.info else { return (nil, nil) }
+            let cpu: String? = info.cpu.map { "\(Int($0.rounded()))%" }
+            let memory: String? = info.mp.map { "\(Int($0.rounded()))%" }
+            return (cpu, memory)
+        } catch {
+            return (nil, nil)
+        }
+    }
+
+    private func fetchContainerStripMetrics() async -> (running: Int, total: Int)? {
+        if let metrics = await fetchPortainerContainerMetrics() {
+            return metrics
+        }
+        if let (_, instance) = firstReachableInstance(for: [.dockhand]),
+           let client = await servicesStore.dockhandClient(instanceId: instance.id),
+           let overview = try? await client.getQuickOverview(environmentId: nil) {
+            return (overview.runningContainers, overview.totalContainers)
+        }
+        if let (_, instance) = firstReachableInstance(for: [.dockmon]),
+           let client = await servicesStore.dockmonClient(instanceId: instance.id),
+           let summary = try? await client.getSummary() {
+            return (summary.runningContainers, summary.totalContainers)
+        }
+        if let (_, instance) = firstReachableInstance(for: [.komodo]),
+           let client = await servicesStore.komodoClient(instanceId: instance.id),
+           let summary = try? await client.getSummary() {
+            return (summary.runningContainers, summary.totalContainers)
+        }
+        return nil
+    }
+
+    private func fetchPortainerContainerMetrics() async -> (running: Int, total: Int)? {
+        guard let (_, instance) = firstReachableInstance(for: [.portainer]),
+              let client = await servicesStore.portainerClient(instanceId: instance.id) else {
+            return nil
+        }
+        do {
+            let endpoints = try await client.getEndpoints()
+            var totalRunning = 0
+            var totalContainers = 0
+            for endpoint in endpoints {
+                if let containers = try? await client.getContainers(endpointId: endpoint.Id) {
+                    totalContainers += containers.count
+                    totalRunning += containers.filter { $0.State == "running" }.count
+                }
+            }
+            return (totalRunning, totalContainers)
+        } catch {
+            return nil
         }
     }
 
@@ -632,6 +835,19 @@ struct HomeView: View {
         return stride(from: 0, to: items.count, by: size).map { index in
             Array(items[index ..< min(index + size, items.count)])
         }
+    }
+}
+
+private struct OverviewStripModel: Equatable {
+    var systemCPU: String?
+    var systemMemory: String?
+    var containersRunning: Int?
+    var containersTotal: Int?
+    var isLoading = false
+    var showGuidance = false
+
+    var hasMetrics: Bool {
+        systemCPU != nil || systemMemory != nil || (containersRunning != nil && containersTotal != nil)
     }
 }
 
