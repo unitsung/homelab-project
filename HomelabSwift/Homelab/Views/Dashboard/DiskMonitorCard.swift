@@ -4,6 +4,7 @@ import Charts
 struct DiskMonitorCard: View {
     @Environment(ServicesStore.self) private var servicesStore
     @Environment(DashboardRefreshCoordinator.self) private var coordinator
+    @Environment(DashboardSystemStore.self) private var systemStore
 
     @State private var diskUsedGB: Double = 0
     @State private var diskFreeGB: Double = 0
@@ -31,14 +32,14 @@ struct DiskMonitorCard: View {
     }
 
     private func fetchDisk() async {
-        guard let instance = servicesStore.preferredInstance(for: .beszel),
-              let client = await servicesStore.beszelClient(instanceId: instance.id) else { return }
-        do {
-            let response = try await client.getSystems()
-            guard let info = response.items.first?.info else { return }
-            diskPercent = info.dpValue
-            diskUsedGB = info.duValue > 0 ? info.duValue : info.dValue
-            diskFreeGB = max(0, (diskUsedGB / max(diskPercent, 0.1) * 100) - diskUsedGB)
-        } catch {}
+        await systemStore.refresh(servicesStore: servicesStore)
+        guard let info = systemStore.systemInfo else { return }
+        diskPercent = info.dpValue
+        diskUsedGB = info.duValue > 0 ? info.duValue : info.dValue
+        if diskPercent <= 0 || diskUsedGB <= 0 {
+            diskFreeGB = 0
+        } else {
+            diskFreeGB = max(0, (diskUsedGB / diskPercent * 100) - diskUsedGB)
+        }
     }
 }

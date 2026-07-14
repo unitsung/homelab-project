@@ -8,7 +8,7 @@ struct ArcaneContainer: Identifiable, Codable {
     let status: String
     let ports: [ArcanePortMapping]?
 
-    var isRunning: Bool { state == "running" }
+    var isRunning: Bool { state.lowercased() == "running" }
 
     struct ArcanePortMapping: Codable {
         let ip: String?

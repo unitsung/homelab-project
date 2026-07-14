@@ -3,6 +3,7 @@ import SwiftUI
 struct TemperatureCard: View {
     @Environment(ServicesStore.self) private var servicesStore
     @Environment(DashboardRefreshCoordinator.self) private var coordinator
+    @Environment(DashboardSystemStore.self) private var systemStore
 
     @State private var sensors: [(name: String, celsius: Double)] = []
 
@@ -44,12 +45,12 @@ struct TemperatureCard: View {
     }
 
     private func fetchTemperatures() async {
-        guard let instance = servicesStore.preferredInstance(for: .beszel),
+        await systemStore.refresh(servicesStore: servicesStore)
+        guard let systemId = systemStore.firstSystemId,
+              let instance = servicesStore.preferredInstance(for: .beszel),
               let client = await servicesStore.beszelClient(instanceId: instance.id) else { return }
         do {
-            let systemResponse = try await client.getSystems()
-            guard let system = systemResponse.items.first else { return }
-            let recordsResponse = try await client.getSystemRecords(systemId: system.id, limit: 1)
+            let recordsResponse = try await client.getSystemRecords(systemId: systemId, limit: 1)
             guard let latestRecord = recordsResponse.items.first?.stats else { return }
             let tempMap = latestRecord.temperatureSensors
             sensors = tempMap.map { (name: $0.key, celsius: $0.value) }

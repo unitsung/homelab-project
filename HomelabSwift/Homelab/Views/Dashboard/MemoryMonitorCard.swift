@@ -4,11 +4,13 @@ import Charts
 struct MemoryMonitorCard: View {
     @Environment(ServicesStore.self) private var servicesStore
     @Environment(DashboardRefreshCoordinator.self) private var coordinator
+    @Environment(DashboardSystemStore.self) private var systemStore
 
     @State private var usedGB: Double = 0
     @State private var cachedGB: Double = 0
     @State private var freeGB: Double = 0
     @State private var totalGB: Double = 0
+    @State private var lastError: String?
 
     var body: some View {
         DashboardCard(title: "内存", icon: "memorychip") {
@@ -28,6 +30,12 @@ struct MemoryMonitorCard: View {
                 Text("\(Int(usedGB)) GB / \(Int(totalGB)) GB")
                     .font(.caption)
                     .foregroundStyle(AppTheme.textMuted)
+
+                if let error = lastError {
+                    Text(error)
+                        .font(.caption2)
+                        .foregroundStyle(AppTheme.stopped)
+                }
             }
         }
         .task(id: coordinator.refreshTrigger) {
@@ -36,16 +44,16 @@ struct MemoryMonitorCard: View {
     }
 
     private func fetchMemory() async {
-        guard let instance = servicesStore.preferredInstance(for: .beszel),
-              let client = await servicesStore.beszelClient(instanceId: instance.id) else { return }
-        do {
-            let response = try await client.getSystems()
-            guard let info = response.items.first?.info else { return }
+        await systemStore.refresh(servicesStore: servicesStore)
+        if let info = systemStore.systemInfo {
             totalGB = info.mtValue
             usedGB = info.mValue
             let cached = max(0, totalGB - usedGB)
             cachedGB = cached * 0.3
             freeGB = cached - cachedGB
-        } catch {}
+            lastError = nil
+        } else if let error = systemStore.lastError {
+            lastError = error
+        }
     }
 }

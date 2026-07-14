@@ -75,7 +75,9 @@ actor ArcaneAPIClient {
         do {
             return try await engine.request(baseURL: baseURL, fallbackURL: fallbackURL, path: path, method: method, headers: authHeaders(), body: body)
         } catch {
-            if isAuthError(error), let storedUsername = username, let storedPassword = storedPassword {
+            if isAuthError(error), !isRefreshing, let storedUsername = username, let storedPassword = storedPassword {
+                isRefreshing = true
+                defer { isRefreshing = false }
                 try await login(username: storedUsername, password: storedPassword)
                 return try await engine.request(baseURL: baseURL, fallbackURL: fallbackURL, path: path, method: method, headers: authHeaders(), body: body)
             }
@@ -87,7 +89,9 @@ actor ArcaneAPIClient {
         do {
             return try await engine.requestData(baseURL: baseURL, fallbackURL: fallbackURL, path: path, method: method, headers: authHeaders(), body: body)
         } catch {
-            if isAuthError(error), let storedUsername = username, let storedPassword = storedPassword {
+            if isAuthError(error), !isRefreshing, let storedUsername = username, let storedPassword = storedPassword {
+                isRefreshing = true
+                defer { isRefreshing = false }
                 try await login(username: storedUsername, password: storedPassword)
                 return try await engine.requestData(baseURL: baseURL, fallbackURL: fallbackURL, path: path, method: method, headers: authHeaders(), body: body)
             }

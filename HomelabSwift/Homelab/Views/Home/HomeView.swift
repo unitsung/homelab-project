@@ -6,6 +6,7 @@ struct HomeView: View {
     @Environment(Localizer.self) private var localizer
 
     @State private var coordinator = DashboardRefreshCoordinator()
+    @State private var systemStore = DashboardSystemStore()
     @State private var showLogin: ServiceType? = nil
     @State private var showingServiceOrder = false
 
@@ -49,6 +50,7 @@ struct HomeView: View {
             }
         }
         .environment(coordinator)
+        .environment(systemStore)
         .onAppear { coordinator.start() }
         .onDisappear { coordinator.stop() }
     }

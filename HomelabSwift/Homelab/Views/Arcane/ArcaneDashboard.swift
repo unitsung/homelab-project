@@ -84,9 +84,9 @@ struct ArcaneDashboard: View {
             actionInProgress.insert(id)
             do {
                 try await client.containerAction(id: id, action: action)
-                await fetchContainers()
             } catch {}
             actionInProgress.remove(id)
+            await fetchContainers()
         }
     }
 
