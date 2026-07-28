@@ -358,7 +358,7 @@ actor ProxmoxAPIClient {
 
     // MARK: - Authenticated Requests
 
-    private func authenticatedRequest<T: Decodable>(
+    private func authenticatedRequest<T: Decodable & Sendable>(
         path: String,
         method: String = "GET",
         body: Data? = nil
@@ -436,7 +436,7 @@ actor ProxmoxAPIClient {
         }
     }
 
-    private func authenticatedFormRequest<T: Decodable>(
+    private func authenticatedFormRequest<T: Decodable & Sendable>(
         path: String,
         method: String = "POST",
         params: [String: String]

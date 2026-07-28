@@ -1054,7 +1054,7 @@ actor UniFiAPIClient {
         return response.resolvedData
     }
 
-    private func localRequest<T: Decodable>(path: String) async throws -> T {
+    private func localRequest<T: Decodable & Sendable>(path: String) async throws -> T {
         var lastError: Error?
         for candidate in Self.localNetworkPathCandidates(path) {
             do {
@@ -1086,7 +1086,7 @@ actor UniFiAPIClient {
         throw lastError ?? APIError.notConfigured
     }
 
-    private func request<T: Decodable>(path: String) async throws -> T {
+    private func request<T: Decodable & Sendable>(path: String) async throws -> T {
         try await engine.request(
             baseURL: baseURL,
             fallbackURL: fallbackURL,
@@ -1139,14 +1139,14 @@ actor UniFiAPIClient {
     }
 }
 
-private struct UniFiEnvelope<T: Decodable>: Decodable {
+private struct UniFiEnvelope<T: Decodable & Sendable>: Decodable, Sendable {
     let data: T?
     let httpStatusCode: Int?
     let traceId: String?
     let nextToken: String?
 }
 
-private struct UniFiLocalEnvelope<T: Decodable>: Decodable {
+private struct UniFiLocalEnvelope<T: Decodable & Sendable>: Decodable, Sendable {
     let data: T?
     let items: T?
 

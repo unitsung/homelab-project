@@ -158,7 +158,7 @@ actor WakapiAPIClient {
         "\(range)|\(filter?.cacheKey ?? "none")"
     }
 
-    private func requestWithFallbackPaths<T: Decodable>(
+    private func requestWithFallbackPaths<T: Decodable & Sendable>(
         paths: [String],
         headers: [String: String]
     ) async throws -> T {

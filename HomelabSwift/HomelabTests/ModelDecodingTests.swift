@@ -1190,4 +1190,371 @@ final class ModelDecodingTests: XCTestCase {
         XCTAssertEqual(params["force"], "1")
         XCTAssertNil(params["unique"])
     }
+
+    // MARK: - Arcane
+
+    func testArcaneLoginResponseWrappedDecoding() throws {
+        let json = """
+        {
+            "success": true,
+            "data": {
+                "token": "jwt-access-token",
+                "refreshToken": "jwt-refresh",
+                "expiresAt": "2026-07-15T12:00:00Z",
+                "user": {
+                    "id": "u1",
+                    "username": "arcane",
+                    "roleAssignments": [],
+                    "permissionsByEnv": {},
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "timeFormat": "auto"
+                }
+            }
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(ArcaneAPIResponse<ArcaneLoginResponse>.self, from: json)
+        XCTAssertEqual(decoded.success, true)
+        XCTAssertEqual(decoded.data.token, "jwt-access-token")
+        XCTAssertEqual(decoded.data.refreshToken, "jwt-refresh")
+    }
+
+    func testArcaneContainerPaginatedDecoding() throws {
+        let json = """
+        {
+            "success": true,
+            "data": [
+                {
+                    "id": "abc123",
+                    "names": ["/nginx"],
+                    "image": "nginx:latest",
+                    "imageId": "sha256:deadbeef",
+                    "command": "nginx -g daemon off;",
+                    "created": 1700000000,
+                    "ports": [
+                        { "ip": "0.0.0.0", "privatePort": 80, "publicPort": 8080, "type": "tcp" }
+                    ],
+                    "labels": {},
+                    "state": "running",
+                    "status": "Up 2 hours",
+                    "hostConfig": {},
+                    "networkSettings": {},
+                    "mounts": []
+                }
+            ],
+            "counts": {
+                "runningContainers": 1,
+                "stoppedContainers": 0,
+                "totalContainers": 1
+            },
+            "pagination": {
+                "totalPages": 1,
+                "totalItems": 1,
+                "currentPage": 1,
+                "itemsPerPage": 20
+            }
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(ArcanePaginatedResponse<ArcaneContainer>.self, from: json)
+        XCTAssertEqual(decoded.data.count, 1)
+        XCTAssertEqual(decoded.data.first?.displayName, "nginx")
+        XCTAssertTrue(decoded.data.first?.isRunning == true)
+        XCTAssertEqual(decoded.data.first?.ports?.first?.privatePort, 80)
+        XCTAssertEqual(decoded.counts?.running, 1)
+    }
+
+    func testArcaneEnvironmentDecoding() throws {
+        let json = """
+        {
+            "success": true,
+            "data": [
+                {
+                    "id": "0",
+                    "name": "Local",
+                    "apiUrl": "http://localhost",
+                    "status": "online",
+                    "enabled": true,
+                    "isEdge": false
+                }
+            ],
+            "pagination": {
+                "totalPages": 1,
+                "totalItems": 1,
+                "currentPage": 1,
+                "itemsPerPage": 20
+            }
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(ArcanePaginatedResponse<ArcaneEnvironment>.self, from: json)
+        XCTAssertEqual(decoded.data.first?.id, "0")
+        XCTAssertEqual(decoded.data.first?.displayName, "Local")
+        XCTAssertTrue(decoded.data.first?.isOnline == true)
+    }
+
+    func testArcaneActivityDetailDecoding() throws {
+        let json = """
+        {
+            "success": true,
+            "data": {
+                "activity": {
+                    "id": "act-1",
+                    "environmentId": "0",
+                    "type": "auto_update",
+                    "status": "running",
+                    "resourceType": "container",
+                    "resourceId": "e32aceb610ba",
+                    "resourceName": "nginx",
+                    "progress": 40,
+                    "step": "Pulling image",
+                    "latestMessage": "Downloading layer",
+                    "startedAt": "2026-07-28T10:00:00Z",
+                    "createdAt": "2026-07-28T10:00:00Z"
+                },
+                "messages": [
+                    {
+                        "id": "msg-1",
+                        "activityId": "act-1",
+                        "level": "info",
+                        "message": "Container update started",
+                        "createdAt": "2026-07-28T10:00:00Z"
+                    },
+                    {
+                        "id": "msg-2",
+                        "activityId": "act-1",
+                        "level": "info",
+                        "message": "Pulling nginx:latest",
+                        "createdAt": "2026-07-28T10:00:05Z"
+                    }
+                ]
+            }
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(ArcaneAPIResponse<ArcaneActivityDetail>.self, from: json)
+        XCTAssertEqual(decoded.data.activity.id, "act-1")
+        XCTAssertTrue(decoded.data.activity.isActive)
+        XCTAssertEqual(decoded.data.messages?.count, 2)
+        XCTAssertEqual(decoded.data.messages?.last?.message, "Pulling nginx:latest")
+    }
+
+    func testArcaneImageSummaryWithUsedByDecoding() throws {
+        let json = """
+        {
+            "success": true,
+            "data": [
+                {
+                    "id": "sha256:abc123",
+                    "repoTags": ["nginx:latest"],
+                    "inUse": true,
+                    "usedBy": [
+                        { "type": "container", "name": "nginx", "id": "cidnginx" }
+                    ],
+                    "updateInfo": {
+                        "hasUpdate": true,
+                        "currentDigest": "sha256:old",
+                        "latestDigest": "sha256:new"
+                    }
+                }
+            ]
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(ArcanePaginatedResponse<ArcaneImageSummary>.self, from: json)
+        XCTAssertEqual(decoded.data.count, 1)
+        XCTAssertTrue(decoded.data[0].hasUpdate)
+        XCTAssertEqual(decoded.data[0].usedContainerNames, ["nginx"])
+        XCTAssertEqual(decoded.data[0].usedContainerIds, ["cidnginx"])
+    }
+
+    func testArcaneContainerUpdateInfoDecodingMarksHasUpdate() throws {
+        let json = """
+        {
+            "success": true,
+            "data": [
+                {
+                    "id": "cid1",
+                    "names": ["/app"],
+                    "image": "app:1.0",
+                    "imageId": "sha256:abc",
+                    "state": "running",
+                    "status": "Up 1 hour",
+                    "updateInfo": {
+                        "hasUpdate": true,
+                        "updateType": "digest",
+                        "currentVersion": "1.0",
+                        "latestVersion": "1.0",
+                        "currentDigest": "sha256:old",
+                        "latestDigest": "sha256:new",
+                        "error": "",
+                        "checkTime": "2026-07-28T10:00:00Z",
+                        "responseTimeMs": 120
+                    }
+                },
+                {
+                    "id": "cid2",
+                    "names": ["/db"],
+                    "image": "db:2",
+                    "imageId": "sha256:def",
+                    "state": "running",
+                    "status": "Up",
+                    "updateInfo": {
+                        "hasUpdate": false,
+                        "currentDigest": "sha256:aaa",
+                        "latestDigest": "sha256:bbb",
+                        "error": ""
+                    }
+                }
+            ]
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(ArcanePaginatedResponse<ArcaneContainer>.self, from: json)
+        XCTAssertEqual(decoded.data.count, 2)
+        XCTAssertTrue(decoded.data[0].hasUpdate)
+        // OpenAPI: only `hasUpdate: true` counts (digest mismatch alone does not).
+        XCTAssertFalse(decoded.data[1].hasUpdate)
+    }
+
+    func testArcaneImageUsageCountsDecoding() throws {
+        let json = """
+        {
+            "success": true,
+            "data": {
+                "imagesInuse": 20,
+                "imagesUnused": 11,
+                "totalImages": 31,
+                "totalImageSize": 15600000000
+            }
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(ArcaneAPIResponse<ArcaneImageUsageCounts>.self, from: json)
+        XCTAssertEqual(decoded.data.inUse, 20)
+        XCTAssertEqual(decoded.data.unused, 11)
+        XCTAssertEqual(decoded.data.total, 31)
+        XCTAssertEqual(decoded.data.totalSize, 15_600_000_000)
+    }
+
+    func testArcaneImagePruneReportDecodingAndSummary() throws {
+        let json = """
+        {
+            "success": true,
+            "data": {
+                "imagesDeleted": ["sha256:aaa", "sha256:bbb"],
+                "spaceReclaimed": 1048576
+            }
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(ArcaneAPIResponse<ArcaneImagePruneReport>.self, from: json)
+        XCTAssertEqual(decoded.data.deletedCount, 2)
+        XCTAssertEqual(decoded.data.reclaimed, 1_048_576)
+        XCTAssertTrue(decoded.data.userFacingSummary.contains("Pruned 2"))
+    }
+
+    func testArcaneSystemPruneResultDecoding() throws {
+        let json = """
+        {
+            "success": true,
+            "data": {
+                "success": true,
+                "spaceReclaimed": 2048,
+                "imagesDeleted": ["img1"],
+                "networksDeleted": ["net1"],
+                "volumesDeleted": [],
+                "containersPruned": null,
+                "activityId": "act-prune-1"
+            }
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(ArcaneAPIResponse<ArcaneSystemPruneResult>.self, from: json)
+        XCTAssertEqual(decoded.data.success, true)
+        XCTAssertEqual(decoded.data.reclaimed, 2048)
+        XCTAssertEqual(decoded.data.imagesDeleted?.count, 1)
+        XCTAssertTrue(decoded.data.userFacingSummary.contains("img"))
+    }
+
+    func testArcanePaginatedResponseAcceptsNullData() throws {
+        let json = """
+        {
+            "success": true,
+            "data": null,
+            "pagination": {
+                "totalPages": 0,
+                "totalItems": 0,
+                "currentPage": 1,
+                "itemsPerPage": 20
+            }
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(ArcanePaginatedResponse<ArcaneContainer>.self, from: json)
+        XCTAssertEqual(decoded.data.count, 0)
+        XCTAssertEqual(decoded.pagination?.totalItems, 0)
+    }
+
+    func testArcaneTextSanitizerStripsANSIAndOrphanCSI() {
+        let raw = "\u{001B}[1;32mSmartStrm\u{001B}[0m [1;34mconfig[m [6nls"
+        let cleaned = ArcaneTextSanitizer.stripANSI(raw)
+        XCTAssertFalse(cleaned.contains("1;32m"))
+        XCTAssertFalse(cleaned.contains("[6n"))
+        XCTAssertTrue(cleaned.contains("SmartStrm"))
+        XCTAssertTrue(cleaned.contains("ls") || cleaned.contains("config") || cleaned.contains("SmartStrm"))
+    }
+
+    /// Arcane container logs are WebSocket JSON frames (`libarcane/ws.LogMessage`), not `/diagnostics/logs`.
+    func testArcaneParseLogWSPayloadSingleAndBatched() {
+        let single = #"{"seq":1,"level":"stdout","message":"hello world","timestamp":"2026-07-28T00:00:00Z"}"#
+        XCTAssertEqual(ArcaneTextSanitizer.parseLogWSPayload(single), ["hello world"])
+
+        let batched = #"[{"seq":1,"level":"stdout","message":"line-a","timestamp":"2026-07-28T00:00:00Z"},{"seq":2,"level":"stderr","message":"line-b","timestamp":"2026-07-28T00:00:01Z"}]"#
+        XCTAssertEqual(ArcaneTextSanitizer.parseLogWSPayload(batched), ["line-a", "line-b"])
+
+        let plain = "raw docker line"
+        XCTAssertEqual(ArcaneTextSanitizer.parseLogWSPayload(plain), ["raw docker line"])
+
+        // NDJSON-style multi-object frame
+        let ndjson = """
+        {"seq":1,"level":"stdout","message":"one","timestamp":"2026-07-28T00:00:00Z"}
+        {"seq":2,"level":"stdout","message":"two","timestamp":"2026-07-28T00:00:01Z"}
+        """
+        XCTAssertEqual(ArcaneTextSanitizer.parseLogWSPayload(ndjson), ["one", "two"])
+    }
+
+    func testArcaneUpdaterResultWithActivityId() throws {
+        let json = """
+        {
+            "success": true,
+            "data": {
+                "success": true,
+                "checked": 1,
+                "updated": 1,
+                "restarted": 0,
+                "skipped": 0,
+                "failed": 0,
+                "duration": "12s",
+                "activityId": "act-99",
+                "items": [
+                    {
+                        "resourceId": "newcid",
+                        "resourceName": "nginx",
+                        "resourceType": "container",
+                        "status": "updated",
+                        "updateAvailable": true,
+                        "updateApplied": true
+                    }
+                ]
+            }
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(ArcaneAPIResponse<ArcaneUpdaterResult>.self, from: json)
+        XCTAssertEqual(decoded.data.activityId, "act-99")
+        XCTAssertTrue(decoded.data.didApplyUpdate)
+        XCTAssertEqual(decoded.data.userFacingSummary, "Updated 1 resource(s)")
+    }
+
 }

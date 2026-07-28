@@ -36,6 +36,12 @@ struct Translations {
     let launcherTapToConnect: String
     let launcherServices: String
     let homeReorderServices: String
+    let homeReorderCards: String
+    let homeResetCardOrder: String
+    let homeDiskTemperature: String
+    let homeDiskUsage: String
+    let homeDockerLabel: String
+    let homeNoSensorData: String
     let overviewEmptyTitle: String
     let overviewEmptyMessage: String
     let overviewStripGuidance: String
@@ -1690,6 +1696,7 @@ struct Translations {
     let loginHintCalagopus: String
     let serviceOpenListDesc: String
     let loginHintOpenList: String
+    let loginHintArcane: String
     let loginOpenListTokenOptional: String
     let filesCopyLink: String
     let filesOpenInSenPlayer: String
@@ -1812,6 +1819,67 @@ struct Translations {
     let calagopusStatusStarting: String
     let calagopusStatusOffline: String
     let calagopusStatusSuspended: String
+
+    // Arcane dashboard
+    let arcaneDockerHost: String
+    let arcaneCPUs: String
+    let arcaneImages: String
+    let arcaneVersion: String
+    let arcaneActions: String
+    let arcaneStartAll: String
+    let arcaneStopAll: String
+    let arcaneStartStopped: String
+    let arcaneRunUpdater: String
+    let arcaneCheckUpdates: String
+    let arcanePruneDangling: String
+    let arcanePruneUnusedImages: String
+    let arcanePruneVolumes: String
+    let arcaneSystemPrune: String
+    let arcaneUpdateSelected: String
+    let arcaneStopSelected: String
+    let arcaneStartSelected: String
+    let arcaneRestartSelected: String
+    let arcaneDeleteSelected: String
+    let arcaneUpdatesAvailableFormat: String
+    let arcaneImagesUsageFormat: String
+    let arcaneFilterAll: String
+    let arcaneFilterRunning: String
+    let arcaneFilterStopped: String
+    let arcaneFilterUpdates: String
+    let arcaneLoadingUpdates: String
+    let arcaneReloadUpdates: String
+    let arcaneConfirmStopAll: String
+    let arcaneConfirmStartAll: String
+    let arcaneConfirmUpdateSelected: String
+    let arcaneConfirmDeleteSelected: String
+    let arcaneConfirmPruneDangling: String
+    let arcaneConfirmPruneUnusedImages: String
+    let arcaneConfirmPruneVolumes: String
+    let arcaneConfirmSystemPrune: String
+    let arcanePruneDanglingHint: String
+    let arcanePruneUnusedImagesHint: String
+    let arcanePruneVolumesHint: String
+    let arcaneSystemPruneHint: String
+    let arcaneClientUnavailable: String
+    let arcaneCheckingUpdates: String
+    let arcaneStartAllRequested: String
+    let arcaneStopAllRequested: String
+    let arcaneStartStoppedRequested: String
+    let arcaneRedeployed: String
+    let arcaneDeleted: String
+    let arcaneRunningUpdater: String
+    let arcaneUpdatingFormat: String
+    let arcaneBatchUpdatingFormat: String
+    let arcaneBatchActionFormat: String
+    let arcaneDeletedSelected: String
+    let arcaneUpdate: String
+    let arcaneUpdater: String
+    let arcaneAllPendingUpdates: String
+    let arcanePruningDangling: String
+    let arcanePruningUnusedImages: String
+    let arcanePruningVolumes: String
+    let arcaneRunningSystemPrune: String
+    let arcaneActionOkFormat: String
 }
 
 // MARK: - Factory

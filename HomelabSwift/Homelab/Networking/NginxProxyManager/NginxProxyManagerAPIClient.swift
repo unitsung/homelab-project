@@ -165,7 +165,7 @@ actor NginxProxyManagerAPIClient {
         }
     }
 
-    private func authenticatedRequest<T: Decodable>(path: String, method: String = "GET", body: Data? = nil) async throws -> T {
+    private func authenticatedRequest<T: Decodable & Sendable>(path: String, method: String = "GET", body: Data? = nil) async throws -> T {
         return try await withAuthRetry {
             try await engine.request(
                 baseURL: baseURL,

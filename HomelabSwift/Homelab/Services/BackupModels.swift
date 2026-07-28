@@ -73,6 +73,7 @@ enum BackupServiceTypeMapper {
         case .pterodactyl:       return "pterodactyl"
         case .calagopus:         return "calagopus"
         case .openlist:          return "openlist"
+        case .arcane:            return "arcane"
         }
     }
 

@@ -805,7 +805,7 @@ actor PangolinAPIClient {
         return resolved
     }
 
-    private func request<T: Decodable>(
+    private func request<T: Decodable & Sendable>(
         _ path: String,
         method: String = "GET",
         headers: [String: String] = [:],

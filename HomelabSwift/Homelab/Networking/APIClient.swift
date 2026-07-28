@@ -16,6 +16,8 @@ final class BaseNetworkEngine: Sendable {
     private let allowSelfSigned: Bool
     private let timeoutInterval: TimeInterval = 8
     private let pingTimeout: TimeInterval = 3
+    /// Image pulls / container updates routinely exceed the normal 8s API budget.
+    static let longRunningTimeout: TimeInterval = 300
 
     // MARK: - Shared delegates & sessions
 
@@ -28,6 +30,9 @@ final class BaseNetworkEngine: Sendable {
     private static let insecureRequestSession: URLSession = {
         makeSession(delegate: insecureDelegate, timeout: 8)
     }()
+    private static let insecureLongRequestSession: URLSession = {
+        makeSession(delegate: insecureDelegate, timeout: longRunningTimeout)
+    }()
     private static let insecurePingSession: URLSession = {
         makeSession(delegate: insecureDelegate, timeout: 3)
     }()
@@ -38,6 +43,9 @@ final class BaseNetworkEngine: Sendable {
     // Secure sessions (standard TLS validation — used when allowSelfSigned = false)
     private static let secureRequestSession: URLSession = {
         makeSession(delegate: secureDelegate, timeout: 8)
+    }()
+    private static let secureLongRequestSession: URLSession = {
+        makeSession(delegate: secureDelegate, timeout: longRunningTimeout)
     }()
     private static let securePingSession: URLSession = {
         makeSession(delegate: secureDelegate, timeout: 3)
@@ -81,12 +89,23 @@ final class BaseNetworkEngine: Sendable {
         allowSelfSigned ? Self.insecureRequestSession : Self.secureRequestSession
     }
 
+    private var longRequestSession: URLSession {
+        allowSelfSigned ? Self.insecureLongRequestSession : Self.secureLongRequestSession
+    }
+
     private var pingSession: URLSession {
         allowSelfSigned ? Self.insecurePingSession : Self.securePingSession
     }
 
     private var imageSession: URLSession {
         allowSelfSigned ? Self.insecureImageSession : Self.secureImageSession
+    }
+
+    /// Prefer the long-running session when the caller needs more than the default budget.
+    /// Session-level resource timeouts must rise too — raising only `URLRequest.timeoutInterval`
+    /// cannot exceed `URLSessionConfiguration.timeoutIntervalForResource`.
+    private func session(for timeout: TimeInterval) -> URLSession {
+        timeout > timeoutInterval ? longRequestSession : requestSession
     }
 
     static func imageData(from url: URL, headers: [String: String] = [:]) async throws -> Data {
@@ -113,16 +132,32 @@ final class BaseNetworkEngine: Sendable {
         path: String,
         method: String = "GET",
         headers: [String: String] = [:],
-        body: Data? = nil
+        body: Data? = nil,
+        timeout: TimeInterval? = nil
     ) async throws -> T {
         guard !baseURL.isEmpty else { throw APIError.notConfigured }
+        let effectiveTimeout = timeout ?? timeoutInterval
 
         do {
-            return try await performRequest(baseURL: baseURL, path: path, method: method, headers: headers, body: body)
+            return try await performRequest(
+                baseURL: baseURL,
+                path: path,
+                method: method,
+                headers: headers,
+                body: body,
+                timeout: effectiveTimeout
+            )
         } catch let primaryError {
             guard !fallbackURL.isEmpty else { throw primaryError }
             do {
-                return try await performRequest(baseURL: fallbackURL, path: path, method: method, headers: headers, body: body)
+                return try await performRequest(
+                    baseURL: fallbackURL,
+                    path: path,
+                    method: method,
+                    headers: headers,
+                    body: body,
+                    timeout: effectiveTimeout
+                )
             } catch let fallbackError {
                 throw APIError.bothURLsFailed(primaryError: primaryError, fallbackError: fallbackError)
             }
@@ -182,16 +217,32 @@ final class BaseNetworkEngine: Sendable {
         path: String,
         method: String = "GET",
         headers: [String: String] = [:],
-        body: Data? = nil
+        body: Data? = nil,
+        timeout: TimeInterval? = nil
     ) async throws -> Data {
         guard !baseURL.isEmpty else { throw APIError.notConfigured }
+        let effectiveTimeout = timeout ?? timeoutInterval
 
         do {
-            return try await performDataRequest(baseURL: baseURL, path: path, method: method, headers: headers, body: body)
+            return try await performDataRequest(
+                baseURL: baseURL,
+                path: path,
+                method: method,
+                headers: headers,
+                body: body,
+                timeout: effectiveTimeout
+            )
         } catch let primaryError {
             guard !fallbackURL.isEmpty else { throw primaryError }
             do {
-                return try await performDataRequest(baseURL: fallbackURL, path: path, method: method, headers: headers, body: body)
+                return try await performDataRequest(
+                    baseURL: fallbackURL,
+                    path: path,
+                    method: method,
+                    headers: headers,
+                    body: body,
+                    timeout: effectiveTimeout
+                )
             } catch let fallbackError {
                 throw APIError.bothURLsFailed(primaryError: primaryError, fallbackError: fallbackError)
             }
@@ -223,21 +274,22 @@ final class BaseNetworkEngine: Sendable {
         path: String,
         method: String,
         headers: [String: String],
-        body: Data?
+        body: Data?,
+        timeout: TimeInterval
     ) async throws -> T {
         let urlString = baseURL + path
         guard let url = URL(string: urlString) else { throw APIError.invalidURL }
 
         var req = URLRequest(url: url)
         req.httpMethod = method
-        req.timeoutInterval = timeoutInterval
+        req.timeoutInterval = timeout
         for (key, value) in headers {
             req.setValue(value, forHTTPHeaderField: key)
         }
         req.httpBody = body
 
         logRequest(req)
-        let (data, response) = try await requestSession.data(for: req)
+        let (data, response) = try await session(for: timeout).data(for: req)
         logResponse(response, data: data)
         try interceptResponse(response, data: data, expectJSON: true)
 
@@ -305,21 +357,22 @@ final class BaseNetworkEngine: Sendable {
         path: String,
         method: String,
         headers: [String: String],
-        body: Data?
+        body: Data?,
+        timeout: TimeInterval
     ) async throws -> Data {
         let urlString = baseURL + path
         guard let url = URL(string: urlString) else { throw APIError.invalidURL }
 
         var req = URLRequest(url: url)
         req.httpMethod = method
-        req.timeoutInterval = timeoutInterval
+        req.timeoutInterval = timeout
         for (key, value) in headers {
             req.setValue(value, forHTTPHeaderField: key)
         }
         req.httpBody = body
 
         logRequest(req)
-        let (data, response) = try await requestSession.data(for: req)
+        let (data, response) = try await session(for: timeout).data(for: req)
         logResponse(response, data: data)
         // File downloads / OpenList /p proxy may return text/html for real HTML files.
         try interceptResponse(response, data: data, expectJSON: false)

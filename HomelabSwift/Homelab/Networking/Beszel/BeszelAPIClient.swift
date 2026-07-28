@@ -63,7 +63,7 @@ actor BeszelAPIClient {
     }
 
     /// Wrapper that retries once after token refresh on auth failure (400/401)
-    private func authenticatedRequest<T: Decodable>(path: String, method: String = "GET", headers: [String: String]? = nil, body: Data? = nil) async throws -> T {
+    private func authenticatedRequest<T: Decodable & Sendable>(path: String, method: String = "GET", headers: [String: String]? = nil, body: Data? = nil) async throws -> T {
         let h = headers ?? authHeaders()
         do {
             return try await engine.request(baseURL: baseURL, fallbackURL: fallbackURL, path: path, method: method, headers: h, body: body)

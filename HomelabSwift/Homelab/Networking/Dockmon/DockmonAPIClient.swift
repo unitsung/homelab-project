@@ -138,7 +138,7 @@ actor DockmonAPIClient {
             .replacingOccurrences(of: "/+$", with: "", options: .regularExpression)
     }
 
-    private func request<T: Decodable>(
+    private func request<T: Decodable & Sendable>(
         path: String,
         method: String = "GET",
         body: Data? = nil

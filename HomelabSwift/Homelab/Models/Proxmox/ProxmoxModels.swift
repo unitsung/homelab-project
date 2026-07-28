@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Generic API Response Wrapper
 // Proxmox wraps all JSON responses in { "data": ... }
 
-struct ProxmoxAPIResponse<T: Decodable>: Decodable {
+struct ProxmoxAPIResponse<T: Decodable & Sendable>: Decodable, Sendable {
     let data: T
 }
 

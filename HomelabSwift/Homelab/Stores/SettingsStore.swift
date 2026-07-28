@@ -32,6 +32,12 @@ final class SettingsStore {
         }
     }
 
+    private(set) var dashboardCardOrder: [DashboardCardID] {
+        didSet {
+            UserDefaults.standard.set(dashboardCardOrder.map(\.rawValue), forKey: Keys.dashboardCardOrder)
+        }
+    }
+
     var biometricEnabled: Bool {
         didSet {
             UserDefaults.standard.set(biometricEnabled, forKey: Keys.biometricEnabled)
@@ -115,6 +121,7 @@ final class SettingsStore {
         static let theme = "homelab_theme"
         static let hiddenServices = "homelab_hidden_services"
         static let serviceOrder = "homelab_service_order"
+        static let dashboardCardOrder = "homelab_dashboard_card_order"
         static let biometricEnabled = "homelab_biometric_enabled"
         static let hasCompletedOnboarding = "homelab_has_completed_onboarding"
 
@@ -150,6 +157,9 @@ final class SettingsStore {
 
         let savedOrder = UserDefaults.standard.stringArray(forKey: Keys.serviceOrder) ?? []
         self.serviceOrder = Self.normalizedServiceOrder(savedOrder.compactMap(Self.serviceType(fromStoredRawValue:)))
+
+        let savedCardOrder = UserDefaults.standard.stringArray(forKey: Keys.dashboardCardOrder) ?? []
+        self.dashboardCardOrder = DashboardCardID.normalizeOrder(rawValues: savedCardOrder)
 
         self.biometricEnabled = UserDefaults.standard.bool(forKey: Keys.biometricEnabled)
         self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: Keys.hasCompletedOnboarding)
@@ -201,6 +211,20 @@ final class SettingsStore {
         var updated = serviceOrder
         updated.swapAt(index, destination)
         serviceOrder = updated
+    }
+
+    func setDashboardCardOrder(_ order: [DashboardCardID]) {
+        dashboardCardOrder = DashboardCardID.normalizeOrder(order)
+    }
+
+    func moveDashboardCard(from source: IndexSet, to destination: Int) {
+        var updated = dashboardCardOrder
+        updated.move(fromOffsets: source, toOffset: destination)
+        dashboardCardOrder = DashboardCardID.normalizeOrder(updated)
+    }
+
+    func resetDashboardCardOrder() {
+        dashboardCardOrder = DashboardCardID.defaultOrder
     }
 
     func canMoveService(_ type: ServiceType, offset: Int, within allowedTypes: [ServiceType]) -> Bool {

@@ -50,6 +50,7 @@ struct ServiceLoginView: View {
             || serviceType == .maltrail
             || serviceType == .uptimeKuma
             || serviceType == .openlist
+            || serviceType == .arcane
     }
 
     private var usesApiKeyAuth: Bool {
@@ -108,6 +109,16 @@ struct ServiceLoginView: View {
             let hasPass = normalizedOptional(password) != nil
                 || (isEditing && !(existingInstance?.password?.isEmpty ?? true))
             return hasToken || (hasUser && hasPass)
+        }
+
+        if serviceType == .arcane {
+            let hasKey = normalizedOptional(apiKey) != nil
+                || (isEditing && !(existingInstance?.apiKey?.isEmpty ?? true))
+            let hasUser = normalizedOptional(username) != nil
+                || (isEditing && !(existingInstance?.username?.isEmpty ?? true))
+            let hasPass = normalizedOptional(password) != nil
+                || (isEditing && !(existingInstance?.password?.isEmpty ?? true))
+            return hasKey || (hasUser && hasPass)
         }
 
         if !isProxmox {
@@ -291,7 +302,9 @@ struct ServiceLoginView: View {
 
             InputField(
                 icon: "globe",
-                placeholder: serviceType == .unifiNetwork && unifiAuthMode == .siteManager ? localizer.t.unifiSiteManagerURLPlaceholder : localizer.t.loginUrlPlaceholder,
+                placeholder: serviceType == .unifiNetwork && unifiAuthMode == .siteManager
+                    ? localizer.t.unifiSiteManagerURLPlaceholder
+                    : serviceType.urlPlaceholder,
                 text: $url,
                 keyboardType: .URL
             )
@@ -325,6 +338,31 @@ struct ServiceLoginView: View {
 
             if isProxmox {
                 proxmoxAuthSection
+            } else if serviceType == .arcane {
+                InputField(
+                    icon: "key.fill",
+                    placeholder: localizer.t.loginApiKey,
+                    text: $apiKey,
+                    isSecure: !showPassword,
+                    showToggle: true,
+                    toggleAction: { showPassword.toggle() },
+                    showPassword: showPassword
+                )
+                InputField(
+                    icon: "person.fill",
+                    placeholder: localizer.t.loginUsername,
+                    text: $username
+                )
+                InputField(
+                    icon: "lock.fill",
+                    placeholder: isEditing ? localizer.t.loginPasswordIfChanging : localizer.t.loginPassword,
+                    text: $password,
+                    isSecure: !showPassword,
+                    showToggle: true,
+                    toggleAction: { showPassword.toggle() },
+                    showPassword: showPassword,
+                    onSubmit: handleSave
+                )
             } else if usesKomodoAuth {
                 InputField(
                     icon: "key.fill",
@@ -518,6 +556,7 @@ struct ServiceLoginView: View {
         case .pterodactyl:       return localizer.t.loginHintPterodactyl
         case .calagopus:         return localizer.t.loginHintCalagopus
         case .openlist:          return localizer.t.loginHintOpenList
+        case .arcane:            return localizer.t.loginHintArcane
         case .qbittorrent, .radarr, .sonarr, .lidarr, .jellyseerr, .prowlarr, .bazarr:
                                  return nil
         default: return nil
@@ -1306,6 +1345,64 @@ struct ServiceLoginView: View {
                 allowSelfSigned: allowSelfSigned,
                 password: storedPassword
             )
+
+        case .arcane:
+            let apiKeyValue = normalizedOptional(apiKey) ?? existingInstance?.apiKey
+            if let key = apiKeyValue, !key.isEmpty {
+                let client = ArcaneAPIClient(instanceId: existingInstanceId ?? UUID())
+                await client.configure(
+                    url: url,
+                    apiKey: key,
+                    token: nil,
+                    fallbackUrl: fallbackUrl,
+                    username: existingInstance?.username,
+                    password: existingInstance?.password,
+                    allowSelfSigned: allowSelfSigned
+                )
+                // Verify auth by listing environments (health is unauthenticated).
+                _ = try await client.getEnvironments()
+                return ServiceInstance(
+                    id: existingInstanceId ?? UUID(),
+                    type: .arcane,
+                    label: label,
+                    url: url,
+                    token: "",
+                    username: existingInstance?.username,
+                    apiKey: key,
+                    fallbackUrl: fallbackUrl,
+                    allowSelfSigned: allowSelfSigned,
+                    password: existingInstance?.password
+                )
+            } else {
+                let identity = normalizedOptional(username) ?? existingInstance?.username
+                let secret = normalizedOptional(password) ?? existingInstance?.password
+                guard let identity, !identity.isEmpty, let secret, !secret.isEmpty else {
+                    throw APIError.custom(localizer.t.loginErrorCredentials)
+                }
+                let client = ArcaneAPIClient(instanceId: existingInstanceId ?? UUID())
+                await client.configure(
+                    url: url,
+                    apiKey: nil,
+                    token: nil,
+                    fallbackUrl: fallbackUrl,
+                    username: identity,
+                    password: secret,
+                    allowSelfSigned: allowSelfSigned
+                )
+                let token = try await client.login(username: identity, password: secret)
+                return ServiceInstance(
+                    id: existingInstanceId ?? UUID(),
+                    type: .arcane,
+                    label: label,
+                    url: url,
+                    token: token,
+                    username: identity,
+                    apiKey: nil,
+                    fallbackUrl: fallbackUrl,
+                    allowSelfSigned: allowSelfSigned,
+                    password: secret
+                )
+            }
 
         case .gitea:
             let identity = normalizedOptional(username) ?? existingInstance?.username

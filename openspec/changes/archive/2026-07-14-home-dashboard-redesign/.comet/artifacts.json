@@ -1,8 +1,0 @@
-{
-  "openspec_proposal": "openspec/changes/home-dashboard-redesign/proposal.md",
-  "openspec_design": "openspec/changes/home-dashboard-redesign/design.md",
-  "openspec_tasks": "openspec/changes/home-dashboard-redesign/tasks.md",
-  "handoff_context": "openspec/changes/home-dashboard-redesign/.comet/handoff/design-context.json",
-  "handoff_markdown": "openspec/changes/home-dashboard-redesign/.comet/handoff/design-context.md",
-  "archive_directory": "openspec/changes/archive/2026-07-14-home-dashboard-redesign"
-}
