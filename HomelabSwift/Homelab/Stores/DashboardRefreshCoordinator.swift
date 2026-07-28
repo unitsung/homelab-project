@@ -9,7 +9,8 @@ final class DashboardRefreshCoordinator {
 
     func start() {
         stop()
-        timer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
+        refreshTrigger = UUID()
+        timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.refreshTrigger = UUID()
             }

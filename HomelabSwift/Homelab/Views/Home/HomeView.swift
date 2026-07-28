@@ -8,42 +8,30 @@ struct HomeView: View {
     @State private var coordinator = DashboardRefreshCoordinator()
     @State private var systemStore = DashboardSystemStore()
     @State private var showLogin: ServiceType? = nil
-    @State private var showingServiceOrder = false
-
-    private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+    @State private var showingCardOrder = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    headerSection
+                    topBar
 
-                    SystemHealthCard()
-                        .padding(.horizontal, 16)
+                    HeroCard()
 
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        CPUMonitorCard()
-                        MemoryMonitorCard()
-                        DiskMonitorCard()
-                        TemperatureCard()
-                    }
-                    .padding(.horizontal, 16)
+                    systemGrid
 
-                    DockerOverviewCard()
-                        .padding(.horizontal, 16)
-
-                    ServiceEntryCard()
-                        .padding(.horizontal, 16)
+                    serviceSection
                 }
+                .padding(.horizontal, 16)
                 .padding(.bottom, 40)
             }
-            .background(AppTheme.background)
+            .background(AppTheme.premiumGradient())
             .navigationBarHidden(true)
             .sheet(item: $showLogin) { type in
                 ServiceLoginView(serviceType: type)
             }
-            .sheet(isPresented: $showingServiceOrder) {
-                ServiceOrderSheet()
+            .sheet(isPresented: $showingCardOrder) {
+                DashboardCardOrderSheet()
             }
             .navigationDestination(for: HomeServiceRoute.self) { route in
                 serviceDestination(for: route)
@@ -55,29 +43,42 @@ struct HomeView: View {
         .onDisappear { coordinator.stop() }
     }
 
-    private var headerSection: some View {
+    private var topBar: some View {
         HStack {
-            Text(localizer.t.launcherTitle)
-                .font(.largeTitle)
-                .fontWeight(.heavy)
-                .foregroundStyle(.primary)
             Spacer()
             Button {
                 HapticManager.light()
-                showingServiceOrder = true
+                showingCardOrder = true
             } label: {
-                Image(systemName: "arrow.up.arrow.down")
+                Image(systemName: "slider.horizontal.3")
                     .font(.subheadline.bold())
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(.secondary)
                     .frame(width: 36, height: 36)
-                    .background(AppTheme.accent.opacity(0.12), in: Circle())
+                    .background(.ultraThinMaterial, in: Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(localizer.t.homeReorderServices)
         }
-        .padding(.top, 8)
-        .padding(.horizontal, 16)
-        .padding(.bottom, 4)
+        .padding(.top, 12)
+    }
+
+    private var systemGrid: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            DockerOverviewCard()
+            QbittorrentHomeCard()
+        }
+    }
+
+    private var serviceSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text(localizer.t.launcherServices)
+                    .font(.title3.weight(.semibold))
+                Spacer()
+            }
+            .padding(.top, 4)
+
+            ServiceTileGrid(selectedNewServiceType: $showLogin)
+        }
     }
 
     @ViewBuilder
@@ -98,10 +99,10 @@ struct HomeView: View {
         case .craftyController:       CraftyDashboard(instanceId: route.instanceId)
         case .unifiNetwork:           UniFiDashboard(instanceId: route.instanceId)
         case .gitea:             GiteaDashboard(instanceId: route.instanceId)
-        case .nginxProxyManager: NpmDashboard(instanceId: route.instanceId)
-        case .pangolin:          PangolinDashboard(instanceId: route.instanceId)
-        case .patchmon:          PatchmonDashboard(instanceId: route.instanceId)
-        case .jellystat:         JellystatDashboard(instanceId: route.instanceId)
+        case .nginxProxyManager:  NpmDashboard(instanceId: route.instanceId)
+        case .pangolin:           PangolinDashboard(instanceId: route.instanceId)
+        case .patchmon:           PatchmonDashboard(instanceId: route.instanceId)
+        case .jellystat:          JellystatDashboard(instanceId: route.instanceId)
         case .plex:              PlexDashboard(instanceId: route.instanceId)
         case .qbittorrent:       QbittorrentDashboard(instanceId: route.instanceId)
         case .radarr:            RadarrDashboard(instanceId: route.instanceId)
@@ -125,7 +126,7 @@ struct HomeServiceRoute: Hashable {
     let instanceId: UUID
 }
 
-private struct ServiceOrderSheet: View {
+private struct DashboardCardOrderSheet: View {
     @Environment(SettingsStore.self) private var settingsStore
     @Environment(Localizer.self) private var localizer
     @Environment(\.dismiss) private var dismiss
@@ -133,56 +134,16 @@ private struct ServiceOrderSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(settingsStore.serviceOrder.filter { ServiceType.homeServices.contains($0) }) { type in
-                    let isHidden = settingsStore.isServiceHidden(type)
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(type.displayName)
-                                .font(.body.weight(.semibold))
-                            if isHidden {
-                                Text(localizer.t.settingsHiddenBadge)
-                                    .font(.caption2.bold())
-                                    .foregroundStyle(.secondary)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 3)
-                                    .background(Color.secondary.opacity(0.12), in: Capsule())
-                            }
-                        }
-                        Spacer()
-                        HStack(spacing: 12) {
-                            Button {
-                                settingsStore.toggleServiceVisibility(type)
-                                HapticManager.light()
-                            } label: {
-                                Image(systemName: isHidden ? "eye.slash" : "eye")
-                            }
-                            .buttonStyle(.borderless)
-                            .accessibilityLabel(isHidden ? localizer.t.settingsShowServiceGeneric : localizer.t.settingsHideServiceGeneric)
-
-                            Button {
-                                settingsStore.moveService(type, offset: -1, within: ServiceType.homeServices)
-                                HapticManager.light()
-                            } label: {
-                                Image(systemName: "chevron.up")
-                            }
-                            .buttonStyle(.borderless)
-                            .disabled(!settingsStore.canMoveService(type, offset: -1, within: ServiceType.homeServices))
-                            .accessibilityLabel(localizer.t.settingsMoveUp)
-
-                            Button {
-                                settingsStore.moveService(type, offset: 1, within: ServiceType.homeServices)
-                                HapticManager.light()
-                            } label: {
-                                Image(systemName: "chevron.down")
-                            }
-                            .buttonStyle(.borderless)
-                            .disabled(!settingsStore.canMoveService(type, offset: 1, within: ServiceType.homeServices))
-                            .accessibilityLabel(localizer.t.settingsMoveDown)
-                        }
-                    }
+                ForEach(settingsStore.dashboardCardOrder) { id in
+                    Text(title(for: id))
+                }
+                .onMove { source, destination in
+                    settingsStore.moveDashboardCard(from: source, to: destination)
+                    HapticManager.light()
                 }
             }
-            .navigationTitle(localizer.t.homeReorderServices)
+            .environment(\.editMode, .constant(.active))
+            .navigationTitle(localizer.t.homeReorderCards)
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .background(AppTheme.background)
@@ -190,7 +151,23 @@ private struct ServiceOrderSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(localizer.t.done) { dismiss() }
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    Button(localizer.t.homeResetCardOrder) {
+                        settingsStore.resetDashboardCardOrder()
+                        HapticManager.light()
+                    }
+                }
             }
+        }
+    }
+
+    private func title(for id: DashboardCardID) -> String {
+        switch id {
+        case .cpu: return localizer.t.overviewCpuLabel
+        case .memory: return localizer.t.overviewMemoryLabel
+        case .disk: return localizer.t.homeDiskUsage
+        case .diskTemperature: return localizer.t.homeDiskTemperature
+        case .docker: return localizer.t.homeDockerLabel
         }
     }
 }

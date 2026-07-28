@@ -124,7 +124,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
     ]
 
     public static var homeServices: [ServiceType] {
-        [.truenas, .openlist, .proxmox, .beszel, .portainer]
+        [.truenas, .openlist, .proxmox, .beszel, .portainer, .arcane]
     }
 
     public var isMediaService: Bool {
@@ -399,6 +399,48 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .calagopus:          return "service-calagopus"
         case .openlist:           return "service-openlist"
         case .arcane:             return "service-arcane"
+        }
+    }
+
+    /// Example URL shown as the login field placeholder only (not prefilled into submit).
+    public var urlPlaceholder: String {
+        switch self {
+        case .beszel: return "http://beszel.local:8090"
+        case .arcane: return "http://arcane.local:3552"
+        case .portainer: return "https://portainer.local:9443"
+        case .proxmox: return "https://pve.local:8006"
+        case .truenas: return "https://truenas.local"
+        case .openlist: return "http://openlist.local:5244"
+        case .pihole: return "http://pi.hole"
+        case .adguardHome: return "http://adguard.local"
+        case .nginxProxyManager: return "http://npm.local:81"
+        case .healthchecks: return "https://healthchecks.local"
+        case .gitea: return "https://gitea.local"
+        case .qbittorrent: return "http://qbittorrent.local:8080"
+        case .plex: return "http://plex.local:32400"
+        case .radarr: return "http://radarr.local:7878"
+        case .sonarr: return "http://sonarr.local:8989"
+        case .lidarr: return "http://lidarr.local:8686"
+        case .jellystat: return "http://jellystat.local"
+        case .uptimeKuma: return "http://uptime-kuma.local:3001"
+        case .dockhand: return "http://dockhand.local"
+        case .dockmon: return "http://dockmon.local"
+        case .komodo: return "http://komodo.local"
+        case .pangolin: return "http://pangolin.local"
+        case .patchmon: return "http://patchmon.local"
+        case .technitium: return "http://technitium.local"
+        case .wakapi: return "http://wakapi.local"
+        case .pterodactyl: return "https://panel.local"
+        case .calagopus: return "http://calagopus.local"
+        case .craftyController: return "https://crafty.local:8443"
+        case .unifiNetwork: return "https://unifi.local"
+        case .maltrail: return "http://maltrail.local"
+        case .linuxUpdate: return "http://linux-update.local"
+        case .jellyseerr: return "http://jellyseerr.local:5055"
+        case .prowlarr: return "http://prowlarr.local:9696"
+        case .bazarr: return "http://bazarr.local:6767"
+        case .gluetun: return "http://gluetun.local:8000"
+        case .flaresolverr: return "http://flaresolverr.local:8191"
         }
     }
 

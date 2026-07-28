@@ -7,17 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A88B89BC3C824ECAA45C072B /* ServiceConnectionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BB4044E69A483BBECCDCA3 /* ServiceConnectionStatus.swift */; };
-		26EDBC42A78240CDA973CBC5 /* OpenListModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5EFF3944BBC4890BB67D78A /* OpenListModels.swift */; };
-		FE6118410C414AF9AC0E4599 /* OpenListAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A99711891C734A5A87DD5233 /* OpenListAPIClient.swift */; };
-		BFFEB7E5F83342F8BE276625 /* ExternalPlayerRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8332309F574441D8CE91F14 /* ExternalPlayerRouter.swift */; };
-		389C0B77B585429EAC7FC837 /* OpenListFileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD657ABFDBD42B2A2AFFA49 /* OpenListFileBrowserView.swift */; };
-		C8F52D3B0E2A5F9B9D4E6F7A8B9C0D1E /* OpenListFilePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E41C2A9D1F4E8A8C3D5E6F7A8B9C0D /* OpenListFilePreviewView.swift */; };
-		D1A2B3C4E5F60718293A4B5C6D7E8F90 /* OpenListMediaPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B3C4D5F60718293A4B5C6D7E8F901A /* OpenListMediaPlayerView.swift */; };
-		F3A4B5C6D7E8091A2B3C4D5E6F708192 /* OpenListFolderPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C6D7E8F901A2B3C4D5E6F708192A /* OpenListFolderPickerView.swift */; };
-		A1B2C3D4E5F60718293A4B5C6D7E8F01 /* OpenListPlayerPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F60718293A4B5C6D7E8F012A /* OpenListPlayerPickerView.swift */; };
-		D4E5F60718293A4B5C6D7E8F901A2B3C /* OpenListTasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F60718293A4B5C6D7E8F901A2B /* OpenListTasksView.swift */; };
 		001FA6007779556F8CF2BDC5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B518BC3D0A31F29612A69B75 /* Assets.xcassets */; };
+		00548109096F11FC7AEF1EB9 /* OpenListFilePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E6CCD256F7474044C76188 /* OpenListFilePreviewView.swift */; };
 		00623F9E5FFF09815953B86C /* UniFiDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDFB37C2FF152CEF28395F2C /* UniFiDashboard.swift */; };
 		011C344816A77F708FD46AF1 /* PatchmonModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853EA1B757B0BD3540F2AEED /* PatchmonModels.swift */; };
 		016D402545A7111BB261D134 /* ProxmoxHAView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2165BE8E2471EC0D1A745B5E /* ProxmoxHAView.swift */; };
@@ -30,6 +21,7 @@
 		0CDEC08F570D58E9AC6743B5 /* ProxmoxTaskLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DB8B85BC0E01B15E9111C27 /* ProxmoxTaskLogView.swift */; };
 		0E5566DAE01FB0E9F10E98C8 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F5B6FAE42892F4BEB3097FD /* StatusBadge.swift */; };
 		0F634D9389BDB5467A64C25E /* GlassStatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735477DB04233B4FDA23469D /* GlassStatCard.swift */; };
+		0F8FB3E78A58E1ADA07BD914 /* ArcaneContainerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4DB37FAA2D676A077D84EB /* ArcaneContainerDetailView.swift */; };
 		106BBFAAA495E7AEACAEE51B /* CraftyAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24A96461E54B814B66B6815 /* CraftyAPIClient.swift */; };
 		10FBD548812295AB0814803D /* HealthchecksModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD139A00611FED93C43C0833 /* HealthchecksModels.swift */; };
 		1497D7B4F3F97AE5825880D0 /* KomodoDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9FA03523F30D410383AC54B /* KomodoDashboard.swift */; };
@@ -40,16 +32,20 @@
 		1C4457681E0F071045A8132C /* PiHoleDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE7A7BFF374B6DE9CE7384EE /* PiHoleDashboard.swift */; };
 		1F2427668043AA81D0F038BE /* QbittorrentModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FF27D860A84E8974681CFE /* QbittorrentModels.swift */; };
 		1FEB8EB133A5749EBE928E1C /* BookmarkFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3565C63ADD375B1D9773CF8B /* BookmarkFormView.swift */; };
+		205F88BD261C9512A8F335A3 /* ArcaneAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22F9B0E9D7B8EC09F4E8301C /* ArcaneAPIClient.swift */; };
 		21BAB7FCB0AECC7133D55F6F /* ServiceConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 334BAFC4A25FD83F52E9CDD0 /* ServiceConnection.swift */; };
 		21E7233E678C07EF2FA629B5 /* EditCategoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F887B97554253C51BDFD167F /* EditCategoryView.swift */; };
 		22CA57F636BE4C6A5EE09760 /* DockmonAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7398039FD5D5E7D82AF14C76 /* DockmonAPIClient.swift */; };
 		22F17B053E47A71B687C63C5 /* GenericMediaDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D02DC8E1FAB21C2D68A01A6 /* GenericMediaDashboard.swift */; };
 		24AF53A5125B18B4F58D1A21 /* PatchmonAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEA7A42035DBFADEB256C578 /* PatchmonAPIClient.swift */; };
 		253B46BF21904B59477F2E8E /* GiteaDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3491FAD0D71DDB3C25D9D90 /* GiteaDashboard.swift */; };
+		26A1A8B2C269450EDC71E7B5 /* HeroCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E47ECA62BA4B6CFEB41078FD /* HeroCard.swift */; };
 		29C9BD1512C814A8ED65D53A /* NpmDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CB742A0C436A83F92CC1FED /* NpmDashboard.swift */; };
 		29E8185E30D00ACA9B5D0C0F /* CraftyDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FB1BDA2DED27825F9D54D0 /* CraftyDashboard.swift */; };
 		2A10CBCF4DFA744F2BE9BE8B /* AdGuardHomeFiltersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1461ABFFED5C380B73195B /* AdGuardHomeFiltersView.swift */; };
 		2A2B324A3BEE70896105D4DA /* TrueNASModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E501E56649173D4BA8F24EA /* TrueNASModels.swift */; };
+		2B1B037068C24E88656A2F00 /* DashboardCardID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BEB7418EF141D069B7B0232 /* DashboardCardID.swift */; };
+		2B7BEDEFB9FB5394B017896C /* OpenListFolderPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC05F182C031C0A88BDD50E7 /* OpenListFolderPickerView.swift */; };
 		2BCD4D6ACDA7D4CEA00AFEBA /* BeszelAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E1E8A717351D5E42B2696F1 /* BeszelAPIClient.swift */; };
 		2DEE79E0C15D816F7170E110 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD1D644D530DE462BB79AA2 /* AppTheme.swift */; };
 		2E323D5C9589F5692F02B092 /* ProxmoxStorageContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24CCA4D77154824B51544FF /* ProxmoxStorageContentView.swift */; };
@@ -57,23 +53,30 @@
 		366228A5C9000FF822E289FB /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EF6E7AF1CDC6676B7421A7B /* HapticManager.swift */; };
 		3782CAF7B067BBC9098EE91E /* RadarrModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F7EDC22BCE4C069B41BA65C /* RadarrModels.swift */; };
 		37CBDADA59AC66BC5639663F /* QbittorrentDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514838C728FAF7E9BA95F1B1 /* QbittorrentDashboard.swift */; };
+		3C5E508ED29EAEE5107AABF8 /* ServiceTileGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC821B6F0F3E165D79B99875 /* ServiceTileGrid.swift */; };
 		3D3519C51168694146FB2672 /* BeszelLineGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D0F063C9B955AB9794F2AF /* BeszelLineGraph.swift */; };
 		3F93EE54AF0FCD4CFFF0969D /* TechnitiumAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B6BFF54C5FE544768FDAB0 /* TechnitiumAPIClient.swift */; };
+		43E2CAF833BCA9C112F96FE5 /* DiskMonitorCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DD5023598335B98A724F150 /* DiskMonitorCard.swift */; };
 		44002C75F703B805378EE7E0 /* NpmAccessListForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04940FAEDE28A509EB1E0EEB /* NpmAccessListForm.swift */; };
 		45563EB6F51F8EF1867CF1DC /* BeszelSystemDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 141E9B530530A0BF0D52A289 /* BeszelSystemDetail.swift */; };
 		462FAAA3890B72AC8A953A68 /* ProxmoxModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D78FC8BBE3C34A7255D0CAC /* ProxmoxModels.swift */; };
+		46E6675A75E4F0F0757A6379 /* SystemHealthCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9688CF0837D27C24BE2D0D55 /* SystemHealthCard.swift */; };
 		47484763DF3A83E432F37FC6 /* ProxmoxBackupJobsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C246817EA53ED0E3950005 /* ProxmoxBackupJobsView.swift */; };
 		4CA71DBAD3D27E419ED0A10F /* NpmStreamForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA3C99077201F337CAC332D8 /* NpmStreamForm.swift */; };
 		4CF60BF28CB87B137D89A229 /* KomodoAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C89DAA067B6D6A378553CB61 /* KomodoAPIClient.swift */; };
 		4E06A01BDB74CF4F678913CD /* AdGuardHomeDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10229F75137E8019ACE551D7 /* AdGuardHomeDashboard.swift */; };
 		53AE4DC63535738D1804E28B /* TrueNASAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61734EE1BC78B3E2BA95622 /* TrueNASAPIClient.swift */; };
+		559CAAA2D02398D9A5736440 /* DashboardSystemStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34377D85CC395D9615917AD /* DashboardSystemStoreTests.swift */; };
 		5739C0189A11AB2E9F581D4C /* AdGuardHomeBlockedServicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6C9B54D25DB2230917C8F8 /* AdGuardHomeBlockedServicesView.swift */; };
 		5A5F8EF3CA17C9A8CB0FA645 /* AdGuardHomeRewritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76B6FE397CB60885626195C /* AdGuardHomeRewritesView.swift */; };
 		5A7B08D9563CAA7DD0268405 /* PatchmonHostDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B16543E222589D62D5DFD50 /* PatchmonHostDetailView.swift */; };
 		5C4D0998B1BA7E0636F3EEEE /* ProxmoxFirewallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB16542A93B5FBF0293F8D25 /* ProxmoxFirewallView.swift */; };
 		5D8C7835FA88617F8F3EC1E0 /* LinuxUpdateModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DFA133CE3803FBA54D0CD78 /* LinuxUpdateModels.swift */; };
+		5E40CBE854037089D64C5FCF /* DiskTemperatureSensorFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18F62DA9D2996B6FE50CE53 /* DiskTemperatureSensorFilter.swift */; };
 		60845D39E8A2BD7753B767BB /* PortainerDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 569655DA5311D77756775472 /* PortainerDashboard.swift */; };
 		62EF5383568C38878FAB5623 /* BookmarkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA8931C718CFC9019DCFF462 /* BookmarkManager.swift */; };
+		631F6C4885B79BF72C87BC06 /* ExternalPlayerRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 416EE343DE722B5B0280C876 /* ExternalPlayerRouter.swift */; };
+		63968D93EA4167B736C07150 /* ArcaneModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D4F303A837FFD36CE302FE /* ArcaneModels.swift */; };
 		63A39B89AC9B8F48B3BC3147 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF389260911EADF7079A97B /* APIClient.swift */; };
 		654B246C79458CB80AEC15D8 /* CategoryFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4834BF58C4F9B1399553F78 /* CategoryFormView.swift */; };
 		663F29038479453699652E94 /* AdGuardHomeQueryLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3E11D0571609D7927FCD5A /* AdGuardHomeQueryLogView.swift */; };
@@ -87,6 +90,7 @@
 		7095EBE669356384B3B42911 /* PangolinDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4881549A11CBCDEFA7DCFB72 /* PangolinDashboard.swift */; };
 		760733612460236D15FEC7F5 /* BeszelDetailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFCAD7944220A8EA3DDFC3A6 /* BeszelDetailComponents.swift */; };
 		7870DA23D2B10D1CCAC08453 /* BeszelDetailTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CFC214C2A851C7033ABE815 /* BeszelDetailTypes.swift */; };
+		78E77D0CAE314564E639192C /* OpenListFileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C73A4809D0F69DEB211DAC8 /* OpenListFileBrowserView.swift */; };
 		79B7809501B1B8693D60A364 /* HealthchecksComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFE5B253C47730D40039273 /* HealthchecksComponents.swift */; };
 		7A6EF3A0EB57E1035A0132F2 /* RadarrAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F4F3A42D23E0520D3EE3D4 /* RadarrAPIClient.swift */; };
 		7D4F9B8A45AF9BC46A6A733F /* DockhandComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04B5CCA8C815CB0FB9A9B076 /* DockhandComponents.swift */; };
@@ -101,10 +105,13 @@
 		825A29FD831832ED501CF764 /* HealthchecksCheckEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4ED2EF6B8B525C2387A59EC /* HealthchecksCheckEditor.swift */; };
 		826BA16B6B4D4F31C3CC2B5C /* HomelabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F58DFAF2218D934F936D17 /* HomelabApp.swift */; };
 		83C02FB2B277928F3C9E720A /* BackupModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0C96DF48BA12ABCC04C11 /* BackupModelsTests.swift */; };
+		843A6D6CA3F08068A9CCB1E2 /* DashboardCardOrderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C4AD595B52CB8D98C6B952 /* DashboardCardOrderTests.swift */; };
 		849DBCF3A98DD307B4221371 /* RadarrDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24417C29BDF77D8FA1C6305A /* RadarrDashboard.swift */; };
 		84F415AFC1217C67B1C8D080 /* ProxmoxGuestConfigEditSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C33B224BF42CCCC8D7E73416 /* ProxmoxGuestConfigEditSheet.swift */; };
 		889C2C456E8212B86F6EB9BB /* AdGuardHomeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1911146A0ED528B1D912614C /* AdGuardHomeModels.swift */; };
 		8A663C3AED31DE94C751E17A /* MaltrailDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B08BBF2836A4CDE120732B2E /* MaltrailDashboard.swift */; };
+		8B4C68835DF82714DEA0822A /* DockerOverviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818316C2AA836B3677F0DA0C /* DockerOverviewCard.swift */; };
+		8B56BC1BDF8BBAE7B704D108 /* CPUMonitorCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358401A62F1C37D65F438BFF /* CPUMonitorCard.swift */; };
 		8DD71C55FFF77D4A370735D1 /* PlexAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3DE80965FEEDE327E3AE34 /* PlexAPIClient.swift */; };
 		8EADC34444DEB43F553D0513 /* SkeletonLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CC9947203975F8072646659 /* SkeletonLoader.swift */; };
 		8F1E8C350A24585FB98C7290 /* BackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575579918416C21F4E6DC488 /* BackupManager.swift */; };
@@ -129,37 +136,47 @@
 		A15E4596A2950B61F233E229 /* UptimeKumaDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18C16B119CB2EDEE60B4784D /* UptimeKumaDashboard.swift */; };
 		A1B0DB1FF6B1CB2BEB21B2CE /* KeychainServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCD7BB9B1065930082265D21 /* KeychainServiceTests.swift */; };
 		A283181CEA487B0C8346D967 /* PiHoleAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B236EC8434642BB311F3E1A8 /* PiHoleAPIClient.swift */; };
+		A3062C0B1895E1FB92FF1982 /* DiskTemperatureSensorFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADFB6395300A84531755A8FA /* DiskTemperatureSensorFilterTests.swift */; };
 		A3DF6B4D547020804E10A0C0 /* HealthchecksDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4425B283650DDB0057DE0E75 /* HealthchecksDashboard.swift */; };
 		A3E3BAB096611E807728CA89 /* ContainerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3116D5544353B573C4C2B0B /* ContainerListView.swift */; };
 		A4503BD3109674FD3018F51C /* ProxmoxCephView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944D35E4ACAB84F64B2DD3B4 /* ProxmoxCephView.swift */; };
+		A4609016AE9941459A318978 /* DiskTemperatureCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A1AC45FAA8CE55B4AA6ACF /* DiskTemperatureCard.swift */; };
+		A49B105DC72148FF1A79E551 /* ServiceConnectionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0EEAA9EFAB6D21E0CA460C9 /* ServiceConnectionStatus.swift */; };
 		A9AED87CFEFFDD6E065E3A0A /* AdGuardHomeAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F5CFB96CB606EB9EC34EBB /* AdGuardHomeAPIClient.swift */; };
 		AAA9BC382610A55D8E374C95 /* Translations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7692F78990DA606D426BA429 /* Translations.swift */; };
-		ABB92C5DC84A0B8332F1A1BD /* Translations+Chinese.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F432CF5E6A0C6642FDFF0D /* Translations+Chinese.swift */; };
+		ABAE44F1D2E4CEFF4C4988B5 /* OpenListModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E5A46B8473D859FA1C5FAF3 /* OpenListModels.swift */; };
 		ABCECDC5B2772BE727043AA3 /* BeszelDetailSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3E6D321C7DB682436A5607 /* BeszelDetailSheets.swift */; };
 		ACC3251242810B5ADED0CDD9 /* ProxmoxServicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A302C47CB672F515E196D5 /* ProxmoxServicesView.swift */; };
 		AD2F16BDA6D33B25BA1DD4B7 /* GiteaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F6D851F1B957C876FD6F0B /* GiteaModels.swift */; };
 		AD8DCE59A20032895B6C83B1 /* PterodactylDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47A340D4B34D2BEF223A1135 /* PterodactylDashboard.swift */; };
 		B224338F9637CC4E71D7C3E1 /* PlexDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EEC5D5B0AD40D7E707EC3A2 /* PlexDashboard.swift */; };
+		B2A3B4260DACACCCA2F8D37A /* MemoryMonitorCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2116DD15E8CAD6208F499B92 /* MemoryMonitorCard.swift */; };
 		B3475959350ADC58148C2E6A /* UniFiAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AD961095B3F8B2101C8C66F /* UniFiAPIClient.swift */; };
+		B4927B258F64BCCCEC0F34B3 /* ArcaneUpdateProgressSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22FEDFA04C06372F7994C13C /* ArcaneUpdateProgressSheet.swift */; };
 		B51871199ACBFB2987E2C165 /* PortainerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24ACF7FA86699161F1FFB10E /* PortainerModels.swift */; };
 		B52CC2ACDDD34ADB9ECCF77B /* GiteaRepoDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBA3D966E73220F618CD9038 /* GiteaRepoDetail.swift */; };
 		B590B4E15C93B800F3AAAE3A /* ProxmoxGuestCloneSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B72F50D3EE38BCCC908D0C /* ProxmoxGuestCloneSheet.swift */; };
 		B5EC1AE9E8F74A570F189E3D /* CalagopusDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B06D4217C6B4508B5E8B865 /* CalagopusDashboard.swift */; };
+		B636CF3188413DADACBF2890 /* ArcaneDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761253EF6FE290DA17067C7D /* ArcaneDashboard.swift */; };
 		B6F34400E4C7BC4A5F752049 /* NpmProxyHostCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8569FC25F0824870C9BFD6A2 /* NpmProxyHostCard.swift */; };
 		B75BA3C1B775D95298E0933B /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AD5A40912505AFD774ED713 /* SyntaxHighlighter.swift */; };
 		B8698D0D65FAC913F0591434 /* MediaDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 310DA843851C4CF654FD3807 /* MediaDashboardView.swift */; };
 		BAA4219103CC83A339C434BD /* ServicesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 258507E3A00D686FDEF7E9CE /* ServicesStore.swift */; };
+		BC806A16D6DC05B2C7C492B9 /* OpenListPlayerPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77998B243D84678DF9701D39 /* OpenListPlayerPickerView.swift */; };
 		BD697C6B1A9C40EE51C53DDF /* DockhandDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EAECCC0BAEE0321A4DC7951 /* DockhandDashboard.swift */; };
 		C10F96F2F46D3979E9B2FC0E /* HealthchecksDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25D75CC2B29F70046D68EC15 /* HealthchecksDetail.swift */; };
 		C16864C9507D1F8FCE4858F0 /* ProxmoxAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1474391595DB64C568F77CE2 /* ProxmoxAPIClient.swift */; };
 		C18B23568F81455E4164835D /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486E817863BA2B5DA5318488 /* GlassCard.swift */; };
 		C1CA20CED17D39FE4A99DADB /* ProxmoxGuestMigrateSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF17CF3A84B88F80A38C82BE /* ProxmoxGuestMigrateSheet.swift */; };
+		C44FCF92A73230C91EA23478 /* OpenListTasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F586ABDFDC1DDF8B343EAE /* OpenListTasksView.swift */; };
 		C462B63CC5FE35CD624ADFCD /* NpmStreamCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8904009FE0CC197DE3B1492A /* NpmStreamCard.swift */; };
 		C6542378592F0A5E5B44BFB7 /* DockmonDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB334FC7E3B327B41891F806 /* DockmonDashboard.swift */; };
 		C86FF5E6A543278A18B16E9B /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB95F4E19C7D3082B4D6484C /* APIError.swift */; };
 		C97E7FCF77033F146747AF2E /* UniFiClientsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADE20E665B54E273AB66E450 /* UniFiClientsView.swift */; };
+		CA3B872EC07AC70C19B2F416 /* DashboardRefreshCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E0F42B15E76A284DE2BE04 /* DashboardRefreshCoordinator.swift */; };
 		CC23054F0C872CC583502288 /* MaltrailModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE4821BAECE125BF5D455F /* MaltrailModels.swift */; };
 		CC2C094024169C94BD06958F /* LinuxUpdateAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC7D0097236C2F692BCAB383 /* LinuxUpdateAPIClient.swift */; };
+		CC680E8CAC04C3C63BE6EFC5 /* DashboardCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7078FE2A35BF60E4635F7D02 /* DashboardCard.swift */; };
 		CC8DE4D3D830FF7F610EDF1B /* CalagopusAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6159D00710B8E9BA71CAFDC0 /* CalagopusAPIClient.swift */; };
 		CD29007C4FB0AD271F85673C /* JellystatAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D364FA7AED9BAC9B522C01 /* JellystatAPIClient.swift */; };
 		CE78DBCA639D954A7CCB26D3 /* ServiceErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBB688D017EE8175FB27EC7D /* ServiceErrorView.swift */; };
@@ -171,6 +188,7 @@
 		D3FEA9D2C02EFC910D98FEB9 /* ServiceIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F13CBE9BF5234A3FF34586F /* ServiceIconView.swift */; };
 		D581A8A08CC0CA3A5DB9F67D /* PangolinAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71FF913BD6672FB00EE4BCC /* PangolinAPIClient.swift */; };
 		D5CCCB3F42C2012F2522950F /* GenericAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34351F37F1A0778D6CFC90B3 /* GenericAPIClient.swift */; };
+		D5FED332EC23681140B7126D /* Translations+Chinese.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB54DA5C03EAA63787A66C19 /* Translations+Chinese.swift */; };
 		D76DF8769FE2AE2032847D05 /* FormattersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB311F83CBAAC39C90D50E6D /* FormattersTests.swift */; };
 		D813C7E4CB5C91CE7EE3D099 /* LinuxUpdateDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CD34CC8256D65F58DBD5383 /* LinuxUpdateDashboard.swift */; };
 		D84F9D353E2953087A1E5F7D /* ModelDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D7A0C04FD3A10D46F836A9 /* ModelDecodingTests.swift */; };
@@ -178,6 +196,7 @@
 		DDA0B198DFA935B2BF9FCE94 /* BackupModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AD858A4CEA15DE099AC986 /* BackupModels.swift */; };
 		DE0AF6EEB06542387F08BA08 /* DockmonModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9F6388FB1B6AA57648FF16 /* DockmonModels.swift */; };
 		DF86CB1FB4E3E32A79142588 /* BookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCDF60E05C067D5675AB59F /* BookmarksView.swift */; };
+		E3250F73873A533A372680B2 /* OpenListMediaPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54C802CDD7146425DFB46A83 /* OpenListMediaPlayerView.swift */; };
 		E41A618C772AD13F86272FB8 /* BackupCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7BDBCDBE58A73C0B9AF6CC /* BackupCrypto.swift */; };
 		E41C86CEB570A40EFB82ED17 /* WakapiDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4742ECB110ED743BABA54DEE /* WakapiDashboard.swift */; };
 		E518D45F6F1F6DE81BD0F398 /* BackupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 292913B0F73994A51217D87F /* BackupView.swift */; };
@@ -185,6 +204,7 @@
 		E6E04DD8242F5252CD32CCAB /* ServiceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E6FEE939313E58D34CE4BDB /* ServiceType.swift */; };
 		E75363C9B789E7FFC1024F51 /* LidarrDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 794B793766A1B499D331C639 /* LidarrDashboard.swift */; };
 		E75752B2EF79FC31623F21A3 /* ServicesStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57CF72E451CED741576C2F4D /* ServicesStoreTests.swift */; };
+		E94763F1F5A511415EF45498 /* QbittorrentHomeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5793E71A4957B56DE911B7FF /* QbittorrentHomeCard.swift */; };
 		EAD085672E3D6DD29C4F51D1 /* OfflineBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB7A6237B741BF62F16D9F8B /* OfflineBanner.swift */; };
 		EAE1E1F928E990C7105F76A1 /* LoadableState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95AC46B2418C37382FC7EAB9 /* LoadableState.swift */; };
 		EC4B786896FFFE3F57218338 /* NpmRedirectionHostForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF0A029C7F3CF79994A268B /* NpmRedirectionHostForm.swift */; };
@@ -193,6 +213,7 @@
 		F08A9289C496B8D4A6810332 /* Bookmark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 773865BCB947A8885DA8DF37 /* Bookmark.swift */; };
 		F4B00EE3F52A758D705D681D /* UptimeKumaAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9280578F663114BB8569D5 /* UptimeKumaAPIClient.swift */; };
 		F5EF663AA6770602771BD2F2 /* PortainerAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A576049FF063B4EC98E28D9 /* PortainerAPIClient.swift */; };
+		F8D0B49F011729ED93F98C24 /* OpenListAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6EAD18124F20C0FCED9A44 /* OpenListAPIClient.swift */; };
 		FA05008C0CDD05AB6854DE13 /* ProxmoxDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26225B537AD932B159EB30CB /* ProxmoxDashboard.swift */; };
 		FA7A4B88DACB08CBE39AAF48 /* KomodoModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF8FC831B3CEAF0F068CA2BD /* KomodoModels.swift */; };
 		FAF059D26F6524AD3CCFDA3E /* ProxmoxNetworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A7D5276460CD3D1AEFCC1C /* ProxmoxNetworkView.swift */; };
@@ -200,19 +221,7 @@
 		FCD41D6BE7DB010018902C63 /* PinEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 465DB3CC355F5F7FDDF6DE00 /* PinEntryView.swift */; };
 		FD2293CC8607CE165F202493 /* PiholeDomainListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D702ABD0D754FC3DEF8A7B4 /* PiholeDomainListView.swift */; };
 		FDB0C4600B5089FA648DEE0C /* PiholeDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226A2E333FD0452D26FF967 /* PiholeDomain.swift */; };
-		52F1820844276C129A5102AE /* ArcaneModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBAEF71C2782F84DB8F9CDAD /* ArcaneModels.swift */; };
-		F12E86F2FA041AFA7CECE9C4 /* ArcaneAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE4FF773CC6D1FF1D3F07F3 /* ArcaneAPIClient.swift */; };
-		BD2ACB355A424D3F43BACE43 /* ArcaneDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28A2E4EE3AB2AF41222ACCCB /* ArcaneDashboard.swift */; };
-		8CC2D49F7B7764C2466062B6 /* DashboardCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 234018529FF3D897E0C56112 /* DashboardCard.swift */; };
-		0F2E2DF560EE50D88DF952A3 /* SystemHealthCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E982F5D0634389730B1B0CD1 /* SystemHealthCard.swift */; };
-		7D58BC8DC0572700A8C6BA74 /* CPUMonitorCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61AF774034889E942101067F /* CPUMonitorCard.swift */; };
-		3CC49316D62ACF568062CB6B /* MemoryMonitorCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E94E924D16ABEB0072D1F284 /* MemoryMonitorCard.swift */; };
-		35D09C00BF2A22F553362A60 /* DiskMonitorCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8390C094DD8BA8C13763438D /* DiskMonitorCard.swift */; };
-		2FDF5191020C5325B621F95F /* TemperatureCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40ADA7D0082E95D03E87A0E4 /* TemperatureCard.swift */; };
-		872E1C0FCF8206791E22110A /* DockerOverviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FC13DF0F6EBACA04D642CB /* DockerOverviewCard.swift */; };
-		4CB9F917F538C31B4269DB46 /* ServiceEntryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2D869903070E52EFC369EAD /* ServiceEntryCard.swift */; };
-		FC8DEB9A4E9814A4BCC714DF /* DashboardRefreshCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FF747893DC82138F3148C34 /* DashboardRefreshCoordinator.swift */; };
-		C252B6295F484D24D11FFD15 /* DashboardSystemStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 927C52516B944DBC2B5B6096 /* DashboardSystemStore.swift */; };
+		FE1FBFABB11D2F3E0ADD180F /* DashboardSystemStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB739FD151DE7D7AC7FFB0B /* DashboardSystemStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -226,21 +235,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		E3BB4044E69A483BBECCDCA3 /* ServiceConnectionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceConnectionStatus.swift; sourceTree = "<group>"; };
-		A5EFF3944BBC4890BB67D78A /* OpenListModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListModels.swift; sourceTree = "<group>"; };
-		A99711891C734A5A87DD5233 /* OpenListAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListAPIClient.swift; sourceTree = "<group>"; };
-		A8332309F574441D8CE91F14 /* ExternalPlayerRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalPlayerRouter.swift; sourceTree = "<group>"; };
-		FBD657ABFDBD42B2A2AFFA49 /* OpenListFileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListFileBrowserView.swift; sourceTree = "<group>"; };
-		B7E41C2A9D1F4E8A8C3D5E6F7A8B9C0D /* OpenListFilePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListFilePreviewView.swift; sourceTree = "<group>"; };
-		E2B3C4D5F60718293A4B5C6D7E8F901A /* OpenListMediaPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListMediaPlayerView.swift; sourceTree = "<group>"; };
-		A4B5C6D7E8F901A2B3C4D5E6F708192A /* OpenListFolderPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListFolderPickerView.swift; sourceTree = "<group>"; };
-		B2C3D4E5F60718293A4B5C6D7E8F012A /* OpenListPlayerPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListPlayerPickerView.swift; sourceTree = "<group>"; };
-		C3D4E5F60718293A4B5C6D7E8F901A2B /* OpenListTasksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListTasksView.swift; sourceTree = "<group>"; };
 		04940FAEDE28A509EB1E0EEB /* NpmAccessListForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmAccessListForm.swift; sourceTree = "<group>"; };
 		04B5CCA8C815CB0FB9A9B076 /* DockhandComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockhandComponents.swift; sourceTree = "<group>"; };
+		06E6CCD256F7474044C76188 /* OpenListFilePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListFilePreviewView.swift; sourceTree = "<group>"; };
 		0726BE937688EDCEF843DA4A /* MaltrailAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaltrailAPIClient.swift; sourceTree = "<group>"; };
+		0BEB7418EF141D069B7B0232 /* DashboardCardID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardCardID.swift; sourceTree = "<group>"; };
 		0CFC214C2A851C7033ABE815 /* BeszelDetailTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeszelDetailTypes.swift; sourceTree = "<group>"; };
 		0DB66F8274714A001051F1BE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		0DB739FD151DE7D7AC7FFB0B /* DashboardSystemStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSystemStore.swift; sourceTree = "<group>"; };
 		0F13CBE9BF5234A3FF34586F /* ServiceIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceIconView.swift; sourceTree = "<group>"; };
 		10229F75137E8019ACE551D7 /* AdGuardHomeDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdGuardHomeDashboard.swift; sourceTree = "<group>"; };
 		13A302C47CB672F515E196D5 /* ProxmoxServicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxServicesView.swift; sourceTree = "<group>"; };
@@ -255,7 +257,10 @@
 		19F58DFAF2218D934F936D17 /* HomelabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomelabApp.swift; sourceTree = "<group>"; };
 		1B6C9B54D25DB2230917C8F8 /* AdGuardHomeBlockedServicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdGuardHomeBlockedServicesView.swift; sourceTree = "<group>"; };
 		20344A156307D01F253B3529 /* SonarrDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SonarrDashboard.swift; sourceTree = "<group>"; };
+		2116DD15E8CAD6208F499B92 /* MemoryMonitorCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryMonitorCard.swift; sourceTree = "<group>"; };
 		2165BE8E2471EC0D1A745B5E /* ProxmoxHAView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxHAView.swift; sourceTree = "<group>"; };
+		22F9B0E9D7B8EC09F4E8301C /* ArcaneAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaneAPIClient.swift; sourceTree = "<group>"; };
+		22FEDFA04C06372F7994C13C /* ArcaneUpdateProgressSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaneUpdateProgressSheet.swift; sourceTree = "<group>"; };
 		24417C29BDF77D8FA1C6305A /* RadarrDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarrDashboard.swift; sourceTree = "<group>"; };
 		24ACF7FA86699161F1FFB10E /* PortainerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortainerModels.swift; sourceTree = "<group>"; };
 		258507E3A00D686FDEF7E9CE /* ServicesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicesStore.swift; sourceTree = "<group>"; };
@@ -270,13 +275,16 @@
 		310DA843851C4CF654FD3807 /* MediaDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDashboardView.swift; sourceTree = "<group>"; };
 		31E3BE5DA5D18FB8959F7C8C /* LockScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenView.swift; sourceTree = "<group>"; };
 		334BAFC4A25FD83F52E9CDD0 /* ServiceConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceConnection.swift; sourceTree = "<group>"; };
+		33C4AD595B52CB8D98C6B952 /* DashboardCardOrderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardCardOrderTests.swift; sourceTree = "<group>"; };
 		34351F37F1A0778D6CFC90B3 /* GenericAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericAPIClient.swift; sourceTree = "<group>"; };
 		34DDAD2C4F4522B5980306ED /* NpmAccessListCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmAccessListCard.swift; sourceTree = "<group>"; };
 		3565C63ADD375B1D9773CF8B /* BookmarkFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkFormView.swift; sourceTree = "<group>"; };
+		358401A62F1C37D65F438BFF /* CPUMonitorCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUMonitorCard.swift; sourceTree = "<group>"; };
 		35B72F50D3EE38BCCC908D0C /* ProxmoxGuestCloneSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxGuestCloneSheet.swift; sourceTree = "<group>"; };
 		38A351665E7EFAF8D4A3A05A /* LidarrModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidarrModels.swift; sourceTree = "<group>"; };
 		38F7AE0005466E2FF260B000 /* Translations+English.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Translations+English.swift"; sourceTree = "<group>"; };
 		39AD858A4CEA15DE099AC986 /* BackupModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupModels.swift; sourceTree = "<group>"; };
+		39E0F42B15E76A284DE2BE04 /* DashboardRefreshCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardRefreshCoordinator.swift; sourceTree = "<group>"; };
 		3A088F5140A5297EA91E3821 /* Homelab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Homelab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A9F6388FB1B6AA57648FF16 /* DockmonModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockmonModels.swift; sourceTree = "<group>"; };
 		3AD1D644D530DE462BB79AA2 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
@@ -285,6 +293,7 @@
 		3CFE5B253C47730D40039273 /* HealthchecksComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthchecksComponents.swift; sourceTree = "<group>"; };
 		3F5B6FAE42892F4BEB3097FD /* StatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
 		408F0E514FDE46F6A78D0A58 /* BeszelDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeszelDashboard.swift; sourceTree = "<group>"; };
+		416EE343DE722B5B0280C876 /* ExternalPlayerRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalPlayerRouter.swift; sourceTree = "<group>"; };
 		4425B283650DDB0057DE0E75 /* HealthchecksDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthchecksDashboard.swift; sourceTree = "<group>"; };
 		44370CC6FB6ADE55FA632A02 /* AdGuardHomeUserRulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdGuardHomeUserRulesView.swift; sourceTree = "<group>"; };
 		44F6D851F1B957C876FD6F0B /* GiteaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiteaModels.swift; sourceTree = "<group>"; };
@@ -296,16 +305,20 @@
 		4881549A11CBCDEFA7DCFB72 /* PangolinDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PangolinDashboard.swift; sourceTree = "<group>"; };
 		49C497A6F9411623A39F8CA5 /* PterodactylAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PterodactylAPIClient.swift; sourceTree = "<group>"; };
 		4C74A7F7C1CB466CC7223840 /* JellystatDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellystatDashboard.swift; sourceTree = "<group>"; };
-		4E1A77FA193DE78992A80B91 /* HomelabTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HomelabTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4E1A77FA193DE78992A80B91 /* HomelabTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HomelabTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4E1E8A717351D5E42B2696F1 /* BeszelAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeszelAPIClient.swift; sourceTree = "<group>"; };
 		4F2913EA81E6CCF74EFC883C /* NpmProxyHostForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmProxyHostForm.swift; sourceTree = "<group>"; };
 		514838C728FAF7E9BA95F1B1 /* QbittorrentDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QbittorrentDashboard.swift; sourceTree = "<group>"; };
 		53BAF0C299F88C7BE7B562D3 /* NpmDeadHostForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmDeadHostForm.swift; sourceTree = "<group>"; };
+		54C802CDD7146425DFB46A83 /* OpenListMediaPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListMediaPlayerView.swift; sourceTree = "<group>"; };
 		569655DA5311D77756775472 /* PortainerDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortainerDashboard.swift; sourceTree = "<group>"; };
 		56AA4EDE39A0AB311974EC00 /* ProxmoxGuestBackupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxGuestBackupSheet.swift; sourceTree = "<group>"; };
 		575579918416C21F4E6DC488 /* BackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupManager.swift; sourceTree = "<group>"; };
+		5793E71A4957B56DE911B7FF /* QbittorrentHomeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QbittorrentHomeCard.swift; sourceTree = "<group>"; };
 		57CF72E451CED741576C2F4D /* ServicesStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicesStoreTests.swift; sourceTree = "<group>"; };
+		58A1AC45FAA8CE55B4AA6ACF /* DiskTemperatureCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskTemperatureCard.swift; sourceTree = "<group>"; };
 		5A59E69E9542AF07ED998399 /* ProxmoxNodeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxNodeDetailView.swift; sourceTree = "<group>"; };
+		5C73A4809D0F69DEB211DAC8 /* OpenListFileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListFileBrowserView.swift; sourceTree = "<group>"; };
 		5EF76E1EC7E853732127B6AA /* ProxmoxGuestDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxGuestDetailView.swift; sourceTree = "<group>"; };
 		5F1F09E5D4D69F8311840E4F /* ServiceLoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceLoginView.swift; sourceTree = "<group>"; };
 		5F7EDC22BCE4C069B41BA65C /* RadarrModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarrModels.swift; sourceTree = "<group>"; };
@@ -319,17 +332,23 @@
 		6C61051F7EA9F32A6342570D /* PinSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinSetupView.swift; sourceTree = "<group>"; };
 		6E501E56649173D4BA8F24EA /* TrueNASModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrueNASModels.swift; sourceTree = "<group>"; };
 		6EF6E7AF1CDC6676B7421A7B /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		7078FE2A35BF60E4635F7D02 /* DashboardCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardCard.swift; sourceTree = "<group>"; };
 		720C06DC422C83CEF5E542D0 /* LidarrAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidarrAPIClient.swift; sourceTree = "<group>"; };
 		735477DB04233B4FDA23469D /* GlassStatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassStatCard.swift; sourceTree = "<group>"; };
 		7398039FD5D5E7D82AF14C76 /* DockmonAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockmonAPIClient.swift; sourceTree = "<group>"; };
 		7432B8C8ACBE47BDF26570DC /* ServiceDashboardLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceDashboardLayout.swift; sourceTree = "<group>"; };
+		761253EF6FE290DA17067C7D /* ArcaneDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaneDashboard.swift; sourceTree = "<group>"; };
 		7692F78990DA606D426BA429 /* Translations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Translations.swift; sourceTree = "<group>"; };
 		773865BCB947A8885DA8DF37 /* Bookmark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bookmark.swift; sourceTree = "<group>"; };
+		77998B243D84678DF9701D39 /* OpenListPlayerPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListPlayerPickerView.swift; sourceTree = "<group>"; };
 		794B793766A1B499D331C639 /* LidarrDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidarrDashboard.swift; sourceTree = "<group>"; };
+		7A4DB37FAA2D676A077D84EB /* ArcaneContainerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaneContainerDetailView.swift; sourceTree = "<group>"; };
 		7B06D4217C6B4508B5E8B865 /* CalagopusDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalagopusDashboard.swift; sourceTree = "<group>"; };
 		7BCDF60E05C067D5675AB59F /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
 		7D78FC8BBE3C34A7255D0CAC /* ProxmoxModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxModels.swift; sourceTree = "<group>"; };
+		7DD5023598335B98A724F150 /* DiskMonitorCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskMonitorCard.swift; sourceTree = "<group>"; };
 		7E6FEE939313E58D34CE4BDB /* ServiceType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceType.swift; sourceTree = "<group>"; };
+		818316C2AA836B3677F0DA0C /* DockerOverviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockerOverviewCard.swift; sourceTree = "<group>"; };
 		81B6BFF54C5FE544768FDAB0 /* TechnitiumAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TechnitiumAPIClient.swift; sourceTree = "<group>"; };
 		853EA1B757B0BD3540F2AEED /* PatchmonModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchmonModels.swift; sourceTree = "<group>"; };
 		8569FC25F0824870C9BFD6A2 /* NpmProxyHostCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmProxyHostCard.swift; sourceTree = "<group>"; };
@@ -339,12 +358,14 @@
 		8D02DC8E1FAB21C2D68A01A6 /* GenericMediaDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericMediaDashboard.swift; sourceTree = "<group>"; };
 		8D1604CF631BC4DC369A42A5 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		8D9280578F663114BB8569D5 /* UptimeKumaAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UptimeKumaAPIClient.swift; sourceTree = "<group>"; };
+		8E5A46B8473D859FA1C5FAF3 /* OpenListModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListModels.swift; sourceTree = "<group>"; };
 		915D9BA2E760A11C22688E74 /* ProxmoxConsoleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxConsoleView.swift; sourceTree = "<group>"; };
 		91BC9E73D378366DA8D3C99E /* UptimeKumaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UptimeKumaModels.swift; sourceTree = "<group>"; };
 		944D35E4ACAB84F64B2DD3B4 /* ProxmoxCephView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxCephView.swift; sourceTree = "<group>"; };
 		94D7A0C04FD3A10D46F836A9 /* ModelDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDecodingTests.swift; sourceTree = "<group>"; };
 		9578616120B5FC6C6CBC942C /* SonarrAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SonarrAPIClient.swift; sourceTree = "<group>"; };
 		95AC46B2418C37382FC7EAB9 /* LoadableState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadableState.swift; sourceTree = "<group>"; };
+		9688CF0837D27C24BE2D0D55 /* SystemHealthCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemHealthCard.swift; sourceTree = "<group>"; };
 		98C831E84A42E73C9A480BE3 /* ConfiguredServicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfiguredServicesView.swift; sourceTree = "<group>"; };
 		9A1C1112D8A8BF86BB78353D /* NpmUserForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmUserForm.swift; sourceTree = "<group>"; };
 		9B16543E222589D62D5DFD50 /* PatchmonHostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchmonHostDetailView.swift; sourceTree = "<group>"; };
@@ -356,6 +377,8 @@
 		9E3E6D321C7DB682436A5607 /* BeszelDetailSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeszelDetailSheets.swift; sourceTree = "<group>"; };
 		9EEC5D5B0AD40D7E707EC3A2 /* PlexDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlexDashboard.swift; sourceTree = "<group>"; };
 		9F233D9CF75937405674EEE4 /* NpmRedirectionHostCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmRedirectionHostCard.swift; sourceTree = "<group>"; };
+		A0EEAA9EFAB6D21E0CA460C9 /* ServiceConnectionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceConnectionStatus.swift; sourceTree = "<group>"; };
+		A18F62DA9D2996B6FE50CE53 /* DiskTemperatureSensorFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskTemperatureSensorFilter.swift; sourceTree = "<group>"; };
 		A1BF1197F8BB03BE213E2995 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		A1C0C96DF48BA12ABCC04C11 /* BackupModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupModelsTests.swift; sourceTree = "<group>"; };
 		A3491FAD0D71DDB3C25D9D90 /* GiteaDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiteaDashboard.swift; sourceTree = "<group>"; };
@@ -365,8 +388,10 @@
 		A8C246817EA53ED0E3950005 /* ProxmoxBackupJobsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxBackupJobsView.swift; sourceTree = "<group>"; };
 		AA26C2B4C3B48757F16F0E7B /* ProxmoxPoolDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxPoolDetailView.swift; sourceTree = "<group>"; };
 		AB95F4E19C7D3082B4D6484C /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
+		AC821B6F0F3E165D79B99875 /* ServiceTileGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceTileGrid.swift; sourceTree = "<group>"; };
 		AD139A00611FED93C43C0833 /* HealthchecksModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthchecksModels.swift; sourceTree = "<group>"; };
 		ADE20E665B54E273AB66E450 /* UniFiClientsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniFiClientsView.swift; sourceTree = "<group>"; };
+		ADFB6395300A84531755A8FA /* DiskTemperatureSensorFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskTemperatureSensorFilterTests.swift; sourceTree = "<group>"; };
 		AE1461ABFFED5C380B73195B /* AdGuardHomeFiltersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdGuardHomeFiltersView.swift; sourceTree = "<group>"; };
 		B08BBF2836A4CDE120732B2E /* MaltrailDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaltrailDashboard.swift; sourceTree = "<group>"; };
 		B0D364FA7AED9BAC9B522C01 /* JellystatAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellystatAPIClient.swift; sourceTree = "<group>"; };
@@ -393,9 +418,10 @@
 		C4834BF58C4F9B1399553F78 /* CategoryFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryFormView.swift; sourceTree = "<group>"; };
 		C7F560D9B1083811461B4B44 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		C89DAA067B6D6A378553CB61 /* KomodoAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KomodoAPIClient.swift; sourceTree = "<group>"; };
-		C9F432CF5E6A0C6642FDFF0D /* Translations+Chinese.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Translations+Chinese.swift"; sourceTree = "<group>"; };
+		C9D4F303A837FFD36CE302FE /* ArcaneModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaneModels.swift; sourceTree = "<group>"; };
 		C9FA03523F30D410383AC54B /* KomodoDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KomodoDashboard.swift; sourceTree = "<group>"; };
 		CBA3D966E73220F618CD9038 /* GiteaRepoDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiteaRepoDetail.swift; sourceTree = "<group>"; };
+		CF6EAD18124F20C0FCED9A44 /* OpenListAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListAPIClient.swift; sourceTree = "<group>"; };
 		CF8FC831B3CEAF0F068CA2BD /* KomodoModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KomodoModels.swift; sourceTree = "<group>"; };
 		D24CCA4D77154824B51544FF /* ProxmoxStorageContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxStorageContentView.swift; sourceTree = "<group>"; };
 		D740E72A36FA4EDBFEE8A195 /* NginxProxyManagerAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NginxProxyManagerAPIClient.swift; sourceTree = "<group>"; };
@@ -409,34 +435,26 @@
 		DDFB66029D52483B7F25F83F /* NpmDeadHostCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmDeadHostCard.swift; sourceTree = "<group>"; };
 		DFCAD7944220A8EA3DDFC3A6 /* BeszelDetailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeszelDetailComponents.swift; sourceTree = "<group>"; };
 		E0D0F063C9B955AB9794F2AF /* BeszelLineGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeszelLineGraph.swift; sourceTree = "<group>"; };
+		E47ECA62BA4B6CFEB41078FD /* HeroCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeroCard.swift; sourceTree = "<group>"; };
 		E9A3B144085A3E0B277808F2 /* QbittorrentAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QbittorrentAPIClient.swift; sourceTree = "<group>"; };
 		EB16542A93B5FBF0293F8D25 /* ProxmoxFirewallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxFirewallView.swift; sourceTree = "<group>"; };
+		EB54DA5C03EAA63787A66C19 /* Translations+Chinese.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Translations+Chinese.swift"; sourceTree = "<group>"; };
 		EDB703E4CE642EF44D10991B /* PangolinComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PangolinComponents.swift; sourceTree = "<group>"; };
 		EF3DE80965FEEDE327E3AE34 /* PlexAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlexAPIClient.swift; sourceTree = "<group>"; };
 		F3116D5544353B573C4C2B0B /* ContainerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerListView.swift; sourceTree = "<group>"; };
+		F34377D85CC395D9615917AD /* DashboardSystemStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSystemStoreTests.swift; sourceTree = "<group>"; };
+		F3F586ABDFDC1DDF8B343EAE /* OpenListTasksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListTasksView.swift; sourceTree = "<group>"; };
 		F3FB1BDA2DED27825F9D54D0 /* CraftyDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CraftyDashboard.swift; sourceTree = "<group>"; };
 		F4ED2EF6B8B525C2387A59EC /* HealthchecksCheckEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthchecksCheckEditor.swift; sourceTree = "<group>"; };
 		F76B6FE397CB60885626195C /* AdGuardHomeRewritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdGuardHomeRewritesView.swift; sourceTree = "<group>"; };
 		F887B97554253C51BDFD167F /* EditCategoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditCategoryView.swift; sourceTree = "<group>"; };
+		FC05F182C031C0A88BDD50E7 /* OpenListFolderPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListFolderPickerView.swift; sourceTree = "<group>"; };
 		FC89D463559422B61BC300AF /* ContainerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerDetailView.swift; sourceTree = "<group>"; };
 		FCD7BB9B1065930082265D21 /* KeychainServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainServiceTests.swift; sourceTree = "<group>"; };
 		FDFB37C2FF152CEF28395F2C /* UniFiDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniFiDashboard.swift; sourceTree = "<group>"; };
 		FE7A7BFF374B6DE9CE7384EE /* PiHoleDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiHoleDashboard.swift; sourceTree = "<group>"; };
 		FEF0A029C7F3CF79994A268B /* NpmRedirectionHostForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmRedirectionHostForm.swift; sourceTree = "<group>"; };
 		FEF389260911EADF7079A97B /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
-		DBAEF71C2782F84DB8F9CDAD /* ArcaneModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaneModels.swift; sourceTree = "<group>"; };
-		3FE4FF773CC6D1FF1D3F07F3 /* ArcaneAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaneAPIClient.swift; sourceTree = "<group>"; };
-		28A2E4EE3AB2AF41222ACCCB /* ArcaneDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaneDashboard.swift; sourceTree = "<group>"; };
-		234018529FF3D897E0C56112 /* DashboardCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardCard.swift; sourceTree = "<group>"; };
-		E982F5D0634389730B1B0CD1 /* SystemHealthCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemHealthCard.swift; sourceTree = "<group>"; };
-		61AF774034889E942101067F /* CPUMonitorCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUMonitorCard.swift; sourceTree = "<group>"; };
-		E94E924D16ABEB0072D1F284 /* MemoryMonitorCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryMonitorCard.swift; sourceTree = "<group>"; };
-		8390C094DD8BA8C13763438D /* DiskMonitorCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskMonitorCard.swift; sourceTree = "<group>"; };
-		40ADA7D0082E95D03E87A0E4 /* TemperatureCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureCard.swift; sourceTree = "<group>"; };
-		51FC13DF0F6EBACA04D642CB /* DockerOverviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockerOverviewCard.swift; sourceTree = "<group>"; };
-		B2D869903070E52EFC369EAD /* ServiceEntryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceEntryCard.swift; sourceTree = "<group>"; };
-		4FF747893DC82138F3148C34 /* DashboardRefreshCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardRefreshCoordinator.swift; sourceTree = "<group>"; };
-		927C52516B944DBC2B5B6096 /* DashboardSystemStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSystemStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -576,6 +594,16 @@
 			path = Technitium;
 			sourceTree = "<group>";
 		};
+		1D5368D22193F46C6BF3977E /* Arcane */ = {
+			isa = PBXGroup;
+			children = (
+				7A4DB37FAA2D676A077D84EB /* ArcaneContainerDetailView.swift */,
+				761253EF6FE290DA17067C7D /* ArcaneDashboard.swift */,
+				22FEDFA04C06372F7994C13C /* ArcaneUpdateProgressSheet.swift */,
+			);
+			path = Arcane;
+			sourceTree = "<group>";
+		};
 		1E129360F625134B518C39D4 /* Pangolin */ = {
 			isa = PBXGroup;
 			children = (
@@ -590,6 +618,14 @@
 				24ACF7FA86699161F1FFB10E /* PortainerModels.swift */,
 			);
 			path = Portainer;
+			sourceTree = "<group>";
+		};
+		2134964AD1995CD281E680B8 /* OpenList */ = {
+			isa = PBXGroup;
+			children = (
+				CF6EAD18124F20C0FCED9A44 /* OpenListAPIClient.swift */,
+			);
+			path = OpenList;
 			sourceTree = "<group>";
 		};
 		23AB1F8E0947D3598E65C623 /* NginxProxyManager */ = {
@@ -694,11 +730,14 @@
 			isa = PBXGroup;
 			children = (
 				773865BCB947A8885DA8DF37 /* Bookmark.swift */,
+				0BEB7418EF141D069B7B0232 /* DashboardCardID.swift */,
 				95AC46B2418C37382FC7EAB9 /* LoadableState.swift */,
 				C226A2E333FD0452D26FF967 /* PiholeDomain.swift */,
 				334BAFC4A25FD83F52E9CDD0 /* ServiceConnection.swift */,
+				A0EEAA9EFAB6D21E0CA460C9 /* ServiceConnectionStatus.swift */,
 				7E6FEE939313E58D34CE4BDB /* ServiceType.swift */,
 				3A1C2051810E696AD09E6C3B /* AdGuardHome */,
+				7D97BB7CB15E4B480FE5A583 /* Arcane */,
 				9C3998846D55F959084051D2 /* Beszel */,
 				A68D8B4B5D526100A0F56D85 /* Dockmon */,
 				981FC3E8A73DC27EF4792684 /* Gitea */,
@@ -707,16 +746,14 @@
 				14E1ED932033D48687A9AEFA /* LinuxUpdate */,
 				9296229844E2867993B7CDC5 /* Maltrail */,
 				F3AB0740CCD7B809F06B451A /* NginxProxyManager */,
+				D5F732BD3E67C59A72F8529E /* OpenList */,
 				FBC83234CE88E51531A08129 /* Patchmon */,
 				F2BD8B68C5C78ECC6C3C024A /* PiHole */,
 				1E866E8511A219B4C76B9235 /* Portainer */,
 				95BCC083816D8AA934FDC8F5 /* Proxmox */,
 				4813335162F54D748D7BB96C /* TrueNAS */,
 				E4365D1267750E9B89EF936F /* UptimeKuma */,
-							2776FBCF30B244E380A7EF80 /* OpenList */,
-				2D24F96CFD5087B3898ADB87 /* Arcane */,
-				E3BB4044E69A483BBECCDCA3 /* ServiceConnectionStatus.swift */,
-);
+			);
 			path = Models;
 			sourceTree = "<group>";
 		};
@@ -835,6 +872,19 @@
 			path = Crafty;
 			sourceTree = "<group>";
 		};
+		78A7FEE22F48E28E93477A2E /* OpenList */ = {
+			isa = PBXGroup;
+			children = (
+				5C73A4809D0F69DEB211DAC8 /* OpenListFileBrowserView.swift */,
+				06E6CCD256F7474044C76188 /* OpenListFilePreviewView.swift */,
+				FC05F182C031C0A88BDD50E7 /* OpenListFolderPickerView.swift */,
+				54C802CDD7146425DFB46A83 /* OpenListMediaPlayerView.swift */,
+				77998B243D84678DF9701D39 /* OpenListPlayerPickerView.swift */,
+				F3F586ABDFDC1DDF8B343EAE /* OpenListTasksView.swift */,
+			);
+			path = OpenList;
+			sourceTree = "<group>";
+		};
 		7A0EE3A34C2ED62339F4E9C6 /* Proxmox */ = {
 			isa = PBXGroup;
 			children = (
@@ -860,13 +910,21 @@
 			path = Proxmox;
 			sourceTree = "<group>";
 		};
+		7D97BB7CB15E4B480FE5A583 /* Arcane */ = {
+			isa = PBXGroup;
+			children = (
+				C9D4F303A837FFD36CE302FE /* ArcaneModels.swift */,
+			);
+			path = Arcane;
+			sourceTree = "<group>";
+		};
 		7DAFCB2BF30198F989D7E950 /* Stores */ = {
 			isa = PBXGroup;
 			children = (
+				39E0F42B15E76A284DE2BE04 /* DashboardRefreshCoordinator.swift */,
+				0DB739FD151DE7D7AC7FFB0B /* DashboardSystemStore.swift */,
 				258507E3A00D686FDEF7E9CE /* ServicesStore.swift */,
 				151F3E3C716170F5B65A688F /* SettingsStore.swift */,
-				4FF747893DC82138F3148C34 /* DashboardRefreshCoordinator.swift */,
-				927C52516B944DBC2B5B6096 /* DashboardSystemStore.swift */,
 			);
 			path = Stores;
 			sourceTree = "<group>";
@@ -926,6 +984,23 @@
 				9B16543E222589D62D5DFD50 /* PatchmonHostDetailView.swift */,
 			);
 			path = Patchmon;
+			sourceTree = "<group>";
+		};
+		8965B5C304D46CC95CBD8B59 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				358401A62F1C37D65F438BFF /* CPUMonitorCard.swift */,
+				7078FE2A35BF60E4635F7D02 /* DashboardCard.swift */,
+				7DD5023598335B98A724F150 /* DiskMonitorCard.swift */,
+				58A1AC45FAA8CE55B4AA6ACF /* DiskTemperatureCard.swift */,
+				818316C2AA836B3677F0DA0C /* DockerOverviewCard.swift */,
+				E47ECA62BA4B6CFEB41078FD /* HeroCard.swift */,
+				2116DD15E8CAD6208F499B92 /* MemoryMonitorCard.swift */,
+				5793E71A4957B56DE911B7FF /* QbittorrentHomeCard.swift */,
+				AC821B6F0F3E165D79B99875 /* ServiceTileGrid.swift */,
+				9688CF0837D27C24BE2D0D55 /* SystemHealthCard.swift */,
+			);
+			path = Dashboard;
 			sourceTree = "<group>";
 		};
 		8A6AA03DA4BF8904504DBDA8 /* Maltrail */ = {
@@ -1027,8 +1102,8 @@
 			isa = PBXGroup;
 			children = (
 				7692F78990DA606D426BA429 /* Translations.swift */,
+				EB54DA5C03EAA63787A66C19 /* Translations+Chinese.swift */,
 				38F7AE0005466E2FF260B000 /* Translations+English.swift */,
-				C9F432CF5E6A0C6642FDFF0D /* Translations+Chinese.swift */,
 			);
 			path = Localization;
 			sourceTree = "<group>";
@@ -1050,6 +1125,14 @@
 				47A340D4B34D2BEF223A1135 /* PterodactylDashboard.swift */,
 			);
 			path = Pterodactyl;
+			sourceTree = "<group>";
+		};
+		A32896383AF5564222A222A3 /* Arcane */ = {
+			isa = PBXGroup;
+			children = (
+				22F9B0E9D7B8EC09F4E8301C /* ArcaneAPIClient.swift */,
+			);
+			path = Arcane;
 			sourceTree = "<group>";
 		};
 		A68D8B4B5D526100A0F56D85 /* Dockmon */ = {
@@ -1090,11 +1173,13 @@
 			children = (
 				BE0A64E52150CEEA94E249D7 /* ContentView.swift */,
 				09F190CFB0DE143E71104529 /* AdGuardHome */,
+				1D5368D22193F46C6BF3977E /* Arcane */,
 				F1265188363BF5B5C00056A5 /* Beszel */,
 				ECAF9E33BDB4EE0FFFF630D0 /* Bookmarks */,
 				2A11C19BD60250B7E009AD55 /* Calagopus */,
 				5A93214C3BDCB9BEC5FCCD73 /* Components */,
 				766B8D5D15CBF16824D30AD0 /* Crafty */,
+				8965B5C304D46CC95CBD8B59 /* Dashboard */,
 				D544ABDB8DF1FE38D7862D8B /* Dockhand */,
 				F2881EEEFF55D4BF25DA6F20 /* Dockmon */,
 				48AAFFAA1096205CCB4685B8 /* Gitea */,
@@ -1107,6 +1192,7 @@
 				8A6AA03DA4BF8904504DBDA8 /* Maltrail */,
 				B5B73DED8852F94FA4F1DB7F /* Media */,
 				710B37A9B027F4C732FAA0E0 /* NginxProxyManager */,
+				78A7FEE22F48E28E93477A2E /* OpenList */,
 				4D773C488C27A57846186D6C /* Pangolin */,
 				88CAA1568236FD1297722073 /* Patchmon */,
 				92577B05F8B135054A9B86B6 /* PiHole */,
@@ -1125,10 +1211,7 @@
 				C7EDDE8C2FB40CF792552D6B /* UniFi */,
 				83DA3DAE15FBB9494FDF9EAD /* UptimeKuma */,
 				84FA10F3C1B14B2C55E58EE3 /* Wakapi */,
-							E92316577DB94C669427C827 /* OpenList */,
-				52DFE521F5EAF916E9663AA8 /* Arcane */,
-				E93BD1A948EE221444A64FE8 /* Dashboard */,
-);
+			);
 			path = Views;
 			sourceTree = "<group>";
 		};
@@ -1207,6 +1290,14 @@
 			path = Beszel;
 			sourceTree = "<group>";
 		};
+		D5F732BD3E67C59A72F8529E /* OpenList */ = {
+			isa = PBXGroup;
+			children = (
+				8E5A46B8473D859FA1C5FAF3 /* OpenListModels.swift */,
+			);
+			path = OpenList;
+			sourceTree = "<group>";
+		};
 		D6D52F145CED85D0B4945C73 /* Radarr */ = {
 			isa = PBXGroup;
 			children = (
@@ -1230,6 +1321,7 @@
 				AB95F4E19C7D3082B4D6484C /* APIError.swift */,
 				34351F37F1A0778D6CFC90B3 /* GenericAPIClient.swift */,
 				0FF3AB848856515A57C1F122 /* AdGuardHome */,
+				A32896383AF5564222A222A3 /* Arcane */,
 				D5B24EF44902FCBD35F6D145 /* Beszel */,
 				0CDA3454933CE4C859BCE287 /* Calagopus */,
 				8A7222B61ABE4DC99B26EDA7 /* Crafty */,
@@ -1242,6 +1334,7 @@
 				4C90EF8FCC9EEF95D9AB014C /* LinuxUpdate */,
 				7EE465F8B66B567A6A7A2622 /* Maltrail */,
 				23AB1F8E0947D3598E65C623 /* NginxProxyManager */,
+				2134964AD1995CD281E680B8 /* OpenList */,
 				1E129360F625134B518C39D4 /* Pangolin */,
 				AEF3A1B12CFF68006D2F06AF /* Patchmon */,
 				D43D23351242B6BFC6E743DC /* PiHole */,
@@ -1257,9 +1350,7 @@
 				37812033DFDA5B72BB1A466F /* UniFi */,
 				12DB927C145E608B87596524 /* UptimeKuma */,
 				ABC55F19459A78E216C60C0A /* Wakapi */,
-							40E156569B984E4690B09932 /* OpenList */,
-				1C46CC4555F0D402711A1543 /* Arcane */,
-);
+			);
 			path = Networking;
 			sourceTree = "<group>";
 		};
@@ -1276,6 +1367,9 @@
 			isa = PBXGroup;
 			children = (
 				A1C0C96DF48BA12ABCC04C11 /* BackupModelsTests.swift */,
+				33C4AD595B52CB8D98C6B952 /* DashboardCardOrderTests.swift */,
+				F34377D85CC395D9615917AD /* DashboardSystemStoreTests.swift */,
+				ADFB6395300A84531755A8FA /* DiskTemperatureSensorFilterTests.swift */,
 				DB311F83CBAAC39C90D50E6D /* FormattersTests.swift */,
 				FCD7BB9B1065930082265D21 /* KeychainServiceTests.swift */,
 				94D7A0C04FD3A10D46F836A9 /* ModelDecodingTests.swift */,
@@ -1303,12 +1397,13 @@
 		EB0C2E8A1FE201A265D4FC4A /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				A18F62DA9D2996B6FE50CE53 /* DiskTemperatureSensorFilter.swift */,
+				416EE343DE722B5B0280C876 /* ExternalPlayerRouter.swift */,
 				B1EBFFF57A15B47F78E81D04 /* Formatters.swift */,
 				6EF6E7AF1CDC6676B7421A7B /* HapticManager.swift */,
 				A1BF1197F8BB03BE213E2995 /* Logger.swift */,
 				6AD5A40912505AFD774ED713 /* SyntaxHighlighter.swift */,
-							A8332309F574441D8CE91F14 /* ExternalPlayerRouter.swift */,
-);
+			);
 			path = Utilities;
 			sourceTree = "<group>";
 		};
@@ -1389,77 +1484,6 @@
 			path = Radarr;
 			sourceTree = "<group>";
 		};
-		2776FBCF30B244E380A7EF80 /* OpenList */ = {
-			isa = PBXGroup;
-			children = (
-							A5EFF3944BBC4890BB67D78A /* OpenListModels.swift */,
-);
-			path = OpenList;
-			sourceTree = "<group>";
-		};
-		40E156569B984E4690B09932 /* OpenList */ = {
-			isa = PBXGroup;
-			children = (
-							A99711891C734A5A87DD5233 /* OpenListAPIClient.swift */,
-);
-			path = OpenList;
-			sourceTree = "<group>";
-		};
-		E92316577DB94C669427C827 /* OpenList */ = {
-			isa = PBXGroup;
-			children = (
-							FBD657ABFDBD42B2A2AFFA49 /* OpenListFileBrowserView.swift */,
-							B7E41C2A9D1F4E8A8C3D5E6F7A8B9C0D /* OpenListFilePreviewView.swift */,
-							E2B3C4D5F60718293A4B5C6D7E8F901A /* OpenListMediaPlayerView.swift */,
-							A4B5C6D7E8F901A2B3C4D5E6F708192A /* OpenListFolderPickerView.swift */,
-							B2C3D4E5F60718293A4B5C6D7E8F012A /* OpenListPlayerPickerView.swift */,
-				C3D4E5F60718293A4B5C6D7E8F901A2B /* OpenListTasksView.swift */,
-);
-			path = OpenList;
-			sourceTree = "<group>";
-		};
-		2D24F96CFD5087B3898ADB87 /* Arcane */ = {
-			isa = PBXGroup;
-			children = (
-				DBAEF71C2782F84DB8F9CDAD /* ArcaneModels.swift */,
-			);
-			path = Arcane;
-			sourceTree = "<group>";
-		};
-
-		1C46CC4555F0D402711A1543 /* Arcane */ = {
-			isa = PBXGroup;
-			children = (
-				3FE4FF773CC6D1FF1D3F07F3 /* ArcaneAPIClient.swift */,
-			);
-			path = Arcane;
-			sourceTree = "<group>";
-		};
-
-		52DFE521F5EAF916E9663AA8 /* Arcane */ = {
-			isa = PBXGroup;
-			children = (
-				28A2E4EE3AB2AF41222ACCCB /* ArcaneDashboard.swift */,
-			);
-			path = Arcane;
-			sourceTree = "<group>";
-		};
-
-		E93BD1A948EE221444A64FE8 /* Dashboard */ = {
-			isa = PBXGroup;
-			children = (
-				234018529FF3D897E0C56112 /* DashboardCard.swift */,
-				E982F5D0634389730B1B0CD1 /* SystemHealthCard.swift */,
-				61AF774034889E942101067F /* CPUMonitorCard.swift */,
-				E94E924D16ABEB0072D1F284 /* MemoryMonitorCard.swift */,
-				8390C094DD8BA8C13763438D /* DiskMonitorCard.swift */,
-				40ADA7D0082E95D03E87A0E4 /* TemperatureCard.swift */,
-				51FC13DF0F6EBACA04D642CB /* DockerOverviewCard.swift */,
-				B2D869903070E52EFC369EAD /* ServiceEntryCard.swift */,
-			);
-			path = Dashboard;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1506,12 +1530,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2700;
-				TargetAttributes = {
-					F030701E1A7DE1C00D08FE68 = {
-						ProvisioningStyle = Automatic;
-					};
-				};
+				LastUpgradeCheck = 2600;
 			};
 			buildConfigurationList = 53B06AFB20AFF82B11048BA4 /* Build configuration list for PBXProject "Homelab" */;
 			developmentRegion = en;
@@ -1560,6 +1579,11 @@
 				5A5F8EF3CA17C9A8CB0FA645 /* AdGuardHomeRewritesView.swift in Sources */,
 				A08D2B6FBC3D9252E47321FF /* AdGuardHomeUserRulesView.swift in Sources */,
 				2DEE79E0C15D816F7170E110 /* AppTheme.swift in Sources */,
+				205F88BD261C9512A8F335A3 /* ArcaneAPIClient.swift in Sources */,
+				0F8FB3E78A58E1ADA07BD914 /* ArcaneContainerDetailView.swift in Sources */,
+				B636CF3188413DADACBF2890 /* ArcaneDashboard.swift in Sources */,
+				63968D93EA4167B736C07150 /* ArcaneModels.swift in Sources */,
+				B4927B258F64BCCCEC0F34B3 /* ArcaneUpdateProgressSheet.swift in Sources */,
 				E41A618C772AD13F86272FB8 /* BackupCrypto.swift in Sources */,
 				8F1E8C350A24585FB98C7290 /* BackupManager.swift in Sources */,
 				DDA0B198DFA935B2BF9FCE94 /* BackupModels.swift in Sources */,
@@ -1577,6 +1601,7 @@
 				1FEB8EB133A5749EBE928E1C /* BookmarkFormView.swift in Sources */,
 				62EF5383568C38878FAB5623 /* BookmarkManager.swift in Sources */,
 				DF86CB1FB4E3E32A79142588 /* BookmarksView.swift in Sources */,
+				8B56BC1BDF8BBAE7B704D108 /* CPUMonitorCard.swift in Sources */,
 				CC8DE4D3D830FF7F610EDF1B /* CalagopusAPIClient.swift in Sources */,
 				B5EC1AE9E8F74A570F189E3D /* CalagopusDashboard.swift in Sources */,
 				654B246C79458CB80AEC15D8 /* CategoryFormView.swift in Sources */,
@@ -1586,6 +1611,14 @@
 				9F77F33FFB5F27A3D1A8109E /* ContentView.swift in Sources */,
 				106BBFAAA495E7AEACAEE51B /* CraftyAPIClient.swift in Sources */,
 				29E8185E30D00ACA9B5D0C0F /* CraftyDashboard.swift in Sources */,
+				CC680E8CAC04C3C63BE6EFC5 /* DashboardCard.swift in Sources */,
+				2B1B037068C24E88656A2F00 /* DashboardCardID.swift in Sources */,
+				CA3B872EC07AC70C19B2F416 /* DashboardRefreshCoordinator.swift in Sources */,
+				FE1FBFABB11D2F3E0ADD180F /* DashboardSystemStore.swift in Sources */,
+				43E2CAF833BCA9C112F96FE5 /* DiskMonitorCard.swift in Sources */,
+				A4609016AE9941459A318978 /* DiskTemperatureCard.swift in Sources */,
+				5E40CBE854037089D64C5FCF /* DiskTemperatureSensorFilter.swift in Sources */,
+				8B4C68835DF82714DEA0822A /* DockerOverviewCard.swift in Sources */,
 				7D4F9B8A45AF9BC46A6A733F /* DockhandComponents.swift in Sources */,
 				BD697C6B1A9C40EE51C53DDF /* DockhandDashboard.swift in Sources */,
 				22CA57F636BE4C6A5EE09760 /* DockmonAPIClient.swift in Sources */,
@@ -1593,6 +1626,7 @@
 				DE0AF6EEB06542387F08BA08 /* DockmonModels.swift in Sources */,
 				05260E0A1A5781AC8EAE7011 /* EditBookmarkView.swift in Sources */,
 				21E7233E678C07EF2FA629B5 /* EditCategoryView.swift in Sources */,
+				631F6C4885B79BF72C87BC06 /* ExternalPlayerRouter.swift in Sources */,
 				7E78EE55701AD004992579EF /* Formatters.swift in Sources */,
 				D5CCCB3F42C2012F2522950F /* GenericAPIClient.swift in Sources */,
 				22F17B053E47A71B687C63C5 /* GenericMediaDashboard.swift in Sources */,
@@ -1609,6 +1643,7 @@
 				A3DF6B4D547020804E10A0C0 /* HealthchecksDashboard.swift in Sources */,
 				C10F96F2F46D3979E9B2FC0E /* HealthchecksDetail.swift in Sources */,
 				10FBD548812295AB0814803D /* HealthchecksModels.swift in Sources */,
+				26A1A8B2C269450EDC71E7B5 /* HeroCard.swift in Sources */,
 				703D6379BB37D3F83B0C21D5 /* HomeView.swift in Sources */,
 				826BA16B6B4D4F31C3CC2B5C /* HomelabApp.swift in Sources */,
 				CD29007C4FB0AD271F85673C /* JellystatAPIClient.swift in Sources */,
@@ -1630,6 +1665,7 @@
 				8A663C3AED31DE94C751E17A /* MaltrailDashboard.swift in Sources */,
 				CC23054F0C872CC583502288 /* MaltrailModels.swift in Sources */,
 				B8698D0D65FAC913F0591434 /* MediaDashboardView.swift in Sources */,
+				B2A3B4260DACACCCA2F8D37A /* MemoryMonitorCard.swift in Sources */,
 				97C25FD08421A32F71C2B3BD /* NginxProxyManagerAPIClient.swift in Sources */,
 				EDFF65DD1D2A1F388BF64B2F /* NginxProxyManagerModels.swift in Sources */,
 				9A986ED771EA2DC52308E756 /* NpmAccessListCard.swift in Sources */,
@@ -1647,6 +1683,14 @@
 				4CA71DBAD3D27E419ED0A10F /* NpmStreamForm.swift in Sources */,
 				CFCDE90DDC7DCF5CB7F4A3A6 /* NpmUserForm.swift in Sources */,
 				EAD085672E3D6DD29C4F51D1 /* OfflineBanner.swift in Sources */,
+				F8D0B49F011729ED93F98C24 /* OpenListAPIClient.swift in Sources */,
+				78E77D0CAE314564E639192C /* OpenListFileBrowserView.swift in Sources */,
+				00548109096F11FC7AEF1EB9 /* OpenListFilePreviewView.swift in Sources */,
+				2B7BEDEFB9FB5394B017896C /* OpenListFolderPickerView.swift in Sources */,
+				E3250F73873A533A372680B2 /* OpenListMediaPlayerView.swift in Sources */,
+				ABAE44F1D2E4CEFF4C4988B5 /* OpenListModels.swift in Sources */,
+				BC806A16D6DC05B2C7C492B9 /* OpenListPlayerPickerView.swift in Sources */,
+				C44FCF92A73230C91EA23478 /* OpenListTasksView.swift in Sources */,
 				D581A8A08CC0CA3A5DB9F67D /* PangolinAPIClient.swift in Sources */,
 				6DEEA589BD92BE70DF884F07 /* PangolinComponents.swift in Sources */,
 				7095EBE669356384B3B42911 /* PangolinDashboard.swift in Sources */,
@@ -1690,15 +1734,18 @@
 				AD8DCE59A20032895B6C83B1 /* PterodactylDashboard.swift in Sources */,
 				97254226660E65C1DEC0C2EE /* QbittorrentAPIClient.swift in Sources */,
 				37CBDADA59AC66BC5639663F /* QbittorrentDashboard.swift in Sources */,
+				E94763F1F5A511415EF45498 /* QbittorrentHomeCard.swift in Sources */,
 				1F2427668043AA81D0F038BE /* QbittorrentModels.swift in Sources */,
 				7A6EF3A0EB57E1035A0132F2 /* RadarrAPIClient.swift in Sources */,
 				849DBCF3A98DD307B4221371 /* RadarrDashboard.swift in Sources */,
 				3782CAF7B067BBC9098EE91E /* RadarrModels.swift in Sources */,
 				21BAB7FCB0AECC7133D55F6F /* ServiceConnection.swift in Sources */,
+				A49B105DC72148FF1A79E551 /* ServiceConnectionStatus.swift in Sources */,
 				8FC5C2BF6FC7CBC21BFF6696 /* ServiceDashboardLayout.swift in Sources */,
 				CE78DBCA639D954A7CCB26D3 /* ServiceErrorView.swift in Sources */,
 				D3FEA9D2C02EFC910D98FEB9 /* ServiceIconView.swift in Sources */,
 				E5242DCA4ACD2835153FBB96 /* ServiceLoginView.swift in Sources */,
+				3C5E508ED29EAEE5107AABF8 /* ServiceTileGrid.swift in Sources */,
 				E6E04DD8242F5252CD32CCAB /* ServiceType.swift in Sources */,
 				BAA4219103CC83A339C434BD /* ServicesStore.swift in Sources */,
 				7EBB5603EC5B23E166D98E33 /* SettingsStore.swift in Sources */,
@@ -1709,10 +1756,11 @@
 				9FEE4CC03CF99116B5067700 /* SonarrModels.swift in Sources */,
 				0E5566DAE01FB0E9F10E98C8 /* StatusBadge.swift in Sources */,
 				B75BA3C1B775D95298E0933B /* SyntaxHighlighter.swift in Sources */,
+				46E6675A75E4F0F0757A6379 /* SystemHealthCard.swift in Sources */,
 				3F93EE54AF0FCD4CFFF0969D /* TechnitiumAPIClient.swift in Sources */,
 				9FAF7E857BCB519244B79DD0 /* TechnitiumDashboard.swift in Sources */,
+				D5FED332EC23681140B7126D /* Translations+Chinese.swift in Sources */,
 				7EF18D092660634150160E03 /* Translations+English.swift in Sources */,
-				ABB92C5DC84A0B8332F1A1BD /* Translations+Chinese.swift in Sources */,
 				AAA9BC382610A55D8E374C95 /* Translations.swift in Sources */,
 				53AE4DC63535738D1804E28B /* TrueNASAPIClient.swift in Sources */,
 				0B2C4949117F87CDA9133773 /* TrueNASDashboard.swift in Sources */,
@@ -1725,30 +1773,7 @@
 				A15E4596A2950B61F233E229 /* UptimeKumaDashboard.swift in Sources */,
 				0608E2F28F00EDAF641EE43E /* UptimeKumaModels.swift in Sources */,
 				698E6B77D281367DA484C23B /* WakapiAPIClient.swift in Sources */,
-				E41C86CEB570A40EFB82ED17 /* WakapiDashboard.swift in Sources */,				A88B89BC3C824ECAA45C072B /* ServiceConnectionStatus.swift in Sources */,
-				26EDBC42A78240CDA973CBC5 /* OpenListModels.swift in Sources */,
-				FE6118410C414AF9AC0E4599 /* OpenListAPIClient.swift in Sources */,
-				BFFEB7E5F83342F8BE276625 /* ExternalPlayerRouter.swift in Sources */,
-				389C0B77B585429EAC7FC837 /* OpenListFileBrowserView.swift in Sources */,
-				C8F52D3B0E2A5F9B9D4E6F7A8B9C0D1E /* OpenListFilePreviewView.swift in Sources */,
-				D1A2B3C4E5F60718293A4B5C6D7E8F90 /* OpenListMediaPlayerView.swift in Sources */,
-				F3A4B5C6D7E8091A2B3C4D5E6F708192 /* OpenListFolderPickerView.swift in Sources */,
-				A1B2C3D4E5F60718293A4B5C6D7E8F01 /* OpenListPlayerPickerView.swift in Sources */,
-				D4E5F60718293A4B5C6D7E8F901A2B3C /* OpenListTasksView.swift in Sources */,
-				52F1820844276C129A5102AE /* ArcaneModels.swift in Sources */,
-				F12E86F2FA041AFA7CECE9C4 /* ArcaneAPIClient.swift in Sources */,
-				BD2ACB355A424D3F43BACE43 /* ArcaneDashboard.swift in Sources */,
-				8CC2D49F7B7764C2466062B6 /* DashboardCard.swift in Sources */,
-				0F2E2DF560EE50D88DF952A3 /* SystemHealthCard.swift in Sources */,
-				7D58BC8DC0572700A8C6BA74 /* CPUMonitorCard.swift in Sources */,
-				3CC49316D62ACF568062CB6B /* MemoryMonitorCard.swift in Sources */,
-				35D09C00BF2A22F553362A60 /* DiskMonitorCard.swift in Sources */,
-				2FDF5191020C5325B621F95F /* TemperatureCard.swift in Sources */,
-				872E1C0FCF8206791E22110A /* DockerOverviewCard.swift in Sources */,
-				4CB9F917F538C31B4269DB46 /* ServiceEntryCard.swift in Sources */,
-				FC8DEB9A4E9814A4BCC714DF /* DashboardRefreshCoordinator.swift in Sources */,
-				C252B6295F484D24D11FFD15 /* DashboardSystemStore.swift in Sources */,
-
+				E41C86CEB570A40EFB82ED17 /* WakapiDashboard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1757,6 +1782,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				83C02FB2B277928F3C9E720A /* BackupModelsTests.swift in Sources */,
+				843A6D6CA3F08068A9CCB1E2 /* DashboardCardOrderTests.swift in Sources */,
+				559CAAA2D02398D9A5736440 /* DashboardSystemStoreTests.swift in Sources */,
+				A3062C0B1895E1FB92FF1982 /* DiskTemperatureSensorFilterTests.swift in Sources */,
 				D76DF8769FE2AE2032847D05 /* FormattersTests.swift in Sources */,
 				A1B0DB1FF6B1CB2BEB21B2CE /* KeychainServiceTests.swift in Sources */,
 				D84F9D353E2953087A1E5F7D /* ModelDecodingTests.swift in Sources */,
@@ -1886,7 +1914,6 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1900,11 +1927,10 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_COMPILATION_MODE = incremental;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -1945,7 +1971,6 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -1966,11 +1991,10 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};

@@ -3,55 +3,65 @@ import SwiftUI
 struct DockerOverviewCard: View {
     @Environment(ServicesStore.self) private var servicesStore
     @Environment(DashboardRefreshCoordinator.self) private var coordinator
+    @Environment(DashboardSystemStore.self) private var systemStore
+    @Environment(Localizer.self) private var localizer
 
-    @State private var containers: [ArcaneContainer] = []
-    @State private var runningCount: Int = 0
+    @State private var totalContainers: Int = 0
+    @State private var runningContainers: Int = 0
+    @State private var imageCount: Int = 0
+    @State private var aggCpu: Double = 0
 
     var body: some View {
-        DashboardCard(title: "Docker", icon: "shippingbox") {
-            VStack(spacing: 10) {
-                HStack {
-                    Label("\(runningCount)/\(containers.count)", systemImage: "circle.fill")
-                        .foregroundStyle(AppTheme.running)
-                        .font(.title3.bold())
-                    Spacer()
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "shippingbox").font(.subheadline.weight(.semibold)).foregroundStyle(AppTheme.info)
+                Text(localizer.t.homeDockerLabel).font(.subheadline.weight(.semibold))
+                Spacer()
+            }
+            if totalContainers > 0 {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    stat("总量", "\(totalContainers)")
+                    stat("运行中", "\(runningContainers)", accent: AppTheme.running)
+                    stat("镜像", "\(imageCount)")
+                    stat("CPU", String(format: "%.0f%%", aggCpu))
                 }
-
-                if containers.isEmpty {
-                    Text("无容器数据")
-                        .font(.caption)
-                        .foregroundStyle(AppTheme.textMuted)
-                } else {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(containers) { container in
-                                VStack(spacing: 4) {
-                                    Circle()
-                                        .fill(container.isRunning ? AppTheme.running : AppTheme.stopped)
-                                        .frame(width: 10, height: 10)
-                                    Text(container.name.replacingOccurrences(of: "^/", with: "", options: .regularExpression))
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
-                                        .frame(maxWidth: 80)
-                                }
-                            }
-                        }
-                    }
-                }
+            } else {
+                Text(localizer.t.noData).font(.subheadline).foregroundStyle(.tertiary).frame(maxWidth: .infinity, alignment: .center).padding(.vertical, 12)
             }
         }
-        .task(id: coordinator.refreshTrigger) {
-            await fetchContainers()
-        }
+        .padding(16)
+        .glassCard()
+        .task(id: coordinator.refreshTrigger) { await fetchData() }
     }
 
-    private func fetchContainers() async {
-        guard let instance = servicesStore.preferredInstance(for: .arcane),
-              let client = await servicesStore.arcaneClient(instanceId: instance.id) else { return }
+    private func stat(_ label: String, _ value: String, accent: Color? = nil) -> some View {
+        VStack(spacing: 3) {
+            Text(value).font(.system(.body, design: .rounded).weight(.bold).monospacedDigit()).foregroundStyle(accent ?? .primary)
+            Text(label).font(.caption2).foregroundStyle(.tertiary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func fetchData() async {
+        await systemStore.refresh(servicesStore: servicesStore)
+        guard let systemId = systemStore.firstSystemId,
+              let instance = servicesStore.preferredInstance(for: .beszel),
+              let client = await servicesStore.beszelClient(instanceId: instance.id) else {
+            totalContainers = 0; runningContainers = 0; imageCount = 0; aggCpu = 0; return
+        }
         do {
-            containers = try await client.getContainers()
-            runningCount = containers.filter(\.isRunning).count
+            let containers = try await client.getContainers(systemId: systemId)
+            totalContainers = containers.count
+            runningContainers = containers.filter { isRunning($0) }.count
+            imageCount = Set(containers.compactMap { $0.image?.split(separator: ":").first.map(String.init) }).count
+            aggCpu = containers.reduce(0) { $0 + $1.cpuValue }
         } catch {}
+    }
+
+    private func isRunning(_ c: BeszelContainerRecord) -> Bool {
+        let s = (c.status ?? "").lowercased()
+        if s.contains("up") || s.contains("running") { return true }
+        if s.contains("exited") || s.contains("dead") || s.contains("created") { return false }
+        return c.health == .healthy || c.health == .starting
     }
 }
