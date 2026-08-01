@@ -1,0 +1,130 @@
+{
+  "schema": "comet.native.check-receipt.v1",
+  "change": "feat-media-cloud-modules",
+  "sourceRevision": 3,
+  "checker": {
+    "policy": "scoped-text-safety",
+    "version": 1,
+    "hash": "859ac9d93d19ac346e5e0c6dfca376112da6b0c9caeb9d7d7aa68393c73e0eaf",
+    "limits": {
+      "maxFiles": 256,
+      "maxFileBytes": 2097152,
+      "maxTotalBytes": 8388608,
+      "maxIssues": 128
+    }
+  },
+  "inputHash": "87feb9c226c4e8f9a92bad335f6f7169b49fd66b1c013b1d9d86bd92368e9598",
+  "status": "failed",
+  "startedAt": "2026-07-30T15:23:42.497Z",
+  "endedAt": "2026-07-30T15:23:42.979Z",
+  "contract": {
+    "expectedHash": "057399387ce90a20d7488fd686bb8b40b14421503c92ef61ac2a7a78c28243b4",
+    "beforeHash": "5ab4fedd69fbead3b558725c2bff22fe5ccaa89c59bf335306dea2d382e3c7dc",
+    "afterHash": "5ab4fedd69fbead3b558725c2bff22fe5ccaa89c59bf335306dea2d382e3c7dc"
+  },
+  "implementation": {
+    "scopeHash": "9a348eec6beb318b59fcfa6d11d16716a4b286013905ecc0cd9d448fac7ada6d",
+    "expectedSnapshotHash": "9e636613930ac05ebe77740c89d36bd12350d2a588ddaff9971aa6577a4a5142",
+    "beforeSnapshotHash": "f6e7cbb2dc23e8fb05099a443670242bfc3c72402589ffbad812b59d098060cc",
+    "afterSnapshotHash": "f6e7cbb2dc23e8fb05099a443670242bfc3c72402589ffbad812b59d098060cc"
+  },
+  "counts": {
+    "filesSelected": 14,
+    "filesScanned": 9,
+    "binaryFilesSkipped": 0,
+    "bytesScanned": 491525,
+    "issueCount": 16,
+    "recordedIssueCount": 16
+  },
+  "issues": [
+    {
+      "path": "HomelabSwift/Homelab.xcodeproj/project.pbxproj",
+      "line": 1,
+      "kind": "scope-mismatch"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Localization/Translations.swift",
+      "line": 961,
+      "kind": "trailing-whitespace"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Localization/Translations+English.swift",
+      "line": 43,
+      "kind": "trailing-whitespace"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Localization/Translations+English.swift",
+      "line": 47,
+      "kind": "trailing-whitespace"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Localization/Translations+English.swift",
+      "line": 1142,
+      "kind": "trailing-whitespace"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Localization/Translations+English.swift",
+      "line": 1150,
+      "kind": "trailing-whitespace"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Networking/CloudSaver/CloudSaverAPIClient.swift",
+      "line": 1,
+      "kind": "scope-mismatch"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Networking/CloudSaver/CloudSaverModels.swift",
+      "line": 1,
+      "kind": "scope-mismatch"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Stores/ServicesStore.swift",
+      "line": 246,
+      "kind": "trailing-whitespace"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Views/CloudSaver/CloudSaverDashboard.swift",
+      "line": 1,
+      "kind": "scope-mismatch"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Views/ServiceLogin/ServiceLoginView.swift",
+      "line": 1584,
+      "kind": "trailing-whitespace"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Views/ServiceLogin/ServiceLoginView.swift",
+      "line": 1615,
+      "kind": "trailing-whitespace"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Views/ServiceLogin/ServiceLoginView.swift",
+      "line": 1634,
+      "kind": "trailing-whitespace"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Views/ServiceLogin/ServiceLoginView.swift",
+      "line": 1653,
+      "kind": "trailing-whitespace"
+    },
+    {
+      "path": "HomelabSwift/Homelab/Views/ServiceLogin/ServiceLoginView.swift",
+      "line": 1672,
+      "kind": "trailing-whitespace"
+    },
+    {
+      "path": "HomelabSwift/HomelabTests/CloudSaverModelsTests.swift",
+      "line": 1,
+      "kind": "scope-mismatch"
+    }
+  ],
+  "issuesTruncated": false,
+  "stale": true,
+  "staleReasons": [
+    "contract-before-does-not-match-scope",
+    "implementation-before-does-not-match-scope",
+    "contract-after-does-not-match-scope",
+    "implementation-after-does-not-match-scope"
+  ],
+  "receiptHash": "4a8c82d2b244da5011b9eb5f32c14bef80f57c4d0b95be4149624afad9204d0a"
+}

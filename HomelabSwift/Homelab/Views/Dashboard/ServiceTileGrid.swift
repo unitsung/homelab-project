@@ -76,6 +76,7 @@ struct ServiceTileGrid: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 14)
         .padding(.horizontal, 6)
+        .contentShape(Rectangle())
         .glassCard()
     }
 

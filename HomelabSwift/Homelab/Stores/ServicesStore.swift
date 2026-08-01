@@ -34,6 +34,7 @@ private final class ServiceClientManager {
     private var pterodactylClients: [UUID: PterodactylAPIClient] = [:]
     private var calagopusClients: [UUID: CalagopusAPIClient] = [:]
     private var openlistClients: [UUID: OpenListAPIClient] = [:]
+    private var cloudsaverClients: [UUID: CloudSaverAPIClient] = [:]
     private var arcaneClients: [UUID: ArcaneAPIClient] = [:]
 
     func portainerClient(id: UUID) -> PortainerAPIClient {
@@ -305,6 +306,15 @@ private final class ServiceClientManager {
         return client
     }
 
+    func cloudsaverClient(id: UUID) -> CloudSaverAPIClient {
+        if let client = cloudsaverClients[id] {
+            return client
+        }
+        let client = CloudSaverAPIClient(instanceId: id)
+        cloudsaverClients[id] = client
+        return client
+    }
+
     func arcaneClient(id: UUID) -> ArcaneAPIClient {
         if let client = arcaneClients[id] {
             return client
@@ -385,6 +395,8 @@ private final class ServiceClientManager {
             calagopusClients.removeValue(forKey: id)
         case .openlist:
             openlistClients.removeValue(forKey: id)
+        case .cloudsaver:
+            cloudsaverClients.removeValue(forKey: id)
         case .arcane:
             arcaneClients.removeValue(forKey: id)
         case .jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr:
@@ -425,6 +437,7 @@ private final class ServiceClientManager {
         pterodactylClients = pterodactylClients.filter { knownInstanceIds.contains($0.key) }
         calagopusClients = calagopusClients.filter { knownInstanceIds.contains($0.key) }
         openlistClients = openlistClients.filter { knownInstanceIds.contains($0.key) }
+        cloudsaverClients = cloudsaverClients.filter { knownInstanceIds.contains($0.key) }
         arcaneClients = arcaneClients.filter { knownInstanceIds.contains($0.key) }
         genericClients = genericClients.filter { knownInstanceIds.contains($0.key) }
     }
@@ -778,6 +791,11 @@ final class ServicesStore {
         return clientManager.openlistClient(id: instance.id)
     }
 
+    func cloudsaverClient(instanceId: UUID) async -> CloudSaverAPIClient? {
+        guard let instance = instancesById[instanceId], instance.type == .cloudsaver else { return nil }
+        return clientManager.cloudsaverClient(id: instance.id)
+    }
+
     func arcaneClient(instanceId: UUID) async -> ArcaneAPIClient? {
         guard let instance = instancesById[instanceId], instance.type == .arcane else { return nil }
         return clientManager.arcaneClient(id: instance.id)
@@ -861,6 +879,8 @@ final class ServicesStore {
             ok = await clientManager.calagopusClient(id: instanceId).ping()
         case .openlist:
             ok = await clientManager.openlistClient(id: instanceId).ping()
+        case .cloudsaver:
+            ok = await clientManager.cloudsaverClient(id: instanceId).ping()
         case .arcane:
             ok = await clientManager.arcaneClient(id: instanceId).ping()
         case .jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr:
@@ -1356,6 +1376,26 @@ final class ServicesStore {
                     guard let self, var current = self.instancesById[instanceId] else { return }
                     current.token = newToken
                     self.instancesById[instanceId] = current
+                    self.persistState()
+                }
+            }
+
+        case .cloudsaver:
+            let client = clientManager.cloudsaverClient(id: instance.id)
+            await client.configure(
+                url: instance.url,
+                token: instance.token,
+                fallbackUrl: instance.fallbackUrl,
+                username: instance.username,
+                password: instance.password,
+                allowSelfSigned: instance.allowSelfSigned
+            )
+            let csInstanceId = instance.id
+            await client.setTokenRefreshCallback { [weak self] newToken in
+                Task { @MainActor in
+                    guard let self, var current = self.instancesById[csInstanceId] else { return }
+                    current.token = newToken
+                    self.instancesById[csInstanceId] = current
                     self.persistState()
                 }
             }

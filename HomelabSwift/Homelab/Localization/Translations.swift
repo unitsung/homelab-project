@@ -1695,6 +1695,8 @@ struct Translations {
     let serviceCalagopusDesc: String
     let loginHintCalagopus: String
     let serviceOpenListDesc: String
+    let serviceCloudSaverDesc: String
+    let loginHintCloudSaver: String
     let loginHintOpenList: String
     let loginHintArcane: String
     let loginOpenListTokenOptional: String

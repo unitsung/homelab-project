@@ -9,13 +9,33 @@ struct QbittorrentHomeCard: View {
     @State private var seedingCount: Int = 0
     @State private var pausedCount: Int = 0
     @State private var hasInstance: Bool = false
+    @State private var instanceId: UUID?
 
     var body: some View {
+        Group {
+            if hasInstance, let instanceId {
+                NavigationLink(value: HomeServiceRoute(type: .qbittorrent, instanceId: instanceId)) {
+                    cardContent
+                }
+                .buttonStyle(TilePressButtonStyle())
+            } else {
+                cardContent
+            }
+        }
+        .task(id: coordinator.refreshTrigger) { await fetchData() }
+    }
+
+    private var cardContent: some View {
         VStack(spacing: 12) {
             HStack {
                 Image(systemName: "arrow.down.circle").font(.subheadline.weight(.semibold)).foregroundStyle(AppTheme.info)
                 Text("qBittorrent").font(.subheadline.weight(.semibold))
                 Spacer()
+                if hasInstance {
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
             }
             if hasInstance, totalTorrents > 0 {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
@@ -31,8 +51,9 @@ struct QbittorrentHomeCard: View {
             }
         }
         .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
         .glassCard()
-        .task(id: coordinator.refreshTrigger) { await fetchData() }
     }
 
     private func stat(_ label: String, _ value: String, accent: Color? = nil) -> some View {
@@ -48,8 +69,13 @@ struct QbittorrentHomeCard: View {
     }
 
     private func fetchData() async {
-        guard let instance = servicesStore.preferredInstance(for: .qbittorrent) else { hasInstance = false; return }
+        guard let instance = servicesStore.preferredInstance(for: .qbittorrent) else {
+            hasInstance = false
+            instanceId = nil
+            return
+        }
         hasInstance = true
+        instanceId = instance.id
         guard let client = await servicesStore.qbittorrentClient(instanceId: instance.id) else { return }
         do {
             let torrents = try await client.getTorrents()

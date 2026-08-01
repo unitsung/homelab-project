@@ -20,7 +20,26 @@ struct HeroCard: View {
     private func gaugeColor(_ pct: Double) -> Color { pct > 85 ? AppTheme.danger : pct > 70 ? AppTheme.warning : AppTheme.info }
     private func tempColor(_ c: Double) -> Color { c > 55 ? AppTheme.danger : c > 45 ? AppTheme.warning : AppTheme.running }
 
+    private var beszelRoute: HomeServiceRoute? {
+        guard let inst = servicesStore.preferredInstance(for: .beszel) else { return nil }
+        return HomeServiceRoute(type: .beszel, instanceId: inst.id)
+    }
+
     var body: some View {
+        Group {
+            if let route = beszelRoute {
+                NavigationLink(value: route) {
+                    heroContent
+                }
+                .buttonStyle(TilePressButtonStyle())
+            } else {
+                heroContent
+            }
+        }
+        .task(id: coordinator.refreshTrigger) { await fetchData() }
+    }
+
+    private var heroContent: some View {
         VStack(spacing: 12) {
             header
             if isOnline {
@@ -30,8 +49,9 @@ struct HeroCard: View {
             }
         }
         .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
         .glassCard()
-        .task(id: coordinator.refreshTrigger) { await fetchData() }
     }
 
     private var header: some View {
@@ -46,6 +66,11 @@ struct HeroCard: View {
             }
             Spacer()
             if isOnline { Text(uptime).font(.caption2.monospacedDigit()).foregroundStyle(.tertiary) }
+            if beszelRoute != nil {
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
         }
     }
 

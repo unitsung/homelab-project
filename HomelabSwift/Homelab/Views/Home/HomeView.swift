@@ -115,6 +115,7 @@ struct HomeView: View {
         case .calagopus:         CalagopusDashboard(instanceId: route.instanceId)
         case .openlist:          OpenListFileBrowserView(instanceId: route.instanceId)
         case .arcane:            ArcaneDashboard(instanceId: route.instanceId)
+        case .cloudsaver:        CloudSaverDashboard(instanceId: route.instanceId)
         case .jellyseerr, .prowlarr, .bazarr, .gluetun, .flaresolverr:
                                  GenericMediaDashboard(serviceType: route.type, instanceId: route.instanceId)
         }

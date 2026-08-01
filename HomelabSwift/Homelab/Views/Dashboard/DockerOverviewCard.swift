@@ -11,12 +11,43 @@ struct DockerOverviewCard: View {
     @State private var imageCount: Int = 0
     @State private var aggCpu: Double = 0
 
+    /// Prefer Arcane → Portainer → Beszel for docker management entry.
+    private var dockerRoute: HomeServiceRoute? {
+        if let inst = servicesStore.preferredInstance(for: .arcane) {
+            return HomeServiceRoute(type: .arcane, instanceId: inst.id)
+        }
+        if let inst = servicesStore.preferredInstance(for: .portainer) {
+            return HomeServiceRoute(type: .portainer, instanceId: inst.id)
+        }
+        if let inst = servicesStore.preferredInstance(for: .beszel) {
+            return HomeServiceRoute(type: .beszel, instanceId: inst.id)
+        }
+        return nil
+    }
+
     var body: some View {
+        Group {
+            if let route = dockerRoute {
+                NavigationLink(value: route) {
+                    cardContent
+                }
+                .buttonStyle(TilePressButtonStyle())
+            } else {
+                cardContent
+            }
+        }
+        .task(id: coordinator.refreshTrigger) { await fetchData() }
+    }
+
+    private var cardContent: some View {
         VStack(spacing: 12) {
             HStack {
                 Image(systemName: "shippingbox").font(.subheadline.weight(.semibold)).foregroundStyle(AppTheme.info)
                 Text(localizer.t.homeDockerLabel).font(.subheadline.weight(.semibold))
                 Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
             }
             if totalContainers > 0 {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
@@ -30,8 +61,9 @@ struct DockerOverviewCard: View {
             }
         }
         .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
         .glassCard()
-        .task(id: coordinator.refreshTrigger) { await fetchData() }
     }
 
     private func stat(_ label: String, _ value: String, accent: Color? = nil) -> some View {

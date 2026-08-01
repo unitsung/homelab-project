@@ -74,6 +74,7 @@ enum BackupServiceTypeMapper {
         case .calagopus:         return "calagopus"
         case .openlist:          return "openlist"
         case .arcane:            return "arcane"
+        case .cloudsaver:        return "cloudsaver"
         }
     }
 
@@ -136,6 +137,8 @@ enum BackupServiceTypeMapper {
         case "pterodactyl":          return .pterodactyl
         case "calagopus":            return .calagopus
         case "openlist", "alist":    return .openlist
+        case "arcane":               return .arcane
+        case "cloudsaver", "cloud_saver": return .cloudsaver
         default:                     return nil
         }
     }

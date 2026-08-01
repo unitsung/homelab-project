@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8A6F3427601B43D2ADF0889B /* CloudSaverDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 515A16CF45074F76A72589C4 /* CloudSaverDetailView.swift */; };
+		701F70C5C49D492DA3B37A4F /* CloudSaverRemoteImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA9C0D6E3A4F41F3A2F8747D /* CloudSaverRemoteImage.swift */; };
+		81F7B804BAA9445791F8F97C /* CloudSaverAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AB20C05F22940268324BCA1 /* CloudSaverAPIClient.swift */; };
+		5589F1808822422A85ADAD41 /* CloudSaverModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EE4F8A7B29949509DFACF9F /* CloudSaverModels.swift */; };
+		4D2124DFF17340D0BF71353D /* CloudSaverDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44657FD29B98452992D2274D /* CloudSaverDashboard.swift */; };
+		FB61C29D365241F882F013A2 /* CloudSaverModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56583CD8D104456CBFC5970D /* CloudSaverModelsTests.swift */; };
 		001FA6007779556F8CF2BDC5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B518BC3D0A31F29612A69B75 /* Assets.xcassets */; };
 		00548109096F11FC7AEF1EB9 /* OpenListFilePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E6CCD256F7474044C76188 /* OpenListFilePreviewView.swift */; };
 		00623F9E5FFF09815953B86C /* UniFiDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDFB37C2FF152CEF28395F2C /* UniFiDashboard.swift */; };
@@ -235,6 +241,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		515A16CF45074F76A72589C4 /* CloudSaverDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSaverDetailView.swift; sourceTree = "<group>"; };
+		AA9C0D6E3A4F41F3A2F8747D /* CloudSaverRemoteImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSaverRemoteImage.swift; sourceTree = "<group>"; };
+		5AB20C05F22940268324BCA1 /* CloudSaverAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSaverAPIClient.swift; sourceTree = "<group>"; };
+		3EE4F8A7B29949509DFACF9F /* CloudSaverModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSaverModels.swift; sourceTree = "<group>"; };
+		44657FD29B98452992D2274D /* CloudSaverDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSaverDashboard.swift; sourceTree = "<group>"; };
+		56583CD8D104456CBFC5970D /* CloudSaverModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSaverModelsTests.swift; sourceTree = "<group>"; };
 		04940FAEDE28A509EB1E0EEB /* NpmAccessListForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NpmAccessListForm.swift; sourceTree = "<group>"; };
 		04B5CCA8C815CB0FB9A9B076 /* DockhandComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockhandComponents.swift; sourceTree = "<group>"; };
 		06E6CCD256F7474044C76188 /* OpenListFilePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListFilePreviewView.swift; sourceTree = "<group>"; };
@@ -524,6 +536,16 @@
 			path = Calagopus;
 			sourceTree = "<group>";
 		};
+		F4A074506E0B43A9BDF0A897 /* CloudSaver */ = {
+			isa = PBXGroup;
+			children = (
+				5AB20C05F22940268324BCA1 /* CloudSaverAPIClient.swift */,
+				3EE4F8A7B29949509DFACF9F /* CloudSaverModels.swift */,
+			);
+			path = CloudSaver;
+			sourceTree = "<group>";
+		};
+
 		0D47235EA9B3E7ABB54D915C /* Komodo */ = {
 			isa = PBXGroup;
 			children = (
@@ -652,6 +674,17 @@
 			path = Calagopus;
 			sourceTree = "<group>";
 		};
+		A464EF916E7445EF9925FF87 /* CloudSaver */ = {
+			isa = PBXGroup;
+			children = (
+				44657FD29B98452992D2274D /* CloudSaverDashboard.swift */,
+				AA9C0D6E3A4F41F3A2F8747D /* CloudSaverRemoteImage.swift */,
+				515A16CF45074F76A72589C4 /* CloudSaverDetailView.swift */,
+			);
+			path = CloudSaver;
+			sourceTree = "<group>";
+		};
+
 		315D15A9A015777069607D57 /* Komodo */ = {
 			isa = PBXGroup;
 			children = (
@@ -1177,6 +1210,7 @@
 				F1265188363BF5B5C00056A5 /* Beszel */,
 				ECAF9E33BDB4EE0FFFF630D0 /* Bookmarks */,
 				2A11C19BD60250B7E009AD55 /* Calagopus */,
+				A464EF916E7445EF9925FF87 /* CloudSaver */,
 				5A93214C3BDCB9BEC5FCCD73 /* Components */,
 				766B8D5D15CBF16824D30AD0 /* Crafty */,
 				8965B5C304D46CC95CBD8B59 /* Dashboard */,
@@ -1324,6 +1358,7 @@
 				A32896383AF5564222A222A3 /* Arcane */,
 				D5B24EF44902FCBD35F6D145 /* Beszel */,
 				0CDA3454933CE4C859BCE287 /* Calagopus */,
+				F4A074506E0B43A9BDF0A897 /* CloudSaver */,
 				8A7222B61ABE4DC99B26EDA7 /* Crafty */,
 				E7700DDE3FA87FCC29C7446A /* Dockmon */,
 				289C5939524BACC32CDCCF25 /* Gitea */,
@@ -1366,6 +1401,7 @@
 		E403C416C1CD9D360CB4369E /* HomelabTests */ = {
 			isa = PBXGroup;
 			children = (
+				56583CD8D104456CBFC5970D /* CloudSaverModelsTests.swift */,
 				A1C0C96DF48BA12ABCC04C11 /* BackupModelsTests.swift */,
 				33C4AD595B52CB8D98C6B952 /* DashboardCardOrderTests.swift */,
 				F34377D85CC395D9615917AD /* DashboardSystemStoreTests.swift */,
@@ -1603,6 +1639,11 @@
 				DF86CB1FB4E3E32A79142588 /* BookmarksView.swift in Sources */,
 				8B56BC1BDF8BBAE7B704D108 /* CPUMonitorCard.swift in Sources */,
 				CC8DE4D3D830FF7F610EDF1B /* CalagopusAPIClient.swift in Sources */,
+				81F7B804BAA9445791F8F97C /* CloudSaverAPIClient.swift in Sources */,
+				5589F1808822422A85ADAD41 /* CloudSaverModels.swift in Sources */,
+				4D2124DFF17340D0BF71353D /* CloudSaverDashboard.swift in Sources */,
+				701F70C5C49D492DA3B37A4F /* CloudSaverRemoteImage.swift in Sources */,
+				8A6F3427601B43D2ADF0889B /* CloudSaverDetailView.swift in Sources */,
 				B5EC1AE9E8F74A570F189E3D /* CalagopusDashboard.swift in Sources */,
 				654B246C79458CB80AEC15D8 /* CategoryFormView.swift in Sources */,
 				91FEB90D9F7C9387B1CD8BA9 /* ConfiguredServicesView.swift in Sources */,
@@ -1782,6 +1823,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				83C02FB2B277928F3C9E720A /* BackupModelsTests.swift in Sources */,
+				FB61C29D365241F882F013A2 /* CloudSaverModelsTests.swift in Sources */,
 				843A6D6CA3F08068A9CCB1E2 /* DashboardCardOrderTests.swift in Sources */,
 				559CAAA2D02398D9A5736440 /* DashboardSystemStoreTests.swift in Sources */,
 				A3062C0B1895E1FB92FF1982 /* DiskTemperatureSensorFilterTests.swift in Sources */,

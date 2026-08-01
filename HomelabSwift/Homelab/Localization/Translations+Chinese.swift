@@ -1624,6 +1624,8 @@ extension Translations {
         serviceCalagopusDesc: "下一代游戏服务器管理面板",
         loginHintCalagopus: "使用 Calagopus 客户端 API 密钥。从你的账户页面的 API 凭据中生成。",
         serviceOpenListDesc: "统一文件管理（本地 / 网盘）",
+        serviceCloudSaverDesc: "搜索网盘分享并转存到自己的网盘",
+        loginHintCloudSaver: "使用 CloudSaver 用户名和密码登录。",
         loginHintOpenList: "使用 OpenList 用户名和密码登录；若已有后台 Token，也可只填 Token。",
         loginHintArcane: "推荐使用 Arcane API 密钥（设置 → API Keys，请求头 X-Api-Key），也可用用户名/密码登录。默认安装账号常见为 arcane / arcane-admin。",
         loginOpenListTokenOptional: "Token（可选）",

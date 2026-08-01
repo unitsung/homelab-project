@@ -1624,6 +1624,8 @@ extension Translations {
         serviceCalagopusDesc: "Next-generation game server management panel",
         loginHintCalagopus: "Use a Calagopus Client API key. Generate one from your account page under API Credentials.",
         serviceOpenListDesc: "Unified files for local and cloud storage",
+        serviceCloudSaverDesc: "Search cloud shares and save to your drive",
+        loginHintCloudSaver: "Sign in with your CloudSaver username and password.",
         loginHintOpenList: "Sign in with OpenList username and password. Or paste an admin Token instead.",
         loginHintArcane: "Use an Arcane API key (Settings → API Keys) with the X-Api-Key header, or sign in with username and password. Default install credentials are often arcane / arcane-admin.",
         loginOpenListTokenOptional: "Token (optional)",
