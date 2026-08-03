@@ -647,12 +647,24 @@ struct CloudSaverDetailView: View {
                 folderId: folderId,
                 files: list
             )
+            let followUp = await client.triggerPostSavePluginIfNeeded(
+                pluginId: settings.resolvedPostSavePluginId,
+                result: item,
+                folderId: folderId,
+                folderName: selectedFolderLabel,
+                files: list
+            )
             isTransferred = true
             statusIsError = false
+            var parts: [String] = ["保存成功：已保存到 \(selectedFolderLabel)"]
+            if let suffix = followUp.userSuffix {
+                parts.append(suffix)
+            }
             let hint = settings.ingestHint.trimmingCharacters(in: .whitespacesAndNewlines)
-            let msg = hint.isEmpty
-                ? "保存成功：已保存到 \(selectedFolderLabel)"
-                : "保存成功：已保存到 \(selectedFolderLabel)。\(hint)"
+            if !hint.isEmpty {
+                parts.append(hint)
+            }
+            let msg = parts.joined(separator: "。")
             statusMessage = msg
             showToast(msg)
         } catch {

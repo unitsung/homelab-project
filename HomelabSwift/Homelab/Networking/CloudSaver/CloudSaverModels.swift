@@ -14,6 +14,8 @@ struct CloudSaverSettings: Equatable, Hashable, Sendable {
     var defaultFolderQuarkName: String
     var libraryOpenURL: String
     var ingestHint: String
+    /// CloudSaver plugin id for `POST /api/plugins/run` after save (e.g. LitePan). Empty/0 = skip.
+    var postSavePluginId: String
 
     static let empty = CloudSaverSettings(
         defaultFolder115Cid: "",
@@ -21,8 +23,16 @@ struct CloudSaverSettings: Equatable, Hashable, Sendable {
         defaultFolderQuarkCid: "",
         defaultFolderQuarkName: "",
         libraryOpenURL: "",
-        ingestHint: ""
+        ingestHint: "",
+        postSavePluginId: ""
     )
+
+    /// Parsed plugin id when > 0; nil means do not call `/api/plugins/run`.
+    var resolvedPostSavePluginId: Int? {
+        let t = postSavePluginId.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let n = Int(t), n > 0 else { return nil }
+        return n
+    }
 
     enum Category: String, CaseIterable, Sendable {
         case movie, tv, anime
@@ -65,7 +75,7 @@ extension CloudSaverSettings: Codable {
     private enum CodingKeys: String, CodingKey {
         case defaultFolder115Cid, defaultFolder115Name
         case defaultFolderQuarkCid, defaultFolderQuarkName
-        case libraryOpenURL, ingestHint
+        case libraryOpenURL, ingestHint, postSavePluginId
         // legacy keys (migration)
         case folder115Movie, folder115TV, folder115Anime
         case folderQuarkMovie, folderQuarkTV, folderQuarkAnime
@@ -75,6 +85,7 @@ extension CloudSaverSettings: Codable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         libraryOpenURL = try c.decodeIfPresent(String.self, forKey: .libraryOpenURL) ?? ""
         ingestHint = try c.decodeIfPresent(String.self, forKey: .ingestHint) ?? ""
+        postSavePluginId = try c.decodeIfPresent(String.self, forKey: .postSavePluginId) ?? ""
 
         func nonEmpty(_ key: CodingKeys) throws -> String? {
             guard let s = try c.decodeIfPresent(String.self, forKey: key) else { return nil }
@@ -116,6 +127,7 @@ extension CloudSaverSettings: Codable {
         try c.encode(defaultFolderQuarkName, forKey: .defaultFolderQuarkName)
         try c.encode(libraryOpenURL, forKey: .libraryOpenURL)
         try c.encode(ingestHint, forKey: .ingestHint)
+        try c.encode(postSavePluginId, forKey: .postSavePluginId)
     }
 }
 
@@ -333,6 +345,69 @@ struct CloudSaverSearchResult: Identifiable, Hashable, Sendable {
             return "https://pan.quark.cn/s/" + shareCode
         case .unknown:
             return shareCode
+        }
+    }
+}
+
+
+// MARK: - Post-save plugin (LitePan / hooks)
+
+/// Built-in params for CloudSaver `POST /api/plugins/run`.
+struct CloudSaverPluginBuiltInParams: Equatable, Hashable, Sendable, Codable {
+    var title: String = ""
+    var firstShareUrl: String = ""
+    var shareUrlStr: String = ""
+    var description: String = ""
+    var shareUrl: String = ""
+    var shareTitle: String = ""
+    var savePath: String = ""
+    var saveFid: String = ""
+    var shareFid: String = ""
+
+    static func make(
+        result: CloudSaverSearchResult,
+        saveFolderId: String,
+        savePath: String,
+        files: [CloudSaverShareFile]
+    ) -> CloudSaverPluginBuiltInParams {
+        let url = result.shareURL
+        let title = result.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let shareFid = files
+            .map { $0.fileId.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: ",")
+        return CloudSaverPluginBuiltInParams(
+            title: title,
+            firstShareUrl: url,
+            shareUrlStr: url,
+            description: result.description,
+            shareUrl: url,
+            shareTitle: title,
+            savePath: savePath,
+            saveFid: saveFolderId,
+            shareFid: shareFid
+        )
+    }
+}
+
+/// Outcome of optional post-save plugin after a successful transfer.
+enum CloudSaverPostSaveFollowUp: Equatable, Sendable {
+    case skipped
+    case triggered(message: String)
+    case failed(message: String)
+
+    var userSuffix: String? {
+        switch self {
+        case .skipped:
+            return nil
+        case .triggered(let message):
+            let m = message.trimmingCharacters(in: .whitespacesAndNewlines)
+            return m.isEmpty ? "已触发后续插件（LitePan / STRM / 刷库）" : m
+        case .failed(let message):
+            let m = message.trimmingCharacters(in: .whitespacesAndNewlines)
+            return m.isEmpty
+                ? "已转存，但后续插件触发失败"
+                : "已转存，但后续插件触发失败：\(m)"
         }
     }
 }

@@ -306,11 +306,15 @@ actor CloudSaverAPIClient {
         }
     }
 
-    /// End-to-end want-to-watch: share-info + save into folder.
+    /// End-to-end want-to-watch: share-info + save into folder, then optional plugin hooks.
+    /// Plugin failure does **not** throw after a successful save — check `CloudSaverPostSaveFollowUp`.
+    @discardableResult
     func wantToWatch(
         result: CloudSaverSearchResult,
-        folderId: String
-    ) async throws {
+        folderId: String,
+        folderName: String = "",
+        postSavePluginId: Int? = nil
+    ) async throws -> CloudSaverPostSaveFollowUp {
         let info = try await shareInfo(
             shareCode: result.shareCode,
             receiveCode: result.receiveCode,
@@ -323,6 +327,81 @@ actor CloudSaverAPIClient {
             folderId: folderId,
             files: info.files
         )
+        return await triggerPostSavePluginIfNeeded(
+            pluginId: postSavePluginId,
+            result: result,
+            folderId: folderId,
+            folderName: folderName,
+            files: info.files
+        )
+    }
+
+    /// After a successful `save`, optionally `POST /api/plugins/run` (LitePan hooks → STRM / Emby).
+    @discardableResult
+    func triggerPostSavePluginIfNeeded(
+        pluginId: Int?,
+        result: CloudSaverSearchResult,
+        folderId: String,
+        folderName: String,
+        files: [CloudSaverShareFile]
+    ) async -> CloudSaverPostSaveFollowUp {
+        guard let pluginId, pluginId > 0 else { return .skipped }
+        let pathLabel = folderName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let params = CloudSaverPluginBuiltInParams.make(
+            result: result,
+            saveFolderId: folderId,
+            savePath: pathLabel.isEmpty ? folderId : pathLabel,
+            files: files
+        )
+        do {
+            let message = try await runPlugin(id: pluginId, params: params)
+            return .triggered(message: message)
+        } catch {
+            let msg = (error as? APIError)?.errorDescription ?? error.localizedDescription
+            return .failed(message: msg)
+        }
+    }
+
+    /// `POST /api/plugins/run` — triggers CloudSaver plugins (e.g. LitePan 自动保存 / hooks).
+    @discardableResult
+    func runPlugin(
+        id: Int,
+        params: CloudSaverPluginBuiltInParams
+    ) async throws -> String {
+        let builtIn: [String: String] = [
+            "title": params.title,
+            "firstShareUrl": params.firstShareUrl,
+            "shareUrlStr": params.shareUrlStr,
+            "description": params.description,
+            "shareUrl": params.shareUrl,
+            "shareTitle": params.shareTitle,
+            "savePath": params.savePath,
+            "saveFid": params.saveFid,
+            "shareFid": params.shareFid
+        ]
+        let bodyObj: [String: Any] = [
+            "id": id,
+            "builtInParams": builtIn
+        ]
+        let data = try JSONSerialization.data(withJSONObject: bodyObj)
+        let envelope: CSEnvelope<CSPluginRunData> = try await authorizedEnvelope(
+            path: "/api/plugins/run",
+            method: "POST",
+            body: data,
+            timeout: 60
+        )
+        if envelope.success == false {
+            throw APIError.custom(envelope.message ?? "插件触发失败")
+        }
+        // Prefer outer message (e.g. "LitePan推送触发成功！"), then nested.
+        let outer = (envelope.message ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !outer.isEmpty { return outer }
+        let nested = (envelope.data?.message ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !nested.isEmpty { return nested }
+        if let names = envelope.data?.triggeredNames, !names.isEmpty {
+            return "已触发：\(names.joined(separator: "、"))"
+        }
+        return "LitePan推送触发成功"
     }
 
     // MARK: - Private
@@ -644,6 +723,33 @@ private struct CSLoginData: Decodable {
 }
 
 private struct CSEmptyData: Decodable {}
+
+/// Flexible decode for `/api/plugins/run` nested LitePan payload.
+private struct CSPluginRunData: Decodable {
+    let success: Bool?
+    let message: String?
+    let data: CSPluginRunInner?
+
+    var triggeredNames: [String]? {
+        data?.triggered?.compactMap { t in
+            let n = (t.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            return n.isEmpty ? nil : n
+        }
+    }
+}
+
+private struct CSPluginRunInner: Decodable {
+    let event: String?
+    let matched: Int?
+    let path: String?
+    let source: String?
+    let triggered: [CSPluginTriggered]?
+}
+
+private struct CSPluginTriggered: Decodable {
+    let id: Int?
+    let name: String?
+}
 
 private struct CSSearchDataFlexible: Decodable {
     let results: [CSFlatResult]?

@@ -526,16 +526,23 @@ struct CloudSaverDashboard: View {
         defer { transferringIds.remove(item.id) }
 
         do {
-            try await client.wantToWatch(result: item, folderId: dest.cid)
+            let followUp = try await client.wantToWatch(
+                result: item,
+                folderId: dest.cid,
+                folderName: dest.name,
+                postSavePluginId: settings.resolvedPostSavePluginId
+            )
             transferredIds.insert(item.id)
             transferState = .transferred
-            let hint = settings.ingestHint.trimmingCharacters(in: .whitespacesAndNewlines)
-            let msg: String
-            if hint.isEmpty {
-                msg = "已转存到「\(dest.name)」"
-            } else {
-                msg = "已转存到「\(dest.name)」。\(hint)"
+            var parts: [String] = ["已转存到「\(dest.name)」"]
+            if let suffix = followUp.userSuffix {
+                parts.append(suffix)
             }
+            let hint = settings.ingestHint.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !hint.isEmpty {
+                parts.append(hint)
+            }
+            let msg = parts.joined(separator: "。")
             transferMessage = msg
             showToast(msg)
         } catch {
@@ -822,6 +829,17 @@ struct CloudSaverSettingsView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                 TextField("转存成功提示（可选）", text: $settings.ingestHint)
+            }
+
+            Section {
+                TextField("插件 ID（如 4）", text: $settings.postSavePluginId)
+                    .keyboardType(.numberPad)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+            } header: {
+                Text("想看后续（LitePan）")
+            } footer: {
+                Text("转存成功后调用 POST /api/plugins/run，触发 LitePan hooks（STRM / NFO / 刷 Emby 等）。留空则不调用；插件失败不影响已转存。")
             }
 
             Section {

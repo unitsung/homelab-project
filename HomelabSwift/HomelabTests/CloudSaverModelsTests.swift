@@ -187,6 +187,55 @@ final class CloudSaverModelsTests: XCTestCase {
         XCTAssertNil(body["fidTokens"])
     }
 
+
+    func testPluginBuiltInParamsMake() {
+        let item = CloudSaverSearchResult(
+            title: "测试影片",
+            description: "desc",
+            imageURL: "",
+            shareCode: "abc123",
+            receiveCode: "88",
+            cloudType: .cloud115,
+            fileSize: "1G",
+            channel: "",
+            channelId: "",
+            pubDate: "",
+            messageId: "m1",
+            tags: [],
+            count: 1
+        )
+        let files = [CloudSaverShareFile(fileId: "fid1", fileName: "a.mkv", fileSize: nil, fileIdToken: nil, isFolder: false)]
+        let p = CloudSaverPluginBuiltInParams.make(
+            result: item,
+            saveFolderId: "cid99",
+            savePath: "电影",
+            files: files
+        )
+        XCTAssertEqual(p.title, "测试影片")
+        XCTAssertEqual(p.shareTitle, "测试影片")
+        XCTAssertTrue(p.shareUrl.contains("115.com/s/abc123"))
+        XCTAssertEqual(p.firstShareUrl, p.shareUrl)
+        XCTAssertEqual(p.saveFid, "cid99")
+        XCTAssertEqual(p.savePath, "电影")
+        XCTAssertEqual(p.shareFid, "fid1")
+    }
+
+    func testResolvedPostSavePluginId() {
+        var s = CloudSaverSettings.empty
+        XCTAssertNil(s.resolvedPostSavePluginId)
+        s.postSavePluginId = "4"
+        XCTAssertEqual(s.resolvedPostSavePluginId, 4)
+        s.postSavePluginId = " 0 "
+        XCTAssertNil(s.resolvedPostSavePluginId)
+        s.postSavePluginId = "x"
+        XCTAssertNil(s.resolvedPostSavePluginId)
+    }
+
+    func testPostSaveFollowUpSuffix() {
+        XCTAssertNil(CloudSaverPostSaveFollowUp.skipped.userSuffix)
+        XCTAssertTrue(CloudSaverPostSaveFollowUp.triggered(message: "LitePan推送触发成功！").userSuffix?.contains("LitePan") == true)
+        XCTAssertTrue(CloudSaverPostSaveFollowUp.failed(message: "timeout").userSuffix?.contains("timeout") == true)
+    }
 }
 
 /// Test-only mirror of wire envelope for folder list (private DTOs not @testable).
@@ -214,5 +263,5 @@ private struct CSFolderItemTest: Decodable {
     }
 
     private enum CodingKeys: String, CodingKey { case cid, name, path }
-}
 
+}
