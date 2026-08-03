@@ -46,7 +46,12 @@ actor CloudSaverAPIClient {
     func ping() async -> Bool {
         guard !baseURL.isEmpty else { return false }
         do {
-            _ = try await ensureToken()
+            // Validate the stored JWT (and re-login once if expired), not just non-empty token.
+            let _: CSEnvelope<CSDoubanHotData> = try await authorizedEnvelope(
+                path: "/api/douban/hot?type=%E5%85%A8%E9%83%A8&category=%E7%83%AD%E9%97%A8&api=movie&limit=1",
+                method: "GET",
+                timeout: 15
+            )
             return true
         } catch {
             return false
@@ -78,7 +83,6 @@ actor CloudSaverAPIClient {
             return CloudSaverSearchPage(results: [], hasMore: false, lastMessageId: "")
         }
 
-        let token = try await ensureToken()
         var query: [String] = ["keyword=\(trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? trimmed)"]
         if let lastMessageId, !lastMessageId.isEmpty {
             let enc = lastMessageId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? lastMessageId
@@ -86,12 +90,9 @@ actor CloudSaverAPIClient {
         }
         let path = "/api/search?\(query.joined(separator: "&"))"
         // Server fan-out to many channels often takes 7–10s+ (see CS docker logs).
-        let envelope: CSEnvelope<CSSearchDataFlexible> = try await engine.request(
-            baseURL: baseURL,
-            fallbackURL: fallbackURL,
+        let envelope: CSEnvelope<CSSearchDataFlexible> = try await authorizedEnvelope(
             path: path,
             method: "GET",
-            headers: authHeaders(token),
             timeout: 60
         )
         guard envelope.success != false else {
@@ -107,17 +108,13 @@ actor CloudSaverAPIClient {
         api: String = "movie",
         limit: Int = 50
     ) async throws -> [CloudSaverDoubanItem] {
-        let token = try await ensureToken()
         let qType = type.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? type
         let qCat = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? category
         let qApi = api.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? api
         let path = "/api/douban/hot?type=\(qType)&category=\(qCat)&api=\(qApi)&limit=\(limit)"
-        let envelope: CSEnvelope<CSDoubanHotData> = try await engine.request(
-            baseURL: baseURL,
-            fallbackURL: fallbackURL,
+        let envelope: CSEnvelope<CSDoubanHotData> = try await authorizedEnvelope(
             path: path,
-            method: "GET",
-            headers: authHeaders(token)
+            method: "GET"
         )
         guard envelope.success != false else {
             throw APIError.custom(envelope.message ?? "获取豆瓣榜单失败")
@@ -130,18 +127,14 @@ actor CloudSaverAPIClient {
         receiveCode: String,
         cloud: CloudSaverCloudType
     ) async throws -> CloudSaverShareInfoResult {
-        let token = try await ensureToken()
         switch cloud {
         case .cloud115:
             let encShare = shareCode.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? shareCode
             let encRecv = receiveCode.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? receiveCode
             let path = "/api/cloud115/share-info?shareCode=\(encShare)&receiveCode=\(encRecv)"
-            let envelope: CSEnvelope<CS115ShareData> = try await engine.request(
-                baseURL: baseURL,
-                fallbackURL: fallbackURL,
+            let envelope: CSEnvelope<CS115ShareData> = try await authorizedEnvelope(
                 path: path,
                 method: "GET",
-                headers: authHeaders(token),
                 timeout: 30
             )
             guard envelope.success != false else {
@@ -162,12 +155,9 @@ actor CloudSaverAPIClient {
             let encShare = shareCode.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? shareCode
             let encRecv = receiveCode.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? receiveCode
             let path = "/api/quark/share-info?shareCode=\(encShare)&receiveCode=\(encRecv)"
-            let envelope: CSEnvelope<CSQuarkShareData> = try await engine.request(
-                baseURL: baseURL,
-                fallbackURL: fallbackURL,
+            let envelope: CSEnvelope<CSQuarkShareData> = try await authorizedEnvelope(
                 path: path,
                 method: "GET",
-                headers: authHeaders(token),
                 timeout: 30
             )
             guard envelope.success != false else {
@@ -201,7 +191,6 @@ actor CloudSaverAPIClient {
         cloud: CloudSaverCloudType,
         parentCid: String = "0"
     ) async throws -> [CloudSaverRemoteFolder] {
-        let token = try await ensureToken()
         let parent = parentCid.trimmingCharacters(in: .whitespacesAndNewlines)
         let cid = parent.isEmpty ? "0" : parent
         let enc = cid.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? cid
@@ -214,12 +203,9 @@ actor CloudSaverAPIClient {
         case .unknown:
             throw APIError.custom("不支持的云盘类型")
         }
-        let envelope: CSEnvelope<CSFolderListData> = try await engine.request(
-            baseURL: baseURL,
-            fallbackURL: fallbackURL,
+        let envelope: CSEnvelope<CSFolderListData> = try await authorizedEnvelope(
             path: path,
             method: "GET",
-            headers: authHeaders(token),
             timeout: 30
         )
         if envelope.success == false {
@@ -234,9 +220,7 @@ actor CloudSaverAPIClient {
             guard !cid.isEmpty else { return nil }
             return CloudSaverRemoteFolder(cid: cid, name: name.isEmpty ? cid : name)
         }
-        if mapped.isEmpty, envelope.message != nil, envelope.success != true {
-            throw APIError.custom(envelope.message ?? "目录为空或 Cookie 失效")
-        }
+        // Empty list is valid (no subfolders). Do not assume Cookie failure.
         return mapped
     }
 
@@ -250,7 +234,6 @@ actor CloudSaverAPIClient {
         folderId: String,
         files: [CloudSaverShareFile]
     ) async throws {
-        let token = try await ensureToken()
         let folder = folderId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !folder.isEmpty else {
             throw APIError.custom("请选择保存文件夹")
@@ -284,12 +267,9 @@ actor CloudSaverAPIClient {
                 "fids": fids
             ]
             let data = try JSONSerialization.data(withJSONObject: body)
-            let envelope: CSEnvelope<CS115SaveData> = try await engine.request(
-                baseURL: baseURL,
-                fallbackURL: fallbackURL,
+            let envelope: CSEnvelope<CS115SaveData> = try await authorizedEnvelope(
                 path: "/api/cloud115/save",
                 method: "POST",
-                headers: authHeaders(token).merging(["Content-Type": "application/json"]) { _, new in new },
                 body: data,
                 timeout: 60
             )
@@ -311,12 +291,9 @@ actor CloudSaverAPIClient {
                 "receiveCode": receiveCode
             ]
             let data = try JSONSerialization.data(withJSONObject: body)
-            let envelope: CSEnvelope<CSEmptyData> = try await engine.request(
-                baseURL: baseURL,
-                fallbackURL: fallbackURL,
+            let envelope: CSEnvelope<CSEmptyData> = try await authorizedEnvelope(
                 path: "/api/quark/save",
                 method: "POST",
-                headers: authHeaders(token).merging(["Content-Type": "application/json"]) { _, new in new },
                 body: data,
                 timeout: 60
             )
@@ -350,6 +327,10 @@ actor CloudSaverAPIClient {
 
     // MARK: - Private
 
+    private var canPasswordLogin: Bool {
+        !username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !password.isEmpty
+    }
+
     private func authHeaders(_ token: String) -> [String: String] {
         ["Authorization": "Bearer \(token)", "Content-Type": "application/json"]
     }
@@ -359,10 +340,63 @@ actor CloudSaverAPIClient {
         return try await loginAndStoreToken()
     }
 
+    /// Authenticated request with one automatic password re-login when the App JWT/session expired.
+    private func authorizedEnvelope<T: Decodable>(
+        path: String,
+        method: String = "GET",
+        body: Data? = nil,
+        timeout: TimeInterval? = nil
+    ) async throws -> CSEnvelope<T> {
+        do {
+            return try await performAuthorizedEnvelope(
+                path: path,
+                method: method,
+                body: body,
+                timeout: timeout
+            )
+        } catch {
+            guard CloudSaverAuthFailure.isAppSessionAuthError(error), canPasswordLogin else { throw error }
+            token = ""
+            _ = try await loginAndStoreToken()
+            return try await performAuthorizedEnvelope(
+                path: path,
+                method: method,
+                body: body,
+                timeout: timeout
+            )
+        }
+    }
+
+    private func performAuthorizedEnvelope<T: Decodable>(
+        path: String,
+        method: String,
+        body: Data?,
+        timeout: TimeInterval?
+    ) async throws -> CSEnvelope<T> {
+        let jwt = try await ensureToken()
+        let envelope: CSEnvelope<T> = try await engine.request(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: path,
+            method: method,
+            headers: authHeaders(jwt),
+            body: body,
+            timeout: timeout
+        )
+        // Some CS builds return HTTP 200 + success:false instead of 401 when JWT is stale.
+        if envelope.success == false,
+           let message = envelope.message,
+           CloudSaverAuthFailure.looksLikeAppSession(message) {
+            throw APIError.unauthorized
+        }
+        return envelope
+    }
+
+
     @discardableResult
     private func loginAndStoreToken() async throws -> String {
-        guard !username.isEmpty, !password.isEmpty else {
-            throw APIError.notConfigured
+        guard canPasswordLogin else {
+            throw APIError.unauthorized
         }
         let body = try JSONSerialization.data(withJSONObject: [
             "username": username,
@@ -380,7 +414,11 @@ actor CloudSaverAPIClient {
               let jwt = envelope.data?.token?.trimmingCharacters(in: .whitespacesAndNewlines),
               !jwt.isEmpty
         else {
-            throw APIError.custom(envelope.message ?? "登录失败")
+            let msg = (envelope.message ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            if msg.isEmpty {
+                throw APIError.unauthorized
+            }
+            throw APIError.custom(msg)
         }
         token = jwt
         onTokenRefresh?(jwt)

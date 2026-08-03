@@ -349,23 +349,112 @@ struct CloudSaverSavePathOption: Identifiable, Hashable, Sendable {
     }
 }
 
-/// Map backend / cookie failures to actionable copy (user refreshes on CloudSaver web).
+
+/// Classifies CloudSaver auth failures: App JWT/session vs pan Cookie.
+enum CloudSaverAuthFailure {
+    static func isAppSessionAuthError(_ error: Error) -> Bool {
+        if let api = error as? APIError {
+            switch api {
+            case .unauthorized:
+                return true
+            case .httpError(let code, let body):
+                if code == 401 { return true }
+                if code == 403 { return looksLikeAppSession(body) }
+                return false
+            case .custom(let msg):
+                return looksLikeAppSession(msg)
+            case .bothURLsFailed(let primary, let fallback):
+                return isAppSessionAuthError(primary) || isAppSessionAuthError(fallback)
+            default:
+                return false
+            }
+        }
+        return looksLikeAppSession(error.localizedDescription)
+    }
+
+    /// Detect App session/JWT expiry messages. Explicitly excludes pan Cookie wording.
+    static func looksLikeAppSession(_ raw: String) -> Bool {
+        let t = raw.lowercased()
+        if t.contains("cookie") { return false }
+        if t.contains("网盘") && (t.contains("过期") || t.contains("失效") || t.contains("登录")) {
+            return false
+        }
+        let keys = [
+            "jwt", "bearer", "unauthorized", "unauthorised",
+            "token expired", "token invalid", "invalid token", "no token",
+            "jwt expired", "jwt malformed", "malformed token",
+            "not authenticated", "authentication failed", "access token",
+            "未登录", "请先登录", "登录过期", "登录失效", "登录已过期",
+            "token过期", "token 过期", "token失效", "token无效", "token 无效",
+            "认证失败", "鉴权失败", "身份验证失败", "没有权限", "无有效token",
+            "请重新登录", "需要登录", "登录超时"
+        ]
+        if keys.contains(where: { t.contains($0.lowercased()) || raw.contains($0) }) {
+            return true
+        }
+        if t.contains("401") { return true }
+        return false
+    }
+}
+
+/// Map backend failures to actionable copy.
+/// Distinguishes CloudSaver **App** session/JWT expiry from 115/夸克 **Cookie** expiry.
 enum CloudSaverUserFacingError {
     static func message(from error: Error) -> String {
+        if let api = error as? APIError {
+            switch api {
+            case .unauthorized:
+                return appSessionMessage
+            case .notConfigured:
+                return "CloudSaver 尚未配置完整。请在服务设置中填写 URL 与账号密码。"
+            default:
+                break
+            }
+        }
         let raw = (error as? APIError)?.errorDescription ?? error.localizedDescription
         return map(raw)
     }
 
     static func map(_ raw: String) -> String {
-        let t = raw.lowercased()
-        let keys = [
-            "cookie", "过期", "失效", "未登录", "登录", "unauthorized", "401", "403",
-            "token", "认证", "授权", "session", "请先", "网盘账号", "quark cookie", "115 cookie"
-        ]
-        if keys.contains(where: { t.contains($0.lowercased()) || raw.contains($0) }) {
-            return "网盘 Cookie/登录可能已过期。请到 CloudSaver 网页重新登录并刷新对应网盘 Cookie 后再试。（App 不会写死目录，目录始终从接口拉取）"
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return raw }
+        let t = trimmed.lowercased()
+
+        // 1) Pan Cookie — only when wording is clearly about drive cookies / 网盘账号.
+        if looksLikePanCookie(t, raw: trimmed) {
+            return panCookieMessage
         }
-        return raw
+
+        // 2) App JWT / login session
+        if CloudSaverAuthFailure.looksLikeAppSession(trimmed) || looksLikeAppSessionExtra(t) {
+            return appSessionMessage
+        }
+
+        return trimmed
+    }
+
+    private static let appSessionMessage =
+        "CloudSaver 登录已过期或无效。若已保存账号密码，App 会自动重新登录；仍失败请到服务设置中重新保存账号密码。"
+
+    private static let panCookieMessage =
+        "网盘 Cookie 可能已过期。请到 CloudSaver 网页重新登录 115/夸克 并刷新对应网盘 Cookie 后再试。"
+
+    private static func looksLikePanCookie(_ t: String, raw: String) -> Bool {
+        if t.contains("cookie") { return true }
+        if t.contains("quark cookie") || t.contains("115 cookie") { return true }
+        if raw.contains("网盘账号") || t.contains("网盘 cookie") { return true }
+        // e.g. "请先在网页登录夸克/115"
+        if (t.contains("夸克") || t.contains("115") || t.contains("网盘"))
+            && (t.contains("cookie") || t.contains("网页登录") || t.contains("重新登录网盘")) {
+            return true
+        }
+        return false
+    }
+
+    private static func looksLikeAppSessionExtra(_ t: String) -> Bool {
+        // Keep narrow extras; primary detection lives on CloudSaverAPIClient.
+        let keys = ["unauthorized", "session expired", "session invalid"]
+        return keys.contains(where: { t.contains($0) })
     }
 }
 

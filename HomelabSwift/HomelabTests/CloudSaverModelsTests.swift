@@ -31,9 +31,32 @@ final class CloudSaverModelsTests: XCTestCase {
         XCTAssertEqual(s.defaultFolderQuarkCid, "q1")
     }
 
-    func testCookieExpiredMessage() {
+    func testPanCookieExpiredMessage() {
         let m = CloudSaverUserFacingError.map("cookie expired please login")
-        XCTAssertTrue(m.contains("网页") || m.contains("Cookie"))
+        XCTAssertTrue(m.contains("Cookie"), m)
+        XCTAssertTrue(m.contains("网页") || m.contains("CloudSaver"), m)
+        XCTAssertFalse(m.contains("自动重新登录"), m)
+    }
+
+    func testAppSessionExpiredMessage() {
+        let m1 = CloudSaverUserFacingError.map("jwt expired")
+        XCTAssertTrue(m1.contains("登录已过期") || m1.contains("重新登录"), m1)
+        XCTAssertFalse(m1.contains("Cookie"), m1)
+
+        let m2 = CloudSaverUserFacingError.map("请先登录")
+        XCTAssertTrue(m2.contains("登录已过期") || m2.contains("重新登录"), m2)
+        XCTAssertFalse(m2.contains("Cookie"), m2)
+
+        let m3 = CloudSaverUserFacingError.message(from: APIError.unauthorized)
+        XCTAssertTrue(m3.contains("登录已过期") || m3.contains("重新登录"), m3)
+        XCTAssertFalse(m3.contains("Cookie"), m3)
+    }
+
+    func testLooksLikeAppSessionAuthExcludesCookie() {
+        XCTAssertTrue(CloudSaverAuthFailure.looksLikeAppSession("jwt expired"))
+        XCTAssertTrue(CloudSaverAuthFailure.looksLikeAppSession("请先登录"))
+        XCTAssertFalse(CloudSaverAuthFailure.looksLikeAppSession("cookie expired"))
+        XCTAssertFalse(CloudSaverAuthFailure.looksLikeAppSession("网盘 Cookie 失效"))
     }
 
     func testServiceTypeRoundTrip() throws {
