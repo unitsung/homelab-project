@@ -52,12 +52,12 @@ struct ArcaneContainerDetailView: View {
         case info, logs, exec, env
         var id: String { rawValue }
 
-        var title: String {
+        func title(using tr: Translations) -> String {
             switch self {
-            case .info: return "Info"
-            case .logs: return "Logs"
-            case .exec: return "Exec"
-            case .env: return "Env"
+            case .info: return tr.arcaneTabInfo
+            case .logs: return tr.arcaneTabLogs
+            case .exec: return tr.arcaneTabExec
+            case .env: return tr.arcaneTabEnv
             }
         }
     }
@@ -108,7 +108,7 @@ struct ArcaneContainerDetailView: View {
             }
         }
         .background(AppTheme.background)
-        .navigationTitle(detail?.displayName.isEmpty == false ? detail!.displayName : "Container")
+        .navigationTitle(detail?.displayName.isEmpty == false ? detail!.displayName : localizer.t.arcaneContainersTitle)
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await refresh() }
         .task { await refresh() }
@@ -141,7 +141,7 @@ struct ArcaneContainerDetailView: View {
             }
             Button(localizer.t.cancel, role: .cancel) {}
         } message: {
-            Text("Force remove this container?")
+            Text(localizer.t.arcaneForceRemove)
         }
         .sheet(isPresented: $showUpdateProgress) {
             if let updateSession {
@@ -174,13 +174,13 @@ struct ArcaneContainerDetailView: View {
                 .foregroundStyle(AppTheme.textMuted)
                 .lineLimit(2)
             if let started = detail.state?.startedAt, !started.isEmpty {
-                Text("Started: \(started)")
+                Text(String(format: localizer.t.arcaneStartedAt, started))
                     .font(.caption2)
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineLimit(1)
             }
             if let health = detail.state?.health?.status {
-                Text("Health: \(health)")
+                Text(String(format: localizer.t.arcaneHealthLabel, health))
                     .font(.caption2)
                     .foregroundStyle(AppTheme.textSecondary)
             }
@@ -191,9 +191,9 @@ struct ArcaneContainerDetailView: View {
                 }
             )) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Auto-update")
+                    Text(localizer.t.arcaneAutoUpdate)
                         .font(.subheadline.weight(.semibold))
-                    Text("PUT …/containers/{id}/auto-update")
+                    Text(localizer.t.arcaneAutoUpdateHint)
                         .font(.caption2)
                         .foregroundStyle(AppTheme.textMuted)
                 }
@@ -210,32 +210,32 @@ struct ArcaneContainerDetailView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     if isRunning {
-                        actionButton("Stop", icon: "stop.fill", color: AppTheme.stopped) {
+                        actionButton(localizer.t.actionStop, icon: "stop.fill", color: AppTheme.stopped) {
                             Task { await runAction(.stop) }
                         }
-                        actionButton("Restart", icon: "arrow.clockwise", color: AppTheme.warning) {
+                        actionButton(localizer.t.actionRestart, icon: "arrow.clockwise", color: AppTheme.warning) {
                             Task { await runAction(.restart) }
                         }
-                        actionButton("Pause", icon: "pause.fill", color: AppTheme.info) {
+                        actionButton(localizer.t.actionPause, icon: "pause.fill", color: AppTheme.info) {
                             Task { await runAction(.pause) }
                         }
-                        actionButton("Kill", icon: "xmark.octagon.fill", color: AppTheme.danger) {
+                        actionButton(localizer.t.arcaneKill, icon: "xmark.octagon.fill", color: AppTheme.danger) {
                             Task { await runAction(.kill) }
                         }
                     } else {
-                        actionButton("Start", icon: "play.fill", color: AppTheme.running) {
+                        actionButton(localizer.t.actionStart, icon: "play.fill", color: AppTheme.running) {
                             Task { await runAction(.start) }
                         }
                         if detail?.state?.status?.lowercased() == "paused" {
-                            actionButton("Unpause", icon: "play.pause.fill", color: AppTheme.running) {
+                            actionButton(localizer.t.arcaneUnpause, icon: "play.pause.fill", color: AppTheme.running) {
                                 Task { await runAction(.unpause) }
                             }
                         }
                     }
-                    actionButton("Update", icon: "arrow.down.circle", color: arcaneColor) {
+                    actionButton(localizer.t.arcaneUpdate, icon: "arrow.down.circle", color: arcaneColor) {
                         Task { await updateContainer() }
                     }
-                    actionButton("Redeploy", icon: "arrow.triangle.2.circlepath", color: AppTheme.warning) {
+                    actionButton(localizer.t.arcaneRedeploy, icon: "arrow.triangle.2.circlepath", color: AppTheme.warning) {
                         Task { await redeployContainer() }
                     }
                     actionButton(localizer.t.delete, icon: "trash", color: AppTheme.danger) {
@@ -281,7 +281,7 @@ struct ArcaneContainerDetailView: View {
                     HapticManager.light()
                     activeTab = tab
                 } label: {
-                    Text(tab.title)
+                    Text(tab.title(using: localizer.translations))
                         .font(.caption.weight(.bold))
                         .foregroundStyle(activeTab == tab ? arcaneColor : AppTheme.textSecondary)
                         .frame(maxWidth: .infinity)
@@ -353,7 +353,7 @@ struct ArcaneContainerDetailView: View {
                 Button {
                     Task { await loadLogs(follow: true) }
                 } label: {
-                    Label("Refresh", systemImage: "arrow.clockwise")
+                    Label(localizer.t.refresh, systemImage: "arrow.clockwise")
                         .font(.caption.weight(.semibold))
                 }
                 .buttonStyle(.plain)
@@ -383,7 +383,7 @@ struct ArcaneContainerDetailView: View {
     private var execTab: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("Exec")
+                Text(localizer.t.arcaneTabExec)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(AppTheme.textMuted)
                 Spacer()
@@ -401,7 +401,7 @@ struct ArcaneContainerDetailView: View {
                     }
                 }
                 .font(.caption.weight(.semibold))
-                Button("Clear") {
+                Button(localizer.t.arcaneClear) {
                     terminalBuffer = ""
                 }
                 .font(.caption.weight(.semibold))
@@ -467,7 +467,7 @@ struct ArcaneContainerDetailView: View {
                     .font(.system(.body, design: .monospaced))
                     .focused($isCommandFocused)
                     .onSubmit { sendCommand() }
-                Button("Send") { sendCommand() }
+                Button(localizer.t.arcaneSend) { sendCommand() }
                     .buttonStyle(.borderedProminent)
                     .tint(arcaneColor)
                     .disabled(!isTerminalConnected || commandInput.trimmingCharacters(in: .whitespaces).isEmpty)

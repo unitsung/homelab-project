@@ -657,7 +657,7 @@ struct ArcaneDashboard: View {
                                 .foregroundStyle(.primary)
                                 .lineLimit(1)
                             if containerNeedsUpdate(container) {
-                                Text("UPDATE")
+                                Text(localizer.t.arcaneUpdateBadge)
                                     .font(.caption2.bold())
                                     .foregroundStyle(AppTheme.warning)
                                     .padding(.horizontal, 6)
@@ -681,24 +681,24 @@ struct ArcaneDashboard: View {
                         Menu {
                             if container.isRunning {
                                 Button { performAction(.stop, on: container.id) } label: {
-                                    Label("Stop", systemImage: "stop.fill")
+                                    Label(localizer.t.actionStop, systemImage: "stop.fill")
                                 }
                                 Button { performAction(.restart, on: container.id) } label: {
-                                    Label("Restart", systemImage: "arrow.clockwise")
+                                    Label(localizer.t.actionRestart, systemImage: "arrow.clockwise")
                                 }
                                 Button { performAction(.pause, on: container.id) } label: {
-                                    Label("Pause", systemImage: "pause.fill")
+                                    Label(localizer.t.actionPause, systemImage: "pause.fill")
                                 }
                             } else {
                                 Button { performAction(.start, on: container.id) } label: {
-                                    Label("Start", systemImage: "play.fill")
+                                    Label(localizer.t.actionStart, systemImage: "play.fill")
                                 }
                             }
                             Button { Task { await updateOne(container.id) } } label: {
-                                Label("Update", systemImage: "arrow.down.circle")
+                                Label(localizer.t.arcaneUpdate, systemImage: "arrow.down.circle")
                             }
                             Button { Task { await redeployOne(container.id) } } label: {
-                                Label("Redeploy", systemImage: "arrow.triangle.2.circlepath")
+                                Label(localizer.t.arcaneRedeploy, systemImage: "arrow.triangle.2.circlepath")
                             }
                             Button(role: .destructive) { Task { await deleteOne(container.id) } } label: {
                                 Label(localizer.t.delete, systemImage: "trash")
@@ -1156,12 +1156,24 @@ struct ArcaneDashboard: View {
         isBatchRunning = true
         defer { isBatchRunning = false }
         guard let client = await servicesStore.arcaneClient(instanceId: selectedInstanceId) else { return }
+        var ok = 0
+        var fail = 0
         for id in selectedIds {
             do {
                 try await client.containerAction(id: id, action: action, environmentId: envId())
-            } catch {}
+                ok += 1
+            } catch {
+                fail += 1
+            }
         }
-        bannerMessage = String(format: localizer.t.arcaneBatchActionFormat, action.rawValue, selectedIds.count)
+        let actionTitle = localizedActionTitle(action)
+        if fail == 0 {
+            bannerMessage = String(format: localizer.t.arcaneBatchAllOkFormat, actionTitle, ok)
+            HapticManager.success()
+        } else {
+            bannerMessage = String(format: localizer.t.arcaneBatchResultFormat, actionTitle, ok, fail)
+            HapticManager.error()
+        }
         await fetchContainers()
     }
 
@@ -1169,14 +1181,36 @@ struct ArcaneDashboard: View {
         isBatchRunning = true
         defer { isBatchRunning = false }
         guard let client = await servicesStore.arcaneClient(instanceId: selectedInstanceId) else { return }
+        var ok = 0
+        var fail = 0
         for id in selectedIds {
             do {
                 try await client.deleteContainer(id: id, environmentId: envId(), force: true)
-            } catch {}
+                ok += 1
+            } catch {
+                fail += 1
+            }
         }
         selectedIds.removeAll()
-        bannerMessage = localizer.t.arcaneDeletedSelected
+        if fail == 0 {
+            bannerMessage = String(format: localizer.t.arcaneBatchAllOkFormat, localizer.t.delete, ok)
+            HapticManager.success()
+        } else {
+            bannerMessage = String(format: localizer.t.arcaneBatchResultFormat, localizer.t.delete, ok, fail)
+            HapticManager.error()
+        }
         await fetchContainers()
+    }
+
+    private func localizedActionTitle(_ action: ArcaneContainerAction) -> String {
+        switch action {
+        case .start: return localizer.t.actionStart
+        case .stop: return localizer.t.actionStop
+        case .restart: return localizer.t.actionRestart
+        case .pause: return localizer.t.actionPause
+        case .unpause: return localizer.t.arcaneUnpause
+        case .kill: return localizer.t.arcaneKill
+        }
     }
 
     private func statusColor(for state: String) -> Color {
@@ -1196,15 +1230,14 @@ enum ArcaneRoute: Hashable {
     case containerDetail(instanceId: UUID, environmentId: String, containerId: String)
 }
 
-// MARK: - Full list (kept for navigation)
+// MARK: - Full list (legacy route → dashboard)
 
 struct ArcaneContainerListView: View {
     let instanceId: UUID
     let environmentId: String
 
     var body: some View {
-        // Reuse dashboard with fixed env by navigating to detail from main list.
-        Text("Use dashboard list")
-            .navigationTitle("Containers")
+        // Prefer the full dashboard (env picker + filters + bulk actions).
+        ArcaneDashboard(instanceId: instanceId)
     }
 }

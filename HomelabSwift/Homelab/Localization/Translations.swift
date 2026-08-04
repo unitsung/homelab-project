@@ -1911,6 +1911,46 @@ struct Translations {
     let arcanePruningVolumes: String
     let arcaneRunningSystemPrune: String
     let arcaneActionOkFormat: String
+    let arcaneUpdateBadge: String
+    let arcaneKill: String
+    let arcaneUnpause: String
+    let arcaneRedeploy: String
+    let arcaneForceRemove: String
+    let arcaneStartedAt: String
+    let arcaneHealthLabel: String
+    let arcaneAutoUpdate: String
+    let arcaneAutoUpdateHint: String
+    let arcaneTabInfo: String
+    let arcaneTabLogs: String
+    let arcaneTabExec: String
+    let arcaneTabEnv: String
+    let arcaneClear: String
+    let arcaneSend: String
+    let arcaneBatchResultFormat: String
+    let arcaneBatchAllOkFormat: String
+    let arcaneContainersTitle: String
+    let filesSortBy: String
+    let filesSortName: String
+    let filesSortDate: String
+    let filesSortSize: String
+    let filesSortType: String
+    let filesUploadingProgress: String
+    let filesUploadFailedCount: String
+    let qbEmptyNoTorrents: String
+    let qbEmptyFilterNoMatch: String
+    let qbConnectionConnected: String
+    let qbConnectionDisconnected: String
+    let qbConnectionFirewalled: String
+    let qbSelect: String
+    let qbSelectedCount: String
+    let qbPauseSelected: String
+    let qbResumeSelected: String
+    let qbDeleteSelected: String
+    let qbCategoryAll: String
+    let qbCategoryNone: String
+    let qbBatchResultFormat: String
+    let homeQbitDownloadSpeed: String
+    let homeQbitUploadSpeed: String
 
     // Home extras + CloudSaver
     let homeNoServices: String

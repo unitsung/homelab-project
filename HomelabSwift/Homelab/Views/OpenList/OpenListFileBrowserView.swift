@@ -45,9 +45,11 @@ struct OpenListFileBrowserView: View {
 
     @State private var isSelecting = false
     @State private var selectedIDs: Set<String> = []
+    @State private var sortMode: OpenListSortMode = .nameAsc
 
     @State private var actionMessage: String?
     @State private var toastTask: Task<Void, Never>?
+    @State private var uploadProgress: (current: Int, total: Int)?
 
     /// File opened in the bottom sheet (details + play)
     @State private var activeItem: FileItem?
@@ -97,7 +99,9 @@ struct OpenListFileBrowserView: View {
     @State private var builtInPlay: BuiltInPlaySession?
 
     private var breadcrumbs: [FileBreadcrumb] { OpenListPath.breadcrumbs(for: path) }
-    private var displayedItems: [FileItem] { isSearching ? searchResults : items }
+    private var displayedItems: [FileItem] {
+        sortMode.sorted(isSearching ? searchResults : items)
+    }
     private var selectedItems: [FileItem] { displayedItems.filter { selectedIDs.contains($0.id) } }
     private var serviceColor: Color { ServiceType.openlist.colors.primary }
 
@@ -123,6 +127,20 @@ struct OpenListFileBrowserView: View {
             if canWrite && !isSelecting {
                 actionToolbar
             }
+
+            if let uploadProgress {
+                HStack(spacing: 10) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(String(format: localizer.t.filesUploadingProgress, uploadProgress.current, uploadProgress.total))
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(AppTheme.textSecondary)
+                    Spacer(minLength: 0)
+                }
+                .padding(.vertical, 4)
+            }
+
+            sortBar
 
             if isSelecting {
                 selectionBar
@@ -384,6 +402,7 @@ struct OpenListFileBrowserView: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(serviceColor)
+                .disabled(uploadProgress != nil)
 
                 Button {
                     showFileImporter = true
@@ -395,8 +414,27 @@ struct OpenListFileBrowserView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(serviceColor)
+                .disabled(uploadProgress != nil)
             }
         }
+    }
+
+    private var sortBar: some View {
+        HStack {
+            Text(localizer.t.filesSortBy)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppTheme.textSecondary)
+            Spacer()
+            Picker(localizer.t.filesSortBy, selection: $sortMode) {
+                Text(localizer.t.filesSortName).tag(OpenListSortMode.nameAsc)
+                Text(localizer.t.filesSortDate).tag(OpenListSortMode.dateDesc)
+                Text(localizer.t.filesSortSize).tag(OpenListSortMode.sizeDesc)
+                Text(localizer.t.filesSortType).tag(OpenListSortMode.type)
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+        }
+        .padding(.vertical, 2)
     }
 
     private var selectionBar: some View {
@@ -737,8 +775,13 @@ struct OpenListFileBrowserView: View {
         case .failure(let error):
             showToast(error.localizedDescription)
         case .success(let urls):
+            guard !urls.isEmpty else { return }
             var okCount = 0
-            for url in urls {
+            var failCount = 0
+            uploadProgress = (0, urls.count)
+            defer { uploadProgress = nil }
+            for (index, url) in urls.enumerated() {
+                uploadProgress = (index + 1, urls.count)
                 let accessing = url.startAccessingSecurityScopedResource()
                 defer { if accessing { url.stopAccessingSecurityScopedResource() } }
                 do {
@@ -747,12 +790,21 @@ struct OpenListFileBrowserView: View {
                     try await client.upload(fileName: name, data: data, toDirectory: path)
                     okCount += 1
                 } catch {
-                    showToast((error as? APIError)?.localizedDescription ?? error.localizedDescription)
+                    failCount += 1
+                    if urls.count == 1 {
+                        showToast((error as? APIError)?.localizedDescription ?? error.localizedDescription)
+                    }
                 }
             }
             if okCount > 0 {
-                showToast(String(format: localizer.t.filesUploadedCount, okCount))
+                var msg = String(format: localizer.t.filesUploadedCount, okCount)
+                if failCount > 0 {
+                    msg += " · " + String(format: localizer.t.filesUploadFailedCount, failCount)
+                }
+                showToast(msg)
                 await reload(silent: true)
+            } else if failCount > 0, urls.count > 1 {
+                showToast(String(format: localizer.t.filesUploadFailedCount, failCount))
             }
         }
     }
@@ -1180,6 +1232,109 @@ private struct OpenListHierarchicalBackChrome: UIViewControllerRepresentable {
     }
 }
 
+// MARK: - Sort
+
+enum OpenListSortMode: String, CaseIterable, Identifiable {
+    case nameAsc
+    case dateDesc
+    case sizeDesc
+    case type
+
+    var id: String { rawValue }
+
+    func sorted(_ items: [FileItem]) -> [FileItem] {
+        // Folders first for name/type; date/size keep natural mix but folders still lead for type.
+        switch self {
+        case .nameAsc:
+            return items.sorted { a, b in
+                if a.isDirectory != b.isDirectory { return a.isDirectory && !b.isDirectory }
+                return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+            }
+        case .dateDesc:
+            return items.sorted { a, b in
+                let ad = a.modifiedAt ?? .distantPast
+                let bd = b.modifiedAt ?? .distantPast
+                if ad != bd { return ad > bd }
+                return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+            }
+        case .sizeDesc:
+            return items.sorted { a, b in
+                if a.isDirectory != b.isDirectory { return a.isDirectory && !b.isDirectory }
+                if a.size != b.size { return a.size > b.size }
+                return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+            }
+        case .type:
+            return items.sorted { a, b in
+                if a.isDirectory != b.isDirectory { return a.isDirectory && !b.isDirectory }
+                let ae = a.fileExtension
+                let be = b.fileExtension
+                if ae != be { return ae.localizedCaseInsensitiveCompare(be) == .orderedAscending }
+                return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+            }
+        }
+    }
+}
+
+// MARK: - Thumbnail cache
+
+enum OpenListThumbnailCache {
+    // NSCache is thread-safe; mark unsafe for Swift 6 static isolation.
+    nonisolated(unsafe) private static let cache = NSCache<NSURL, UIImage>()
+
+    static func image(for url: URL) -> UIImage? {
+        cache.object(forKey: url as NSURL)
+    }
+
+    static func store(_ image: UIImage, for url: URL) {
+        cache.setObject(image, forKey: url as NSURL)
+    }
+}
+
+// MARK: - Cached thumbnail
+
+private struct OpenListCachedThumbnail: View {
+    let url: URL
+    let systemImageName: String
+
+    @State private var image: UIImage?
+    @State private var failed = false
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else if failed {
+                Image(systemName: systemImageName)
+                    .font(.title3)
+                    .foregroundStyle(ServiceType.openlist.colors.primary)
+            } else {
+                ProgressView()
+                    .controlSize(.small)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .task(id: url) {
+            if let cached = OpenListThumbnailCache.image(for: url) {
+                image = cached
+                return
+            }
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                if let ui = UIImage(data: data) {
+                    OpenListThumbnailCache.store(ui, for: url)
+                    image = ui
+                } else {
+                    failed = true
+                }
+            } catch {
+                failed = true
+            }
+        }
+    }
+}
+
 // MARK: - Share sheet
 
 private struct OpenListShareSheet: UIViewControllerRepresentable {
@@ -1215,18 +1370,9 @@ struct FileRowView: View {
                     .fill(ServiceType.openlist.colors.bg)
                     .frame(width: 52, height: 52)
                 if let thumb = item.thumbnailURL {
-                    AsyncImage(url: thumb) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image.resizable().scaledToFill()
-                        default:
-                            Image(systemName: item.systemImageName)
-                                .font(.title3)
-                                .foregroundStyle(ServiceType.openlist.colors.primary)
-                        }
-                    }
-                    .frame(width: 52, height: 52)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    OpenListCachedThumbnail(url: thumb, systemImageName: item.systemImageName)
+                        .frame(width: 52, height: 52)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 } else {
                     Image(systemName: item.systemImageName)
                         .font(.title3)

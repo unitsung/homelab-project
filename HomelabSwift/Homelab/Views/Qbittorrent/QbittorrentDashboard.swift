@@ -20,6 +20,9 @@ struct QbittorrentDashboard: View {
     @State private var addURLsText = ""
     @State private var addValidationError: String?
     @State private var pendingDeleteWithFilesHash: String?
+    @State private var isSelecting = false
+    @State private var selectedHashes: Set<String> = []
+    @State private var categoryFilter: String? = nil // nil = all
     private var arr: ArrStrings { localizer.arr }
     
     // Keep transfer stats closer to real time while refreshing the heavier torrent list less often.
@@ -42,15 +45,15 @@ struct QbittorrentDashboard: View {
             }
 
             filterSection
+
+            if isSelecting {
+                selectionBar
+            }
             
             if !displayedTorrents.isEmpty {
                 torrentsListSection
             } else if case .loaded = state {
-                Text(localizer.t.noData)
-                    .font(.headline)
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 40)
+                emptyTorrentsView
             }
         }
         .task {
@@ -187,7 +190,7 @@ struct QbittorrentDashboard: View {
                     .font(.caption.bold())
                     .foregroundStyle(AppTheme.textSecondary)
                 Spacer()
-                Text(transferInfo.connection_status.capitalized)
+                Text(connectionLabel(transferInfo.connection_status))
                     .font(.caption.weight(.heavy))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
@@ -239,16 +242,23 @@ struct QbittorrentDashboard: View {
     }
 
     private func actionMessageBanner(_ text: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(AppTheme.running)
+        let isError = text.localizedCaseInsensitiveContains("fail")
+            || text.localizedCaseInsensitiveContains("error")
+            || text.contains("失败")
+            || text.contains("错误")
+        return HStack(spacing: 8) {
+            Image(systemName: isError ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                .foregroundStyle(isError ? AppTheme.danger : AppTheme.running)
             Text(text)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(AppTheme.running)
+                .foregroundStyle(isError ? AppTheme.danger : AppTheme.running)
             Spacer()
         }
         .padding(12)
-        .background(AppTheme.running.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(
+            (isError ? AppTheme.danger : AppTheme.running).opacity(0.12),
+            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+        )
     }
 
     private var filterSection: some View {
@@ -260,18 +270,102 @@ struct QbittorrentDashboard: View {
             }
             .pickerStyle(.segmented)
 
+            if !categoryOptions.isEmpty {
+                Picker(localizer.t.qbCategoryAll, selection: Binding(
+                    get: {
+                        if let categoryFilter {
+                            return categoryFilter.isEmpty ? "__none__" : categoryFilter
+                        }
+                        return "__all__"
+                    },
+                    set: { value in
+                        switch value {
+                        case "__all__": categoryFilter = nil
+                        case "__none__": categoryFilter = ""
+                        default: categoryFilter = value
+                        }
+                    }
+                )) {
+                    Text(localizer.t.qbCategoryAll).tag("__all__")
+                    if categoryOptions.contains("") {
+                        Text(localizer.t.qbCategoryNone).tag("__none__")
+                    }
+                    ForEach(categoryOptions.filter { !$0.isEmpty }, id: \.self) { cat in
+                        Text(cat).tag(cat)
+                    }
+                }
+                .pickerStyle(.menu)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(AppTheme.textMuted)
                 TextField(arr.searchTorrents, text: $searchQuery)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
+                Button {
+                    isSelecting.toggle()
+                    if !isSelecting { selectedHashes.removeAll() }
+                } label: {
+                    Text(isSelecting ? localizer.t.done : localizer.t.qbSelect)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(AppTheme.primary)
+                }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .padding(.top, 8)
+    }
+
+    /// Distinct category values from current torrents ("" = uncategorized).
+    private var categoryOptions: [String] {
+        let cats = Set(torrents.map { ($0.category ?? "").trimmingCharacters(in: .whitespacesAndNewlines) })
+        return cats.sorted { a, b in
+            if a.isEmpty { return false }
+            if b.isEmpty { return true }
+            return a.localizedCaseInsensitiveCompare(b) == .orderedAscending
+        }
+    }
+
+    private var selectionBar: some View {
+        HStack(spacing: 12) {
+            Text(String(format: localizer.t.qbSelectedCount, selectedHashes.count))
+                .font(.subheadline.weight(.semibold))
+            Spacer()
+            Button(localizer.t.qbResumeSelected) {
+                Task { await batchControl(resume: true) }
+            }
+            .disabled(selectedHashes.isEmpty || isRunningTorrentAction)
+            Button(localizer.t.qbPauseSelected) {
+                Task { await batchControl(resume: false) }
+            }
+            .disabled(selectedHashes.isEmpty || isRunningTorrentAction)
+            Button(localizer.t.qbDeleteSelected, role: .destructive) {
+                Task { await batchDelete(deleteFiles: false) }
+            }
+            .disabled(selectedHashes.isEmpty || isRunningTorrentAction)
+        }
+        .font(.caption.weight(.semibold))
+        .padding(.vertical, 4)
+    }
+
+    private var emptyTorrentsView: some View {
+        let hasAny = !torrents.isEmpty
+        return VStack(spacing: 10) {
+            Image(systemName: hasAny ? "line.3.horizontal.decrease.circle" : "arrow.down.circle")
+                .font(.largeTitle)
+                .foregroundStyle(AppTheme.textMuted)
+            Text(hasAny ? localizer.t.qbEmptyFilterNoMatch : localizer.t.qbEmptyNoTorrents)
+                .font(.headline)
+                .foregroundStyle(AppTheme.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 40)
     }
 
     private var displayedTorrents: [QbittorrentTorrent] {
@@ -287,6 +381,11 @@ struct QbittorrentDashboard: View {
                 torrent.isPaused
             }
             guard matchesFilter else { return false }
+
+            if let categoryFilter {
+                let cat = (torrent.category ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                guard cat == categoryFilter else { return false }
+            }
 
             let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !query.isEmpty else { return true }
@@ -401,8 +500,7 @@ struct QbittorrentDashboard: View {
                             }
                             await fetchData(silent: false, includeTorrents: true)
                         } catch {
-                            state = .error(.custom(error.localizedDescription))
-                            HapticManager.error()
+                            showActionError(error)
                         }
                     }
                 } label: {
@@ -428,8 +526,7 @@ struct QbittorrentDashboard: View {
                             }
                             await fetchData(silent: false, includeTorrents: true)
                         } catch {
-                            state = .error(.custom(error.localizedDescription))
-                            HapticManager.error()
+                            showActionError(error)
                         }
                     }
                 } label: {
@@ -456,8 +553,7 @@ struct QbittorrentDashboard: View {
                             }
                             await fetchData(silent: false, includeTorrents: true)
                         } catch {
-                            state = .error(.custom(error.localizedDescription))
-                            HapticManager.error()
+                            showActionError(error)
                         }
                     }
                 } label: {
@@ -474,6 +570,11 @@ struct QbittorrentDashboard: View {
             
             ForEach(displayedTorrents) { torrent in
                 torrentRow(torrent)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        guard isSelecting else { return }
+                        toggleSelect(torrent.hash)
+                    }
             }
         }
         .padding(.top, 24)
@@ -482,6 +583,12 @@ struct QbittorrentDashboard: View {
     private func torrentRow(_ torrent: QbittorrentTorrent) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
+                if isSelecting {
+                    Image(systemName: selectedHashes.contains(torrent.hash) ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(selectedHashes.contains(torrent.hash) ? AppTheme.primary : AppTheme.textMuted)
+                        .font(.title3)
+                        .padding(.trailing, 2)
+                }
                 if torrent.isDownloading {
                     Image(systemName: "arrow.down.app.fill")
                         .foregroundStyle(AppTheme.running)
@@ -558,8 +665,14 @@ struct QbittorrentDashboard: View {
                 .disabled(isRunningTorrentAction)
             }
             
-            ProgressView(value: min(max(torrent.progress, 0.0), 1.0))
-                .tint(torrent.isError ? AppTheme.stopped : (torrent.isPaused ? AppTheme.textMuted : AppTheme.primary))
+            HStack(spacing: 8) {
+                ProgressView(value: min(max(torrent.progress, 0.0), 1.0))
+                    .tint(torrent.isError ? AppTheme.stopped : (torrent.isPaused ? AppTheme.textMuted : AppTheme.primary))
+                Text("\(Int((min(max(torrent.progress, 0), 1) * 100).rounded()))%")
+                    .font(.caption2.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .frame(minWidth: 36, alignment: .trailing)
+            }
             
             HStack {
                 Text("\(Formatters.formatBytes(Double(torrent.downloaded))) / \(Formatters.formatBytes(Double(torrent.size)))")
@@ -643,15 +756,99 @@ struct QbittorrentDashboard: View {
         do {
             HapticManager.light()
             try await action()
-            actionMessage = successMessage
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                actionMessage = nil
-            }
-            await fetchData(silent: false, includeTorrents: true)
+            showActionBanner(successMessage, isError: false)
+            await fetchData(silent: true, includeTorrents: true)
         } catch {
-            state = .error(.custom(error.localizedDescription))
-            HapticManager.error()
+            showActionError(error)
         }
+    }
+
+    private func showActionError(_ error: Error) {
+        let message = (error as? APIError)?.localizedDescription ?? error.localizedDescription
+        showActionBanner(message, isError: true)
+        HapticManager.error()
+    }
+
+    private func showActionBanner(_ message: String, isError: Bool) {
+        actionMessage = message
+        DispatchQueue.main.asyncAfter(deadline: .now() + (isError ? 3.5 : 2.0)) {
+            if actionMessage == message { actionMessage = nil }
+        }
+    }
+
+    private func connectionLabel(_ raw: String) -> String {
+        switch raw.lowercased() {
+        case "connected": return localizer.t.qbConnectionConnected
+        case "disconnected": return localizer.t.qbConnectionDisconnected
+        case "firewalled": return localizer.t.qbConnectionFirewalled
+        default: return raw.capitalized
+        }
+    }
+
+    private func toggleSelect(_ hash: String) {
+        if selectedHashes.contains(hash) {
+            selectedHashes.remove(hash)
+        } else {
+            selectedHashes.insert(hash)
+        }
+    }
+
+    @MainActor
+    private func batchControl(resume: Bool) async {
+        guard !selectedHashes.isEmpty, !isRunningTorrentAction else { return }
+        isRunningTorrentAction = true
+        defer { isRunningTorrentAction = false }
+        var ok = 0
+        var fail = 0
+        do {
+            let client = try requireClient()
+            for hash in selectedHashes {
+                do {
+                    if resume {
+                        try await client.resumeTorrent(hash: hash)
+                    } else {
+                        try await client.pauseTorrent(hash: hash)
+                    }
+                    ok += 1
+                } catch {
+                    fail += 1
+                }
+            }
+        } catch {
+            showActionError(error)
+            return
+        }
+        showActionBanner(String(format: localizer.t.qbBatchResultFormat, ok, fail), isError: fail > 0)
+        if fail == 0 { HapticManager.success() } else { HapticManager.error() }
+        await fetchData(silent: true, includeTorrents: true)
+    }
+
+    @MainActor
+    private func batchDelete(deleteFiles: Bool) async {
+        guard !selectedHashes.isEmpty, !isRunningTorrentAction else { return }
+        isRunningTorrentAction = true
+        defer { isRunningTorrentAction = false }
+        var ok = 0
+        var fail = 0
+        do {
+            let client = try requireClient()
+            for hash in selectedHashes {
+                do {
+                    try await client.deleteTorrent(hash: hash, deleteFiles: deleteFiles)
+                    ok += 1
+                } catch {
+                    fail += 1
+                }
+            }
+        } catch {
+            showActionError(error)
+            return
+        }
+        selectedHashes.removeAll()
+        isSelecting = false
+        showActionBanner(String(format: localizer.t.qbBatchResultFormat, ok, fail), isError: fail > 0)
+        if fail == 0 { HapticManager.success() } else { HapticManager.error() }
+        await fetchData(silent: true, includeTorrents: true)
     }
 
     @MainActor

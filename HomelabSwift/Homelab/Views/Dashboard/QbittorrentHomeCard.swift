@@ -9,7 +9,10 @@ struct QbittorrentHomeCard: View {
     @State private var downloadingCount: Int = 0
     @State private var seedingCount: Int = 0
     @State private var pausedCount: Int = 0
+    @State private var downloadSpeed: Int64 = 0
+    @State private var uploadSpeed: Int64 = 0
     @State private var hasInstance: Bool = false
+    @State private var fetchFailed: Bool = false
     @State private var instanceId: UUID?
 
     var body: some View {
@@ -30,7 +33,7 @@ struct QbittorrentHomeCard: View {
         VStack(spacing: 12) {
             HStack {
                 Image(systemName: "arrow.down.circle").font(.subheadline.weight(.semibold)).foregroundStyle(AppTheme.info)
-                Text("qBittorrent").font(.subheadline.weight(.semibold))
+                Text(localizer.t.serviceQbittorrent).font(.subheadline.weight(.semibold))
                 Spacer()
                 if hasInstance {
                     Image(systemName: "chevron.right")
@@ -38,12 +41,23 @@ struct QbittorrentHomeCard: View {
                         .foregroundStyle(.tertiary)
                 }
             }
-            if hasInstance, totalTorrents > 0 {
+            if hasInstance, fetchFailed {
+                statPlaceholder(localizer.t.statusUnreachable)
+            } else if hasInstance, totalTorrents > 0 {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     stat(localizer.t.homeQbitTorrents, "\(totalTorrents)")
                     stat(localizer.t.homeQbitDownloading, "\(downloadingCount)", accent: AppTheme.info)
                     stat(localizer.t.homeQbitSeeding, "\(seedingCount)", accent: AppTheme.running)
                     stat(localizer.t.homeQbitPaused, "\(pausedCount)")
+                }
+                HStack(spacing: 12) {
+                    Text(String(format: localizer.t.homeQbitDownloadSpeed, Formatters.formatBytes(Double(downloadSpeed)) + "/s"))
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(AppTheme.info)
+                    Text(String(format: localizer.t.homeQbitUploadSpeed, Formatters.formatBytes(Double(uploadSpeed)) + "/s"))
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(AppTheme.running)
+                    Spacer(minLength: 0)
                 }
             } else if hasInstance {
                 statPlaceholder(localizer.t.homeQbitNoActive)
@@ -73,17 +87,29 @@ struct QbittorrentHomeCard: View {
         guard let instance = servicesStore.preferredInstance(for: .qbittorrent) else {
             hasInstance = false
             instanceId = nil
+            fetchFailed = false
             return
         }
         hasInstance = true
         instanceId = instance.id
-        guard let client = await servicesStore.qbittorrentClient(instanceId: instance.id) else { return }
+        guard let client = await servicesStore.qbittorrentClient(instanceId: instance.id) else {
+            fetchFailed = true
+            return
+        }
         do {
-            let torrents = try await client.getTorrents()
+            async let torrentsTask = client.getTorrents()
+            async let transferTask = client.getTransferInfo()
+            let torrents = try await torrentsTask
+            let transfer = try? await transferTask
             totalTorrents = torrents.count
             downloadingCount = torrents.filter { $0.isDownloading && !$0.isPaused }.count
             seedingCount = torrents.filter { $0.isUploading && !$0.isPaused }.count
             pausedCount = torrents.filter { $0.isPaused && !$0.isChecking }.count
-        } catch {}
+            downloadSpeed = transfer?.dl_info_speed ?? torrents.reduce(0) { $0 + $1.dlspeed }
+            uploadSpeed = transfer?.up_info_speed ?? torrents.reduce(0) { $0 + $1.upspeed }
+            fetchFailed = false
+        } catch {
+            fetchFailed = true
+        }
     }
 }
