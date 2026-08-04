@@ -16,9 +16,7 @@ struct HomeView: View {
                 VStack(spacing: 16) {
                     topBar
 
-                    HeroCard()
-
-                    systemGrid
+                    dashboardCards
 
                     serviceSection
                 }
@@ -112,9 +110,25 @@ struct HomeView: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    private var systemGrid: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+    /// Overview cards driven by `settingsStore.dashboardCardOrder` (not a hard-coded layout).
+    private var dashboardCards: some View {
+        let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+        return LazyVGrid(columns: columns, spacing: 12) {
+            ForEach(settingsStore.dashboardCardOrder) { id in
+                dashboardCard(for: id)
+                    .gridCellColumns(id.spansFullWidth ? 2 : 1)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func dashboardCard(for id: DashboardCardID) -> some View {
+        switch id {
+        case .hero:
+            HeroCard()
+        case .docker:
             DockerOverviewCard()
+        case .qbittorrent:
             QbittorrentHomeCard()
         }
     }
@@ -180,22 +194,73 @@ struct HomeServiceRoute: Hashable {
 
 private struct DashboardCardOrderSheet: View {
     @Environment(SettingsStore.self) private var settingsStore
+    @Environment(ServicesStore.self) private var servicesStore
     @Environment(Localizer.self) private var localizer
     @Environment(\.dismiss) private var dismiss
+
+    /// Configured home services in the saved global order.
+    private var orderedHomeServices: [ServiceType] {
+        let configured = Set(
+            ServiceType.homeServices.filter { servicesStore.preferredInstance(for: $0) != nil }
+        )
+        return settingsStore.orderedHomeServices(configured: configured)
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                ForEach(settingsStore.dashboardCardOrder) { id in
-                    Text(title(for: id))
+                Section {
+                    ForEach(settingsStore.dashboardCardOrder) { id in
+                        HStack(spacing: 12) {
+                            Image(systemName: icon(for: id))
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(AppTheme.info)
+                                .frame(width: 28, height: 28)
+                            Text(title(for: id))
+                                .font(.body.weight(.medium))
+                        }
+                    }
+                    .onMove { source, destination in
+                        settingsStore.moveDashboardCard(from: source, to: destination)
+                        HapticManager.light()
+                    }
+                } header: {
+                    Text(localizer.t.homeReorderCards)
+                } footer: {
+                    Text(localizer.t.homeReorderCardsHint)
                 }
-                .onMove { source, destination in
-                    settingsStore.moveDashboardCard(from: source, to: destination)
-                    HapticManager.light()
+
+                Section {
+                    if orderedHomeServices.isEmpty {
+                        Text(localizer.t.homeNoServices)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(orderedHomeServices, id: \.rawValue) { type in
+                            HStack(spacing: 12) {
+                                ServiceIconView(type: type, size: 22)
+                                    .frame(width: 28, height: 28)
+                                Text(type.displayName)
+                                    .font(.body.weight(.medium))
+                            }
+                        }
+                        .onMove { source, destination in
+                            settingsStore.moveServices(
+                                from: source,
+                                to: destination,
+                                within: ServiceType.homeServices
+                            )
+                            HapticManager.light()
+                        }
+                    }
+                } header: {
+                    Text(localizer.t.homeReorderServices)
+                } footer: {
+                    Text(localizer.t.homeReorderServicesHint)
                 }
             }
             .environment(\.editMode, .constant(.active))
             .navigationTitle(localizer.t.homeReorderCards)
+            .navigationBarTitleDisplayMode(.inline)
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .background(AppTheme.background)
@@ -211,15 +276,23 @@ private struct DashboardCardOrderSheet: View {
                 }
             }
         }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     private func title(for id: DashboardCardID) -> String {
         switch id {
-        case .cpu: return localizer.t.overviewCpuLabel
-        case .memory: return localizer.t.overviewMemoryLabel
-        case .disk: return localizer.t.homeDiskUsage
-        case .diskTemperature: return localizer.t.homeDiskTemperature
+        case .hero: return localizer.t.homeHeroCard
         case .docker: return localizer.t.homeDockerLabel
+        case .qbittorrent: return localizer.t.serviceQbittorrent
+        }
+    }
+
+    private func icon(for id: DashboardCardID) -> String {
+        switch id {
+        case .hero: return "server.rack"
+        case .docker: return "shippingbox"
+        case .qbittorrent: return "arrow.down.circle"
         }
     }
 }

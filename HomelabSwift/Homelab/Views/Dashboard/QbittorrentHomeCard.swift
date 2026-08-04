@@ -3,6 +3,7 @@ import SwiftUI
 struct QbittorrentHomeCard: View {
     @Environment(ServicesStore.self) private var servicesStore
     @Environment(DashboardRefreshCoordinator.self) private var coordinator
+    @Environment(Localizer.self) private var localizer
 
     @State private var totalTorrents: Int = 0
     @State private var downloadingCount: Int = 0
@@ -39,15 +40,15 @@ struct QbittorrentHomeCard: View {
             }
             if hasInstance, totalTorrents > 0 {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    stat("种子", "\(totalTorrents)")
-                    stat("下载中", "\(downloadingCount)", accent: AppTheme.info)
-                    stat("做种", "\(seedingCount)", accent: AppTheme.running)
-                    stat("暂停", "\(pausedCount)")
+                    stat(localizer.t.homeQbitTorrents, "\(totalTorrents)")
+                    stat(localizer.t.homeQbitDownloading, "\(downloadingCount)", accent: AppTheme.info)
+                    stat(localizer.t.homeQbitSeeding, "\(seedingCount)", accent: AppTheme.running)
+                    stat(localizer.t.homeQbitPaused, "\(pausedCount)")
                 }
             } else if hasInstance {
-                statPlaceholder("无活动种子")
+                statPlaceholder(localizer.t.homeQbitNoActive)
             } else {
-                statPlaceholder("未配置")
+                statPlaceholder(localizer.t.launcherNotConfigured)
             }
         }
         .padding(16)

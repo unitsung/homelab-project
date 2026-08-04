@@ -4,6 +4,7 @@ struct CloudSaverDashboard: View {
     let instanceId: UUID
 
     @Environment(ServicesStore.self) private var servicesStore
+    @Environment(Localizer.self) private var localizer
     @Environment(\.openURL) private var openURL
 
     @State private var client: CloudSaverAPIClient?
@@ -48,7 +49,7 @@ struct CloudSaverDashboard: View {
             VStack(alignment: .leading, spacing: 14) {
                 Picker("", selection: $tab) {
                     ForEach(CloudSaverMainTab.allCases) { t in
-                        Text(t.title).tag(t)
+                        Text(t.title(using: localizer.translations)).tag(t)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -90,7 +91,7 @@ struct CloudSaverDashboard: View {
                     } label: {
                         Image(systemName: "play.rectangle.fill")
                     }
-                    .accessibilityLabel("打开媒体库")
+                    .accessibilityLabel(localizer.t.csOpenLibrary)
                 }
             }
         }
@@ -132,14 +133,14 @@ struct CloudSaverDashboard: View {
 
     private var doubanSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("CLOUDSAVER · 豆瓣榜单")
+            Text(localizer.t.csDoubanSectionTitle)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(accent)
 
-            Text(selectedChip.title)
+            Text(selectedChip.title(using: localizer.translations))
                 .font(.title3.weight(.bold))
 
-            Text("点击海报搜索资源。115 可「想看」到默认目录；其它网盘进详情选目录保存。")
+            Text(localizer.t.csDoubanHint)
                 .font(.caption)
                 .foregroundStyle(AppTheme.textMuted)
 
@@ -151,22 +152,22 @@ struct CloudSaverDashboard: View {
                 }
             }
 
-            Picker("排序", selection: $doubanSort) {
+            Picker(localizer.t.csSort, selection: $doubanSort) {
                 ForEach(CloudSaverResultSort.allCases) { s in
-                    Text(s.title).tag(s)
+                    Text(s.title(using: localizer.translations)).tag(s)
                 }
             }
             .pickerStyle(.segmented)
 
             if isLoadingDouban && doubanItems.isEmpty {
-                ProgressView("加载榜单…")
+                ProgressView(localizer.t.csLoadingCharts)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 40)
             } else if doubanItems.isEmpty {
                 ContentUnavailableView(
-                    "暂无榜单",
+                    localizer.t.csNoCharts,
                     systemImage: "rectangle.grid.2x2",
-                    description: Text("下拉重试或检查 CloudSaver 服务")
+                    description: Text(localizer.t.csNoChartsHint)
                 )
                 .frame(maxWidth: .infinity)
                 .padding(.top, 24)
@@ -203,7 +204,7 @@ struct CloudSaverDashboard: View {
             selectedChip = chip
             Task { await loadDouban() }
         } label: {
-            Text(chip.title)
+            Text(chip.title(using: localizer.translations))
                 .font(.caption.weight(.semibold))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
@@ -219,7 +220,7 @@ struct CloudSaverDashboard: View {
     private var searchSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
-                TextField("请输入搜索关键词", text: $keyword)
+                TextField(localizer.t.csSearchPlaceholder, text: $keyword)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .padding(12)
@@ -242,16 +243,16 @@ struct CloudSaverDashboard: View {
 
             if !results.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Picker("来源", selection: $sourceFilter) {
+                    Picker(localizer.t.csSource, selection: $sourceFilter) {
                         ForEach(CloudSaverSourceFilter.allCases) { f in
-                            Text(f.title).tag(f)
+                            Text(f.title(using: localizer.translations)).tag(f)
                         }
                     }
                     .pickerStyle(.segmented)
 
-                    Picker("排序", selection: $resultSort) {
+                    Picker(localizer.t.csSort, selection: $resultSort) {
                         ForEach(CloudSaverResultSort.allCases) { s in
-                            Text(s.title).tag(s)
+                            Text(s.title(using: localizer.translations)).tag(s)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -262,9 +263,9 @@ struct CloudSaverDashboard: View {
             if isSearching, results.isEmpty {
                 VStack(spacing: 14) {
                     ProgressView()
-                    Text("正在搜索…")
+                    Text(localizer.t.csSearching)
                         .font(.subheadline.weight(.medium))
-                    Text("正在搜索多个资源频道，通常需要数秒")
+                    Text(localizer.t.csSearchingHint)
                         .font(.caption)
                         .foregroundStyle(AppTheme.textMuted)
                         .multilineTextAlignment(.center)
@@ -273,9 +274,9 @@ struct CloudSaverDashboard: View {
                 .padding(.vertical, 48)
             } else if results.isEmpty, !isSearching {
                 ContentUnavailableView(
-                    "搜索资源",
+                    localizer.t.csSearchEmptyTitle,
                     systemImage: "magnifyingglass",
-                    description: Text("输入片名，或从豆瓣榜单点海报跳转搜索")
+                    description: Text(localizer.t.csSearchEmptyHint)
                 )
                 .frame(maxWidth: .infinity)
                 .padding(.top, 24)
@@ -296,7 +297,7 @@ struct CloudSaverDashboard: View {
                                     serviceBaseURL: imageBaseURL,
                                     bearerToken: imageToken,
                                     allowSelfSigned: imageAllowSelfSigned,
-                                    footerHint: "详情"
+                                    footerHint: localizer.t.csDetails
                                 )
                             }
                             .buttonStyle(.plain)
@@ -310,7 +311,7 @@ struct CloudSaverDashboard: View {
                                         if transferringIds.contains(item.id) {
                                             ProgressView().controlSize(.small)
                                         }
-                                        Text(transferredIds.contains(item.id) ? "已想看" : "想看")
+                                        Text(transferredIds.contains(item.id) ? localizer.t.csAlreadyWanted : localizer.t.csWantToWatch)
                                             .font(.caption.weight(.semibold))
                                     }
                                     .frame(maxWidth: .infinity)
@@ -335,7 +336,7 @@ struct CloudSaverDashboard: View {
                         if isLoadingMore {
                             ProgressView()
                         } else {
-                            Text("加载更多")
+                            Text(localizer.t.csLoadMore)
                                 .font(.subheadline.weight(.semibold))
                         }
                     }
@@ -350,7 +351,7 @@ struct CloudSaverDashboard: View {
 
     private func loadDouban() async {
         guard let client else {
-            errorMessage = "服务未就绪"
+            errorMessage = localizer.t.csServiceNotReady
             return
         }
         isLoadingDouban = true
@@ -364,10 +365,10 @@ struct CloudSaverDashboard: View {
                 limit: 50
             )
             if doubanItems.isEmpty {
-                errorMessage = "榜单为空，请换分类或稍后重试"
+                errorMessage = localizer.t.csChartsEmpty
             }
         } catch {
-            errorMessage = CloudSaverUserFacingError.message(from: error)
+            errorMessage = CloudSaverUserFacingError.message(from: error, using: localizer.translations)
             doubanItems = []
         }
     }
@@ -382,7 +383,7 @@ struct CloudSaverDashboard: View {
         let q = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { return }
         guard let client else {
-            errorMessage = "服务未就绪"
+            errorMessage = localizer.t.csServiceNotReady
             return
         }
 
@@ -418,12 +419,12 @@ struct CloudSaverDashboard: View {
             hasMore = page.hasMore
             lastMessageId = page.lastMessageId
             if results.isEmpty {
-                errorMessage = "未找到相关资源"
+                errorMessage = localizer.t.csNoResults
             } else if reset {
                 Task { await probeLinkHealth(for: page.results) }
             }
         } catch {
-            errorMessage = CloudSaverUserFacingError.message(from: error)
+            errorMessage = CloudSaverUserFacingError.message(from: error, using: localizer.translations)
         }
     }
 
@@ -463,7 +464,7 @@ struct CloudSaverDashboard: View {
         var parts: [String] = []
         if !item.subtitle.isEmpty { parts.append(item.subtitle) }
         if item.ratingCount > 0 {
-            parts.append("\(item.ratingCount) 人评分")
+            parts.append(String(format: localizer.t.csRatingCount, item.ratingCount))
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
@@ -491,17 +492,17 @@ struct CloudSaverDashboard: View {
 
     private func wantToWatch(_ item: CloudSaverSearchResult) async {
         guard item.cloudType == .cloud115 else {
-            transferMessage = "「想看」仅支持 115，其它网盘请打开详情选择目录保存"
+            transferMessage = localizer.t.csWant115Only
             transferState = .failed
             return
         }
         guard let client else {
-            transferMessage = "服务未就绪"
+            transferMessage = localizer.t.csServiceNotReady
             transferState = .failed
             return
         }
         guard let dest = settings.defaultFolder(for: .cloud115) else {
-            transferMessage = "请先在设置中选择 115 默认保存目录（从网盘列表点选，无需手填）"
+            transferMessage = localizer.t.csNeed115DefaultFolder
             transferState = .failed
             showSettings = true
             return
@@ -509,7 +510,7 @@ struct CloudSaverDashboard: View {
 
         transferringIds.insert(item.id)
         transferState = .transferring
-        transferMessage = "正在转存到 \(dest.name)…"
+        transferMessage = String(format: localizer.t.csTransferringTo, dest.name)
         defer { transferringIds.remove(item.id) }
 
         do {
@@ -521,7 +522,7 @@ struct CloudSaverDashboard: View {
             )
             transferredIds.insert(item.id)
             transferState = .transferred
-            var parts: [String] = ["已转存到「\(dest.name)」"]
+            var parts: [String] = [String(format: localizer.t.csTransferredTo, dest.name)]
             if let suffix = followUp.userSuffix {
                 parts.append(suffix)
             }
@@ -534,19 +535,19 @@ struct CloudSaverDashboard: View {
             showToast(msg)
         } catch {
             transferState = .failed
-            transferMessage = CloudSaverUserFacingError.message(from: error)
+            transferMessage = CloudSaverUserFacingError.message(from: error, using: localizer.translations)
         }
     }
 
 
     private func searchBadge(for item: CloudSaverSearchResult) -> String? {
         if case .invalid = linkHealthById[item.id] {
-            return "失效"
+            return localizer.t.csLinkInvalid
         }
         if case .valid = linkHealthById[item.id] {
-            return item.cloudType == .unknown ? "有效" : item.cloudType.displayName
+            return item.cloudType == .unknown ? localizer.t.csLinkValid : item.cloudType.displayName(using: localizer.translations)
         }
-        return item.cloudType == .unknown ? nil : item.cloudType.displayName
+        return item.cloudType == .unknown ? nil : item.cloudType.displayName(using: localizer.translations)
     }
 
     private func searchBadgeColor(for item: CloudSaverSearchResult) -> Color {
@@ -559,7 +560,7 @@ struct CloudSaverDashboard: View {
         var parts: [String] = []
         if !item.fileSize.isEmpty { parts.append(item.fileSize) }
         if case .checking = linkHealthById[item.id] {
-            parts.append("检测中…")
+            parts.append(localizer.t.csChecking)
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
@@ -570,7 +571,7 @@ struct CloudSaverDashboard: View {
         for item in items.prefix(limit) {
             if linkHealthById[item.id] != nil { continue }
             if item.shareCode.isEmpty {
-                linkHealthById[item.id] = .invalid("无分享码")
+                linkHealthById[item.id] = .invalid(localizer.t.csNoShareCode)
                 continue
             }
             if item.cloudType == .unknown {
@@ -585,7 +586,7 @@ struct CloudSaverDashboard: View {
                     cloud: item.cloudType
                 )
                 linkHealthById[item.id] = info.files.isEmpty
-                    ? .invalid("无文件")
+                    ? .invalid(localizer.t.csNoFiles)
                     : .valid(fileCount: info.files.count)
             } catch {
                 let msg = (error as? APIError)?.errorDescription ?? error.localizedDescription
@@ -726,11 +727,11 @@ struct CloudSaverPosterCell: View {
 enum CloudSaverSourceFilter: String, CaseIterable, Identifiable {
     case all, cloud115, quark
     var id: String { rawValue }
-    var title: String {
+    func title(using t: Translations) -> String {
         switch self {
-        case .all: return "全部来源"
+        case .all: return t.csSourceAll
         case .cloud115: return "115"
-        case .quark: return "夸克"
+        case .quark: return t.csSourceQuark
         }
     }
     func matches(_ t: CloudSaverCloudType) -> Bool {
@@ -745,11 +746,11 @@ enum CloudSaverSourceFilter: String, CaseIterable, Identifiable {
 enum CloudSaverResultSort: String, CaseIterable, Identifiable {
     case defaultOrder, rating, year
     var id: String { rawValue }
-    var title: String {
+    func title(using t: Translations) -> String {
         switch self {
-        case .defaultOrder: return "默认排序"
-        case .rating: return "评分排序"
-        case .year: return "年份排序"
+        case .defaultOrder: return t.csSortDefault
+        case .rating: return t.csSortRating
+        case .year: return t.csSortYear
         }
     }
 }
@@ -762,13 +763,17 @@ enum CloudSaverLinkHealth: Equatable, Sendable {
     case valid(fileCount: Int)
     case invalid(String)
 
-    var label: String {
+    func label(using t: Translations) -> String {
         switch self {
-        case .unknown: return "未检测"
-        case .checking: return "检测中…"
-        case .valid(let n): return "有效（\(n) 个文件）"
-        case .invalid(let m): return "失效：\(m)"
+        case .unknown: return t.csHealthUnknown
+        case .checking: return t.csChecking
+        case .valid(let n): return String(format: t.csHealthValidFiles, n)
+        case .invalid(let m): return String(format: t.csHealthInvalid, m)
         }
+    }
+
+    var label: String {
+        label(using: Translations.forLanguage(.zh))
     }
 
     var isInvalid: Bool {
@@ -785,6 +790,7 @@ struct CloudSaverSettingsView: View {
     var onSave: () -> Void
 
     @Environment(ServicesStore.self) private var servicesStore
+    @Environment(Localizer.self) private var localizer
     @Environment(\.dismiss) private var dismiss
 
     @State private var client: CloudSaverAPIClient?
@@ -794,55 +800,55 @@ struct CloudSaverSettingsView: View {
         Form {
             Section {
                 defaultFolderRow(
-                    title: "115 默认保存目录",
+                    title: localizer.t.csDefaultFolder115,
                     name: settings.defaultFolder115Name,
                     cid: settings.defaultFolder115Cid,
                     cloud: .cloud115
                 )
                 defaultFolderRow(
-                    title: "夸克 默认保存目录",
+                    title: localizer.t.csDefaultFolderQuark,
                     name: settings.defaultFolderQuarkName,
                     cid: settings.defaultFolderQuarkCid,
                     cloud: .quark
                 )
             } header: {
-                Text("默认保存目录")
+                Text(localizer.t.csDefaultFolders)
             } footer: {
-                Text("目录从接口实时拉取，不写死 CID。点选即可设为默认。Cookie/登录过期时请到 CloudSaver 网页刷新网盘 Cookie。")
+                Text(localizer.t.csDefaultFoldersFooter)
             }
 
-            Section("播放 / 入库") {
-                TextField("媒体库 URL（Emby/Jellyfin）", text: $settings.libraryOpenURL)
+            Section(localizer.t.csPlaybackIngest) {
+                TextField(localizer.t.csLibraryURL, text: $settings.libraryOpenURL)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                TextField("转存成功提示（可选）", text: $settings.ingestHint)
+                TextField(localizer.t.csIngestHint, text: $settings.ingestHint)
             }
 
             Section {
-                TextField("插件 ID（如 4）", text: $settings.postSavePluginId)
+                TextField(localizer.t.csPluginId, text: $settings.postSavePluginId)
                     .keyboardType(.numberPad)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
             } header: {
-                Text("想看后续（LitePan）")
+                Text(localizer.t.csPostSaveLitePan)
             } footer: {
-                Text("转存成功后调用 POST /api/plugins/run，触发 LitePan hooks（STRM / NFO / 刷 Emby 等）。留空则不调用；插件失败不影响已转存。")
+                Text(localizer.t.csPostSaveLitePanFooter)
             }
 
             Section {
-                Text("「想看」仅 115，保存到上方默认目录。其它网盘请在详情浏览后保存。")
+                Text(localizer.t.csWantWatchNote)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
         }
-        .navigationTitle("CloudSaver 设置")
+        .navigationTitle(localizer.t.csSettingsTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("取消") { dismiss() }
+                Button(localizer.t.cancel) { dismiss() }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("完成") { onSave() }
+                Button(localizer.t.done) { onSave() }
             }
         }
         .task {
@@ -866,12 +872,12 @@ struct CloudSaverSettingsView: View {
             Text(title)
                 .font(.subheadline.weight(.semibold))
             if cid.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Text("未设置 — 从网盘目录选择")
+                Text(localizer.t.csNotSetPickFolder)
                     .font(.caption)
                     .foregroundStyle(.orange)
             } else {
                 Text(name.isEmpty ? cid : name)
-                Text("CID：\(cid)")
+                Text(String(format: localizer.t.csCidLabel, cid))
                     .font(.caption2.monospaced())
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
@@ -879,7 +885,7 @@ struct CloudSaverSettingsView: View {
             Button {
                 pickCloud = cloud
             } label: {
-                Label("从网盘目录选择", systemImage: "folder.badge.plus")
+                Label(localizer.t.csPickFromDrive, systemImage: "folder.badge.plus")
             }
         }
         .padding(.vertical, 4)
@@ -897,6 +903,7 @@ struct CloudSaverFolderPickerSheet: View {
     var onPick: (String, String) -> Void
 
     @Environment(ServicesStore.self) private var servicesStore
+    @Environment(Localizer.self) private var localizer
     @Environment(\.dismiss) private var dismiss
 
     @State private var client: CloudSaverAPIClient?
@@ -914,11 +921,11 @@ struct CloudSaverFolderPickerSheet: View {
             Section {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 4) {
-                        Button("根目录") {
+                        Button(localizer.t.csRootFolder) {
                             stack = []
                             if cloud == .cloud115 {
                                 selectedCid = "0"
-                                selectedName = "根目录"
+                                selectedName = localizer.t.csRootFolder
                             } else {
                                 selectedCid = ""
                                 selectedName = ""
@@ -939,20 +946,20 @@ struct CloudSaverFolderPickerSheet: View {
                     }
                 }
             } header: {
-                Text("浏览 \(cloud.displayName) 目录")
+                Text(String(format: localizer.t.csBrowseCloudFolders, cloud.displayName(using: localizer.translations)))
             }
 
             if client == nil && isLoading {
-                HStack { ProgressView(); Text("连接服务…") }
+                HStack { ProgressView(); Text(localizer.t.csConnectingService) }
             } else if isLoading {
-                HStack { ProgressView(); Text("加载目录…") }
+                HStack { ProgressView(); Text(localizer.t.csLoadingFolders) }
             } else if let error {
                 Text(error)
                     .foregroundStyle(.red)
                     .font(.footnote)
-                Button("重试") { Task { await load(stack.last?.cid ?? "0") } }
+                Button(localizer.t.retry) { Task { await load(stack.last?.cid ?? "0") } }
             } else if folders.isEmpty {
-                Text("此目录下没有子文件夹（可仍将当前路径设为默认）")
+                Text(localizer.t.csNoSubfoldersStillOk)
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(folders) { folder in
@@ -986,7 +993,7 @@ struct CloudSaverFolderPickerSheet: View {
 
             if !selectedCid.isEmpty {
                 Section {
-                    Text("已选：\(selectedName.isEmpty ? selectedCid : selectedName)")
+                    Text(String(format: localizer.t.csSelected, selectedName.isEmpty ? selectedCid : selectedName))
                     Text(selectedCid)
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
@@ -994,14 +1001,14 @@ struct CloudSaverFolderPickerSheet: View {
                 }
             }
         }
-        .navigationTitle("选择默认目录")
+        .navigationTitle(localizer.t.csSelectDefaultFolder)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("取消") { dismiss() }
+                Button(localizer.t.cancel) { dismiss() }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("设为默认") {
+                Button(localizer.t.csSetAsDefault) {
                     let cid = selectedCid.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !cid.isEmpty else { return }
                     if cloud == .quark, cid == "0" { return }
@@ -1013,13 +1020,13 @@ struct CloudSaverFolderPickerSheet: View {
         .task {
             if cloud == .cloud115 {
                 selectedCid = "0"
-                selectedName = "根目录"
+                selectedName = localizer.t.csRootFolder
             }
             isLoading = true
             client = await servicesStore.cloudsaverClient(instanceId: instanceId)
             isLoading = false
             if client == nil {
-                error = "服务未就绪，请确认 CloudSaver 已登录"
+                error = localizer.t.csServiceNotReadyLogin
             } else {
                 await load("0")
             }
@@ -1028,7 +1035,7 @@ struct CloudSaverFolderPickerSheet: View {
 
     private func load(_ parent: String) async {
         guard let client else {
-            error = "服务未就绪，请确认 CloudSaver 已登录"
+            error = localizer.t.csServiceNotReadyLogin
             return
         }
         isLoading = true
@@ -1038,7 +1045,7 @@ struct CloudSaverFolderPickerSheet: View {
             folders = try await client.listFolders(cloud: cloud, parentCid: parent)
         } catch {
             folders = []
-            self.error = CloudSaverUserFacingError.message(from: error)
+            self.error = CloudSaverUserFacingError.message(from: error, using: localizer.translations)
         }
     }
 }

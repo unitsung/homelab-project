@@ -2,30 +2,36 @@ import SwiftUI
 
 struct ServiceTileGrid: View {
     @Environment(ServicesStore.self) private var servicesStore
+    @Environment(SettingsStore.self) private var settingsStore
+    @Environment(Localizer.self) private var localizer
     @Binding var selectedNewServiceType: ServiceType?
 
     @State private var showAddPicker = false
 
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
-    var body: some View {
-        let availableServices = ServiceType.homeServices.filter {
-            servicesStore.preferredInstance(for: $0) != nil
-        }
+    /// Prefer saved `serviceOrder`; only show services that are configured on this device.
+    private var availableServices: [ServiceType] {
+        let configured = Set(
+            ServiceType.homeServices.filter { servicesStore.preferredInstance(for: $0) != nil }
+        )
+        return settingsStore.orderedHomeServices(configured: configured)
+    }
 
+    var body: some View {
         Group {
             if availableServices.isEmpty {
                 VStack(spacing: 14) {
                     Image(systemName: "square.grid.2x2")
                         .font(.title3)
                         .foregroundStyle(.tertiary)
-                    Text("暂无服务")
+                    Text(localizer.t.homeNoServices)
                         .font(.subheadline)
                         .foregroundStyle(.tertiary)
                     Button {
                         showAddPicker = true
                     } label: {
-                        Label("添加服务", systemImage: "plus.circle.fill")
+                        Label(localizer.t.homeAddService, systemImage: "plus.circle.fill")
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(AppTheme.info)
                     }
@@ -67,7 +73,7 @@ struct ServiceTileGrid: View {
                     Circle()
                         .fill(AppTheme.running)
                         .frame(width: 4, height: 4)
-                    Text("在线")
+                    Text(localizer.t.statusOnline)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
@@ -96,7 +102,7 @@ struct ServiceTileGrid: View {
                         .foregroundStyle(.tertiary)
                 }
 
-                Text("添加")
+                Text(localizer.t.homeAdd)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.tertiary)
             }
@@ -120,13 +126,13 @@ struct ServiceTileGrid: View {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.largeTitle)
                             .foregroundStyle(AppTheme.running)
-                        Text("所有服务已配置")
+                        Text(localizer.t.homeAllServicesConfigured)
                             .font(.headline)
                     }
                 }
             } else {
                 List {
-                    Section("选择要添加的服务") {
+                    Section(localizer.t.homeSelectServiceToAdd) {
                         ForEach(unconfiguredTypes, id: \.rawValue) { type in
                             Button {
                                 showAddPicker = false
@@ -149,11 +155,11 @@ struct ServiceTileGrid: View {
                 }
                 .scrollContentBackground(.hidden)
                 .background(AppTheme.background)
-                .navigationTitle("添加服务")
+                .navigationTitle(localizer.t.homeAddService)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("取消") { showAddPicker = false }
+                        Button(localizer.t.cancel) { showAddPicker = false }
                     }
                 }
             }

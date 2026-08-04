@@ -51,9 +51,9 @@ struct DockerOverviewCard: View {
             }
             if totalContainers > 0 {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    stat("总量", "\(totalContainers)")
-                    stat("运行中", "\(runningContainers)", accent: AppTheme.running)
-                    stat("镜像", "\(imageCount)")
+                    stat(localizer.t.homeDockerTotal, "\(totalContainers)")
+                    stat(localizer.t.homeDockerRunning, "\(runningContainers)", accent: AppTheme.running)
+                    stat(localizer.t.homeDockerImages, "\(imageCount)")
                     stat("CPU", String(format: "%.0f%%", aggCpu))
                 }
             } else {

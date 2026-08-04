@@ -535,7 +535,8 @@ actor CloudSaverAPIClient {
             let isNew = row.is_new ?? row.isNew ?? false
             let ratingCount = row.rating?.count ?? 0
             let honor = (row.honor ?? row.honor_info ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            let honorTag = honor.isEmpty ? CloudSaverDoubanItem.honorTag(forRate: rate, isNew: isNew) : honor
+            let tr = Translations.forLanguage(Language.resolve(code: UserDefaults.standard.string(forKey: "homelab_language") ?? Locale.preferredLanguages.first))
+            let honorTag = honor.isEmpty ? CloudSaverDoubanItem.honorTag(forRate: rate, isNew: isNew, using: tr) : honor
             return CloudSaverDoubanItem(
                 id: id.isEmpty ? title : id,
                 title: title,
@@ -546,7 +547,7 @@ actor CloudSaverAPIClient {
                 isNew: isNew,
                 ratingCount: ratingCount,
                 honorTag: honorTag,
-                reputation: CloudSaverDoubanItem.reputation(forRate: rate),
+                reputation: CloudSaverDoubanItem.reputation(forRate: rate, using: tr),
                 year: CloudSaverDoubanItem.year(from: subtitle)
             )
         }

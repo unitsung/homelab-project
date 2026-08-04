@@ -264,6 +264,38 @@ final class SettingsStore {
         serviceOrder = updated
     }
 
+    /// Drag-reorder subset of `serviceOrder` (e.g. home tiles) via `List.onMove`.
+    func moveServices(from source: IndexSet, to destination: Int, within allowedTypes: [ServiceType]) {
+        let allowedSet = Set(allowedTypes)
+        var filtered = serviceOrder.filter { allowedSet.contains($0) }
+        guard !filtered.isEmpty else { return }
+        filtered.move(fromOffsets: source, toOffset: destination)
+
+        var result: [ServiceType] = []
+        var fi = 0
+        for type in serviceOrder {
+            if allowedSet.contains(type) {
+                if fi < filtered.count {
+                    result.append(filtered[fi])
+                    fi += 1
+                }
+            } else {
+                result.append(type)
+            }
+        }
+        while fi < filtered.count {
+            result.append(filtered[fi])
+            fi += 1
+        }
+        serviceOrder = Self.normalizedServiceOrder(result)
+    }
+
+    /// Home service tiles currently shown (configured instances only), in saved order.
+    func orderedHomeServices(configured: Set<ServiceType>) -> [ServiceType] {
+        let allowed = Set(ServiceType.homeServices).intersection(configured)
+        return serviceOrder.filter { allowed.contains($0) }
+    }
+
     // MARK: - PIN Security
 
     var isPinSet: Bool {

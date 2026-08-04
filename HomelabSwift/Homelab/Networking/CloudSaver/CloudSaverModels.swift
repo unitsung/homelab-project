@@ -159,19 +159,19 @@ enum CloudSaverMainTab: String, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
-    var title: String {
+    func title(using t: Translations) -> String {
         switch self {
-        case .douban: return "豆瓣榜单"
-        case .search: return "资源搜索"
+        case .douban: return t.csTabDouban
+        case .search: return t.csTabSearch
         }
     }
 }
 
 /// Maps web chips → GET /api/douban/hot?type=&category=&api=&limit=
 /// Real instance example: type=全部&category=热门&api=movie&limit=50
+/// API query values stay Chinese/slug as required by the backend; only UI titles are localized.
 struct CloudSaverDoubanChip: Identifiable, Hashable, Sendable {
     let id: String
-    let title: String
     /// Query `type` — often 全部
     let type: String
     /// Query `category` — 热门 / 最新 / 冷门佳片 / 国产剧 …
@@ -179,20 +179,35 @@ struct CloudSaverDoubanChip: Identifiable, Hashable, Sendable {
     /// Query `api` — movie / tv / …
     let api: String
 
+    func title(using t: Translations) -> String {
+        switch id {
+        case "movie-hot": return t.csChipMovieHot
+        case "movie-new": return t.csChipMovieNew
+        case "movie-cold": return t.csChipMovieCold
+        case "tv-hot": return t.csChipTvHot
+        case "tv-cn": return t.csChipTvCn
+        case "tv-eu": return t.csChipTvEu
+        case "tv-kr": return t.csChipTvKr
+        case "tv-jp": return t.csChipTvJp
+        case "tv-anime": return t.csChipTvAnime
+        case "tv-show": return t.csChipTvShow
+        case "tv-doc": return t.csChipTvDoc
+        default: return id
+        }
+    }
+
     static let all: [CloudSaverDoubanChip] = [
-        // Movies — matches /douban?type=全部&category=热门&api=movie and /api/douban/hot?...
-        .init(id: "movie-hot", title: "热门电影", type: "全部", category: "热门", api: "movie"),
-        .init(id: "movie-new", title: "最新电影", type: "全部", category: "最新", api: "movie"),
-        .init(id: "movie-cold", title: "冷门佳片", type: "全部", category: "冷门佳片", api: "movie"),
-        // TV — real routes use type slugs + category=tv&api=tv
-        .init(id: "tv-hot", title: "热门电视剧", type: "tv", category: "tv", api: "tv"),
-        .init(id: "tv-cn", title: "热门国产剧", type: "tv_domestic", category: "tv", api: "tv"),
-        .init(id: "tv-eu", title: "热门欧美剧", type: "tv_american", category: "tv", api: "tv"),
-        .init(id: "tv-kr", title: "热门韩剧", type: "tv_korean", category: "tv", api: "tv"),
-        .init(id: "tv-jp", title: "热门日剧", type: "tv_japanese", category: "tv", api: "tv"),
-        .init(id: "tv-anime", title: "热门动画", type: "tv_animation", category: "tv", api: "tv"),
-        .init(id: "tv-show", title: "热门综艺", type: "tv_show", category: "tv", api: "tv"),
-        .init(id: "tv-doc", title: "热门纪录片", type: "tv_documentary", category: "tv", api: "tv"),
+        .init(id: "movie-hot", type: "全部", category: "热门", api: "movie"),
+        .init(id: "movie-new", type: "全部", category: "最新", api: "movie"),
+        .init(id: "movie-cold", type: "全部", category: "冷门佳片", api: "movie"),
+        .init(id: "tv-hot", type: "tv", category: "tv", api: "tv"),
+        .init(id: "tv-cn", type: "tv_domestic", category: "tv", api: "tv"),
+        .init(id: "tv-eu", type: "tv_american", category: "tv", api: "tv"),
+        .init(id: "tv-kr", type: "tv_korean", category: "tv", api: "tv"),
+        .init(id: "tv-jp", type: "tv_japanese", category: "tv", api: "tv"),
+        .init(id: "tv-anime", type: "tv_animation", category: "tv", api: "tv"),
+        .init(id: "tv-show", type: "tv_show", category: "tv", api: "tv"),
+        .init(id: "tv-doc", type: "tv_documentary", category: "tv", api: "tv"),
     ]
 
     static let `default` = all[0]
@@ -215,24 +230,24 @@ struct CloudSaverDoubanItem: Identifiable, Hashable, Sendable {
     /// Year extracted from subtitle when possible
     let year: Int?
 
-    /// Derive 口碑 from numeric rate.
-    static func reputation(forRate rate: String) -> String {
+    /// Derive 口碑 from numeric rate (localized).
+    static func reputation(forRate rate: String, using t: Translations) -> String {
         let n = Double(rate) ?? 0
-        if n >= 9 { return "口碑极佳" }
-        if n >= 8 { return "高分推荐" }
-        if n >= 7 { return "值得一看" }
-        if n >= 6 { return "口碑一般" }
-        if n > 0 { return "口碑较差" }
+        if n >= 9 { return t.csRepExcellent }
+        if n >= 8 { return t.csRepHighlyRated }
+        if n >= 7 { return t.csRepWorthWatching }
+        if n >= 6 { return t.csRepAverage }
+        if n > 0 { return t.csRepPoor }
         return ""
     }
 
-    static func honorTag(forRate rate: String, isNew: Bool) -> String {
-        if isNew { return "新上榜" }
+    static func honorTag(forRate rate: String, isNew: Bool, using t: Translations) -> String {
+        if isNew { return t.csHonorNew }
         let n = Double(rate) ?? 0
-        if n >= 8.5 { return "强烈推荐" }
-        if n >= 7.5 { return "推荐" }
-        if n >= 6 { return "一般" }
-        if n > 0 { return "慎入" }
+        if n >= 8.5 { return t.csHonorStrong }
+        if n >= 7.5 { return t.csHonorRecommend }
+        if n >= 6 { return t.csHonorOk }
+        if n > 0 { return t.csHonorCaution }
         return ""
     }
 
@@ -308,10 +323,19 @@ enum CloudSaverCloudType: String, Sendable, Hashable {
         }
     }
 
+    func displayName(using t: Translations) -> String {
+        switch self {
+        case .cloud115: return "115"
+        case .quark: return t.csSourceQuark
+        case .unknown: return "?"
+        }
+    }
+
+    /// Brand labels used where a full Translations context is unavailable.
     var displayName: String {
         switch self {
         case .cloud115: return "115"
-        case .quark: return "夸克"
+        case .quark: return "Quark"
         case .unknown: return "?"
         }
     }
@@ -475,44 +499,38 @@ enum CloudSaverAuthFailure {
 /// Map backend failures to actionable copy.
 /// Distinguishes CloudSaver **App** session/JWT expiry from 115/夸克 **Cookie** expiry.
 enum CloudSaverUserFacingError {
-    static func message(from error: Error) -> String {
+    static func message(from error: Error, using tr: Translations = Translations.forLanguage(.zh)) -> String {
         if let api = error as? APIError {
             switch api {
             case .unauthorized:
-                return appSessionMessage
+                return tr.csAppSessionExpired
             case .notConfigured:
-                return "CloudSaver 尚未配置完整。请在服务设置中填写 URL 与账号密码。"
+                return tr.csNotConfigured
             default:
                 break
             }
         }
         let raw = (error as? APIError)?.errorDescription ?? error.localizedDescription
-        return map(raw)
+        return map(raw, using: tr)
     }
 
-    static func map(_ raw: String) -> String {
+    static func map(_ raw: String, using tr: Translations = Translations.forLanguage(.zh)) -> String {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return raw }
         let t = trimmed.lowercased()
 
         // 1) Pan Cookie — only when wording is clearly about drive cookies / 网盘账号.
         if looksLikePanCookie(t, raw: trimmed) {
-            return panCookieMessage
+            return tr.csPanCookieExpired
         }
 
         // 2) App JWT / login session
         if CloudSaverAuthFailure.looksLikeAppSession(trimmed) || looksLikeAppSessionExtra(t) {
-            return appSessionMessage
+            return tr.csAppSessionExpired
         }
 
         return trimmed
     }
-
-    private static let appSessionMessage =
-        "CloudSaver 登录已过期或无效。若已保存账号密码，App 会自动重新登录；仍失败请到服务设置中重新保存账号密码。"
-
-    private static let panCookieMessage =
-        "网盘 Cookie 可能已过期。请到 CloudSaver 网页重新登录 115/夸克 并刷新对应网盘 Cookie 后再试。"
 
     private static func looksLikePanCookie(_ t: String, raw: String) -> Bool {
         if t.contains("cookie") { return true }
