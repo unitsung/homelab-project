@@ -21,6 +21,14 @@ External contributors: see [`CONTRIBUTING.md`](CONTRIBUTING.md) (GitHub Flow: PR
 - Do not merge or close external PRs without reviewing the diff and running the relevant checks.
 - Do not introduce a long-lived `dev` / `develop` branch; keep GitHub Flow (`main` + short-lived topic branches + release tags).
 
+## Android Pause (temporary)
+
+- **Android development is temporarily paused.** Do not implement, port, fix, refactor, or verify work in `HomelabAndroid` unless the user explicitly asks for Android.
+- Default all feature/bugfix work to **iOS only** (`HomelabSwift`).
+- Do not require Android parity, Android compile checks, or Android unit tests for normal tasks.
+- Leave existing Android code as-is; do not delete or “clean up” Android unless asked.
+- When the pause is lifted, restore cross-platform parity and dual-platform verification.
+
 ## Development Rules
 
 - Make focused commits with clear messages:
@@ -29,20 +37,21 @@ External contributors: see [`CONTRIBUTING.md`](CONTRIBUTING.md) (GitHub Flow: PR
   - `docs: ...`
   - `ci: ...`
   - `chore: ...`
-- For release-bound changes, update both platform versions together:
+- While Android is paused, release-bound version bumps may update **iOS only**:
+  - iOS: `HomelabSwift/Homelab/Info.plist`
+- When Android work resumes, again update both platform versions together and keep them aligned:
   - Android: `HomelabAndroid/app/build.gradle.kts`
   - iOS: `HomelabSwift/Homelab/Info.plist`
-- Keep Android `versionCode` and iOS `CFBundleVersion` aligned.
-- Keep Android `versionName` and iOS `CFBundleShortVersionString` aligned.
+  - Keep Android `versionCode` and iOS `CFBundleVersion` aligned.
+  - Keep Android `versionName` and iOS `CFBundleShortVersionString` aligned.
 - Do not commit generated release binaries (`.ipa`, `.apk`, `.aab`) unless explicitly requested.
 
 ## Verification Policy
 
 - Run local checks based on the files touched; do not run every build for every change by default.
 - Docs-only changes (`README.md`, `AGENTS.md`, license, markdown, screenshots) do not require local Android or iOS builds.
-- Android-only code/resources require the Android compile check; run Android unit tests when logic, networking, parsing, storage, or ViewModels change.
-- iOS-only code/resources require the iOS compile check; run iOS unit tests when logic, networking, parsing, storage, or model behavior changes.
-- Cross-platform service changes, shared release metadata, or version bumps require both Android and iOS compile checks.
+- **While Android is paused:** do not run Android compile or unit tests unless the user explicitly requests Android work. iOS-only code/resources require the iOS compile check; run iOS unit tests when logic, networking, parsing, storage, or model behavior changes.
+- When Android work is active again: Android-only code/resources require the Android compile check (and unit tests when logic/networking/etc. change); cross-platform service changes, shared release metadata, or version bumps require both Android and iOS compile checks.
 - Release publishing with user-provided signed `Homelab.ipa` and `Homelab.apk` does not require rebuilding locally unless source code changed in the same task.
 - After pushing to `main`, always inspect the GitHub Actions `CI` run. The task is not complete if CI fails.
 
@@ -119,3 +128,4 @@ If the exact simulator is unavailable, list devices with `xcrun simctl list devi
 
 - SideStore and AltStore Classic/World are supported through the IPA source.
 - Keep README wording specific: use "AltStore Classic / SideStore" when discussing sideloading.
+- See **Android Pause (temporary)** above: all product work defaults to iOS; Android is out of scope until the pause is lifted.

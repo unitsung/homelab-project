@@ -230,17 +230,12 @@ struct CloudSaverDashboard: View {
                 Button {
                     Task { await search(reset: true) }
                 } label: {
-                    Group {
-                        if isSearching {
-                            ProgressView()
-                        } else {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundStyle(.white)
-                        }
-                    }
-                    .frame(width: 44, height: 44)
-                    .background(accent)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.white)
+                        .frame(width: 44, height: 44)
+                        .background(accent)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .opacity(isSearching ? 0.6 : 1)
                 }
                 .disabled(isSearching || keyword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
@@ -263,24 +258,16 @@ struct CloudSaverDashboard: View {
                 }
             }
 
-            if isSearching {
-                HStack(spacing: 10) {
-                    ProgressView()
-                    Text("正在搜索多个资源频道，通常需要数秒…")
-                        .font(.footnote)
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-                .padding(.vertical, 8)
-            }
-
+            // Single loading indicator for search (avoid button + status + empty-state all spinning)
             if isSearching, results.isEmpty {
                 VStack(spacing: 14) {
                     ProgressView()
                     Text("正在搜索…")
                         .font(.subheadline.weight(.medium))
-                    Text("已清空上次结果，请稍候")
+                    Text("正在搜索多个资源频道，通常需要数秒")
                         .font(.caption)
                         .foregroundStyle(AppTheme.textMuted)
+                        .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 48)
