@@ -65,6 +65,8 @@ struct OpenListFileBrowserView: View {
     @State private var showNewFolderAlert = false
     @State private var newFolderName = ""
     @State private var showFileImporter = false
+    @State private var showOfflineDownload = false
+    @State private var offlineURLsText = ""
 
     @State private var pendingDelete: [FileItem] = []
     @State private var showDeleteConfirm = false
@@ -332,6 +334,35 @@ struct OpenListFileBrowserView: View {
         ) { result in
             Task { await handleImport(result) }
         }
+        .sheet(isPresented: $showOfflineDownload) {
+            NavigationStack {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(localizer.t.filesOfflineDownloadHint)
+                        .font(.footnote)
+                        .foregroundStyle(AppTheme.textSecondary)
+                    TextEditor(text: $offlineURLsText)
+                        .font(.body.monospaced())
+                        .frame(minHeight: 160)
+                        .padding(8)
+                        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    Spacer(minLength: 0)
+                }
+                .padding(16)
+                .navigationTitle(localizer.t.filesOfflineDownload)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(localizer.t.cancel) { showOfflineDownload = false }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(localizer.t.filesOfflineDownloadSubmit) {
+                            Task { await submitOfflineDownload() }
+                        }
+                    }
+                }
+            }
+            .presentationDetents([.medium, .large])
+        }
         .confirmationDialog(
             localizer.t.filesDeleteConfirm,
             isPresented: $showDeleteConfirm,
@@ -416,6 +447,18 @@ struct OpenListFileBrowserView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(serviceColor)
                 .disabled(uploadProgress != nil)
+
+                Button {
+                    offlineURLsText = ""
+                    showOfflineDownload = true
+                } label: {
+                    Label(localizer.t.filesOfflineDownload, systemImage: "arrow.down.circle")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.bordered)
+                .tint(serviceColor)
             }
         }
     }
@@ -842,6 +885,36 @@ struct OpenListFileBrowserView: View {
             showToast((error as? APIError)?.localizedDescription ?? error.localizedDescription)
         }
         newFolderName = ""
+    }
+
+    @MainActor
+    private func submitOfflineDownload() async {
+        let lines = offlineURLsText
+            .split(whereSeparator: \.isNewline)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .filter { line in
+                let l = line.lowercased()
+                return l.hasPrefix("http://") || l.hasPrefix("https://") || l.hasPrefix("magnet:")
+            }
+        guard !lines.isEmpty else {
+            showToast(localizer.t.filesOfflineDownloadInvalid)
+            return
+        }
+        guard let client else {
+            showToast(APIError.notConfigured.localizedDescription)
+            return
+        }
+        do {
+            try await client.addOfflineDownload(urls: lines, toDirectory: path)
+            showOfflineDownload = false
+            offlineURLsText = ""
+            showToast(localizer.t.filesOfflineDownloadStarted)
+            HapticManager.success()
+        } catch {
+            showToast((error as? APIError)?.localizedDescription ?? error.localizedDescription)
+            HapticManager.error()
+        }
     }
 
     @MainActor

@@ -149,6 +149,69 @@ actor QbittorrentAPIClient {
         }
     }
 
+    func getTorrentTrackers(hash: String) async throws -> [QbittorrentTracker] {
+        try await requestWithSessionRefresh {
+            try await engine.request(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/trackers?hash=\(hash)",
+                headers: authHeaders()
+            )
+        }
+    }
+
+    /// Download limit in bytes/s (`-1` = unlimited).
+    func setDownloadLimit(hash: String, limit: Int64) async throws {
+        try await requestVoidWithSessionRefresh {
+            try await engine.requestVoid(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/setDownloadLimit",
+                method: "POST",
+                headers: formHeaders(),
+                body: formBody(["hashes": hash, "limit": "\(limit)"])
+            )
+        }
+    }
+
+    /// Upload limit in bytes/s (`-1` = unlimited).
+    func setUploadLimit(hash: String, limit: Int64) async throws {
+        try await requestVoidWithSessionRefresh {
+            try await engine.requestVoid(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/setUploadLimit",
+                method: "POST",
+                headers: formHeaders(),
+                body: formBody(["hashes": hash, "limit": "\(limit)"])
+            )
+        }
+    }
+
+    func getDownloadLimit(hash: String) async throws -> Int64 {
+        let map: [String: Int64] = try await requestWithSessionRefresh {
+            try await engine.request(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/downloadLimit?hashes=\(hash)",
+                headers: authHeaders()
+            )
+        }
+        return map[hash] ?? -1
+    }
+
+    func getUploadLimit(hash: String) async throws -> Int64 {
+        let map: [String: Int64] = try await requestWithSessionRefresh {
+            try await engine.request(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/uploadLimit?hashes=\(hash)",
+                headers: authHeaders()
+            )
+        }
+        return map[hash] ?? -1
+    }
+
     func pauseAll() async throws {
         try await postTorrentControl(primaryPath: "/api/v2/torrents/pause", fallbackPath: "/api/v2/torrents/stop", hashes: "all")
     }

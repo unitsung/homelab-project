@@ -38,6 +38,8 @@ struct ArcaneContainerDetailView: View {
     @State private var logsTask: URLSessionWebSocketTask?
     @State private var logsSession: URLSession?
     @State private var autoUpdateEnabled = false
+    @State private var liveStats: ArcaneContainerStats?
+    @State private var statsUnavailable = false
     @FocusState private var isCommandFocused: Bool
 
     private let arcaneColor = ServiceType.arcane.colors.primary
@@ -316,6 +318,8 @@ struct ArcaneContainerDetailView: View {
 
     private func infoTab(_ detail: ArcaneContainerDetails) -> some View {
         VStack(alignment: .leading, spacing: 12) {
+            liveStatsCard
+
             infoRow("ID", String(detail.id.prefix(12)))
             infoRow("Image", detail.image ?? "—")
             infoRow("Created", detail.created ?? "—")
@@ -344,6 +348,81 @@ struct ArcaneContainerDetailView: View {
         }
         .padding(14)
         .glassCard()
+        .task(id: "\(resolvedContainerId)-\(isRunning)") {
+            await pollLiveStats()
+        }
+    }
+
+    @ViewBuilder
+    private var liveStatsCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(localizer.t.arcaneStatsTitle)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppTheme.textMuted)
+            if statsUnavailable {
+                Text(localizer.t.arcaneStatsUnavailable)
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textSecondary)
+            } else if let liveStats {
+                HStack(spacing: 12) {
+                    if let cpu = liveStats.cpuPercent {
+                        statPill(localizer.t.arcaneStatsCPU, String(format: "%.1f%%", cpu), AppTheme.info)
+                    }
+                    if let mem = liveStats.memoryUsage {
+                        let memText: String = {
+                            if let pct = liveStats.memoryPercent {
+                                return "\(Formatters.formatBytes(Double(mem))) (\(String(format: "%.0f%%", pct)))"
+                            }
+                            return Formatters.formatBytes(Double(mem))
+                        }()
+                        statPill(localizer.t.arcaneStatsMemory, memText, AppTheme.running)
+                    }
+                }
+            } else if isRunning {
+                ProgressView().controlSize(.small)
+            } else {
+                Text(localizer.t.noData)
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private func statPill(_ title: String, _ value: String, _ color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(AppTheme.textMuted)
+            Text(value)
+                .font(.caption.weight(.bold).monospacedDigit())
+                .foregroundStyle(color)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+
+    @MainActor
+    private func pollLiveStats() async {
+        guard isRunning else {
+            liveStats = nil
+            statsUnavailable = false
+            return
+        }
+        while !Task.isCancelled {
+            guard let client = await servicesStore.arcaneClient(instanceId: instanceId) else { return }
+            do {
+                liveStats = try await client.getContainerStats(id: resolvedContainerId, environmentId: environmentId)
+                statsUnavailable = false
+            } catch {
+                // Endpoint may not exist on older Arcane builds.
+                if liveStats == nil { statsUnavailable = true }
+            }
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+        }
     }
 
     private var filteredLogs: String {

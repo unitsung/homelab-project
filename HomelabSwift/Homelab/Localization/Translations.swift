@@ -1969,6 +1969,29 @@ struct Translations {
     let arcaneTerminalPlaceholder: String
     let filesViewList: String
     let filesViewGrid: String
+    let arcaneImagesTitle: String
+    let arcaneImagesAll: String
+    let arcaneImagesWithUpdates: String
+    let arcaneImageInUse: String
+    let arcaneImageUnused: String
+    let arcaneImageNoData: String
+    let arcaneStatsTitle: String
+    let arcaneStatsUnavailable: String
+    let arcaneStatsCPU: String
+    let arcaneStatsMemory: String
+    let qbTrackers: String
+    let qbNoTrackers: String
+    let qbDownloadLimit: String
+    let qbUploadLimit: String
+    let qbLimitUnlimited: String
+    let qbApplyLimits: String
+    let qbLimitsSaved: String
+    let filesOfflineDownload: String
+    let filesOfflineDownloadHint: String
+    let filesOfflineDownloadSubmit: String
+    let filesOfflineDownloadStarted: String
+    let filesOfflineDownloadInvalid: String
+    let filesPlayerPiP: String
 
     // Home extras + CloudSaver
     let homeNoServices: String

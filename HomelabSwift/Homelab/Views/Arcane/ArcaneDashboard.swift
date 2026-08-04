@@ -32,6 +32,7 @@ struct ArcaneDashboard: View {
     @State private var isBatchRunning = false
     @State private var updateSession: ArcaneUpdateProgressSession?
     @State private var showUpdateProgress = false
+    @State private var showImagesSheet = false
     /// Server-side `updates=has_update` result (authoritative when local flags are missing).
     @State private var serverUpdateContainers: [ArcaneContainer] = []
     @State private var isLoadingUpdatesFilter = false
@@ -220,6 +221,14 @@ struct ArcaneDashboard: View {
             if let updateSession {
                 ArcaneUpdateProgressSheet(session: updateSession)
             }
+        }
+        .sheet(isPresented: $showImagesSheet) {
+            ArcaneImagesSheet(
+                instanceId: selectedInstanceId,
+                environmentId: selectedEnvironment?.id ?? ArcaneEnvironment.localId
+            )
+            .environment(localizer)
+            .environment(servicesStore)
         }
         .task(id: selectedInstanceId) { await fetchAll() }
         .onChange(of: filter) { _, newValue in
@@ -458,17 +467,31 @@ struct ArcaneDashboard: View {
             }
 
             if let imageUsage {
-                Text(
-                    String(
-                        format: localizer.t.arcaneImagesUsageFormat,
-                        imageUsage.total,
-                        imageUsage.unused,
-                        Formatters.formatBytes(Double(imageUsage.totalSize))
-                    )
-                )
-                    .font(.caption2)
-                    .foregroundStyle(AppTheme.textSecondary)
+                Button {
+                    showImagesSheet = true
+                } label: {
+                    HStack {
+                        Text(
+                            String(
+                                format: localizer.t.arcaneImagesUsageFormat,
+                                imageUsage.total,
+                                imageUsage.unused,
+                                Formatters.formatBytes(Double(imageUsage.totalSize))
+                            )
+                        )
+                        .font(.caption2)
+                        .foregroundStyle(AppTheme.textSecondary)
+                        Spacer()
+                        Text(localizer.t.arcaneImagesTitle)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(arcaneColor)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(arcaneColor)
+                    }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
             }
 
             if isBatchRunning {
@@ -1239,5 +1262,104 @@ struct ArcaneContainerListView: View {
     var body: some View {
         // Prefer the full dashboard (env picker + filters + bulk actions).
         ArcaneDashboard(instanceId: instanceId)
+    }
+}
+
+// MARK: - Images browser
+
+private struct ArcaneImagesSheet: View {
+    let instanceId: UUID
+    let environmentId: String
+
+    @Environment(ServicesStore.self) private var servicesStore
+    @Environment(Localizer.self) private var localizer
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var images: [ArcaneImageSummary] = []
+    @State private var isLoading = true
+    @State private var errorText: String?
+    @State private var updatesOnly = false
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isLoading {
+                    ProgressView(localizer.t.loading)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let errorText {
+                    ContentUnavailableView(errorText, systemImage: "exclamationmark.triangle")
+                } else if images.isEmpty {
+                    ContentUnavailableView(localizer.t.arcaneImageNoData, systemImage: "photo.stack")
+                } else {
+                    List(images) { image in
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                Text(image.primaryTag)
+                                    .font(.subheadline.weight(.semibold))
+                                    .lineLimit(2)
+                                Spacer()
+                                if image.hasUpdate {
+                                    Text(localizer.t.arcaneUpdateBadge)
+                                        .font(.caption2.bold())
+                                        .foregroundStyle(AppTheme.warning)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(AppTheme.warning.opacity(0.15), in: Capsule())
+                                }
+                            }
+                            HStack {
+                                Text(Formatters.formatBytes(Double(image.size ?? 0)))
+                                Spacer()
+                                Text(image.inUse == true ? localizer.t.arcaneImageInUse : localizer.t.arcaneImageUnused)
+                                    .foregroundStyle(image.inUse == true ? AppTheme.running : AppTheme.textMuted)
+                            }
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            if !image.usedContainerNames.isEmpty {
+                                Text(image.usedContainerNames.joined(separator: ", "))
+                                    .font(.caption2)
+                                    .foregroundStyle(AppTheme.textMuted)
+                                    .lineLimit(2)
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                    .listStyle(.insetGrouped)
+                }
+            }
+            .navigationTitle(localizer.t.arcaneImagesTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(localizer.t.close) { dismiss() }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Picker("", selection: $updatesOnly) {
+                        Text(localizer.t.arcaneImagesAll).tag(false)
+                        Text(localizer.t.arcaneImagesWithUpdates).tag(true)
+                    }
+                    .pickerStyle(.menu)
+                }
+            }
+            .task(id: updatesOnly) { await load() }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    @MainActor
+    private func load() async {
+        isLoading = true
+        defer { isLoading = false }
+        guard let client = await servicesStore.arcaneClient(instanceId: instanceId) else {
+            errorText = localizer.t.arcaneClientUnavailable
+            return
+        }
+        do {
+            images = try await client.getImages(environmentId: environmentId, updatesOnly: updatesOnly)
+            errorText = nil
+        } catch {
+            errorText = error.localizedDescription
+            images = []
+        }
     }
 }

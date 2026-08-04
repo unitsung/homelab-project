@@ -348,12 +348,17 @@ actor ArcaneAPIClient {
 
     // OpenAPI images list: updates filter documented as true/false (backend also accepts has_update).
     func getImagesWithUpdates(environmentId: String = localEnvironmentId) async throws -> [ArcaneImageSummary] {
+        try await getImages(environmentId: environmentId, updatesOnly: true)
+    }
+
+    /// List images (optionally only those with available updates). Paginates until exhausted.
+    func getImages(environmentId: String = localEnvironmentId, updatesOnly: Bool = false) async throws -> [ArcaneImageSummary] {
         var all: [ArcaneImageSummary] = []
         var start = 0
         let pageSize = 100
         while true {
-            // Documented query: updates=true|false
-            let path = "/api/environments/\(environmentId)/images?updates=true&limit=\(pageSize)&start=\(start)"
+            var path = "/api/environments/\(environmentId)/images?limit=\(pageSize)&start=\(start)"
+            if updatesOnly { path += "&updates=true" }
             let response: ArcanePaginatedResponse<ArcaneImageSummary> = try await authenticatedRequest(path: path)
             all.append(contentsOf: response.data)
             let total = response.pagination?.totalItems ?? all.count
@@ -361,6 +366,14 @@ actor ArcaneAPIClient {
             if response.data.isEmpty || start >= total || response.data.count < pageSize { break }
         }
         return all
+    }
+
+    /// Best-effort live stats. Soft-fails if the backend does not expose this route.
+    func getContainerStats(id: String, environmentId: String = localEnvironmentId) async throws -> ArcaneContainerStats {
+        let response: ArcaneAPIResponse<ArcaneContainerStats> = try await authenticatedRequest(
+            path: "/api/environments/\(environmentId)/containers/\(id)/stats"
+        )
+        return response.data
     }
 
     // OpenAPI: GET /environments/{id}/images/counts

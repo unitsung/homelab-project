@@ -328,6 +328,53 @@ struct ArcaneImageSummary: Identifiable, Decodable, Hashable, Sendable {
     }
 }
 
+/// Optional live stats payload (varies by Arcane version).
+struct ArcaneContainerStats: Decodable, Sendable, Hashable {
+    let cpuPercent: Double?
+    let memoryUsage: Int64?
+    let memoryLimit: Int64?
+    let netInput: Int64?
+    let netOutput: Int64?
+    let blockRead: Int64?
+    let blockWrite: Int64?
+
+    enum CodingKeys: String, CodingKey {
+        case cpuPercent = "CPUPerc"
+        case cpuPercentAlt = "cpu_percent"
+        case memoryUsage = "MemUsage"
+        case memoryUsageAlt = "memory_usage"
+        case memoryLimit = "MemLimit"
+        case memoryLimitAlt = "memory_limit"
+        case netInput = "NetInput"
+        case netOutput = "NetOutput"
+        case blockRead = "BlockRead"
+        case blockWrite = "BlockWrite"
+        case cpu
+        case memory
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        cpuPercent = try c.decodeIfPresent(Double.self, forKey: .cpuPercent)
+            ?? c.decodeIfPresent(Double.self, forKey: .cpuPercentAlt)
+            ?? c.decodeIfPresent(Double.self, forKey: .cpu)
+        memoryUsage = try c.decodeIfPresent(Int64.self, forKey: .memoryUsage)
+            ?? c.decodeIfPresent(Int64.self, forKey: .memoryUsageAlt)
+            ?? c.decodeIfPresent(Int64.self, forKey: .memory)
+        memoryLimit = try c.decodeIfPresent(Int64.self, forKey: .memoryLimit)
+            ?? c.decodeIfPresent(Int64.self, forKey: .memoryLimitAlt)
+        netInput = try c.decodeIfPresent(Int64.self, forKey: .netInput)
+        netOutput = try c.decodeIfPresent(Int64.self, forKey: .netOutput)
+        blockRead = try c.decodeIfPresent(Int64.self, forKey: .blockRead)
+        blockWrite = try c.decodeIfPresent(Int64.self, forKey: .blockWrite)
+    }
+
+    var memoryPercent: Double? {
+        guard let usage = memoryUsage, let limit = memoryLimit, limit > 0 else { return nil }
+        return (Double(usage) / Double(limit)) * 100
+    }
+}
+
 // MARK: - ANSI / terminal helpers
 
 enum ArcaneTextSanitizer {

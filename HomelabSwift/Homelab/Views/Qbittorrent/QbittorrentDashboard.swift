@@ -980,8 +980,13 @@ private struct QbittorrentTorrentDetailSheet: View {
     @Environment(Localizer.self) private var localizer
     @Environment(\.dismiss) private var dismiss
     @State private var files: [QbittorrentTorrentFile] = []
+    @State private var trackers: [QbittorrentTracker] = []
     @State private var isLoading = true
     @State private var errorText: String?
+    @State private var dlLimitKBps: String = ""
+    @State private var upLimitKBps: String = ""
+    @State private var limitsMessage: String?
+    @State private var isSavingLimits = false
 
     private var arr: ArrStrings { localizer.arr }
 
@@ -1019,6 +1024,58 @@ private struct QbittorrentTorrentDetailSheet: View {
                         Text(tags)
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section {
+                    TextField(localizer.t.qbDownloadLimit, text: $dlLimitKBps)
+                        .keyboardType(.numberPad)
+                    TextField(localizer.t.qbUploadLimit, text: $upLimitKBps)
+                        .keyboardType(.numberPad)
+                    Text(localizer.t.qbLimitUnlimited)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Button {
+                        Task { await applyLimits() }
+                    } label: {
+                        if isSavingLimits {
+                            ProgressView()
+                        } else {
+                            Text(localizer.t.qbApplyLimits)
+                        }
+                    }
+                    .disabled(isSavingLimits)
+                    if let limitsMessage {
+                        Text(limitsMessage)
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.running)
+                    }
+                } header: {
+                    Text(arr.download)
+                }
+
+                Section(localizer.t.qbTrackers) {
+                    if isLoading {
+                        ProgressView()
+                    } else if trackers.isEmpty {
+                        Text(localizer.t.qbNoTrackers).foregroundStyle(.secondary)
+                    } else {
+                        ForEach(trackers) { tracker in
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(tracker.url)
+                                    .font(.caption.weight(.medium))
+                                    .lineLimit(2)
+                                HStack {
+                                    Text(tracker.statusLabel)
+                                    Spacer()
+                                    if let seeds = tracker.num_seeds, let peers = tracker.num_peers {
+                                        Text("S:\(seeds) P:\(peers)")
+                                    }
+                                }
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
 
@@ -1060,23 +1117,58 @@ private struct QbittorrentTorrentDetailSheet: View {
                     Button(localizer.t.close) { dismiss() }
                 }
             }
-            .task { await loadFiles() }
+            .task { await loadDetails() }
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
     }
 
     @MainActor
-    private func loadFiles() async {
+    private func loadDetails() async {
         isLoading = true
         defer { isLoading = false }
         do {
             let client = try clientProvider()
-            files = try await client.getTorrentFiles(hash: torrent.hash)
+            async let filesTask = client.getTorrentFiles(hash: torrent.hash)
+            async let trackersTask = client.getTorrentTrackers(hash: torrent.hash)
+            async let dlTask = client.getDownloadLimit(hash: torrent.hash)
+            async let upTask = client.getUploadLimit(hash: torrent.hash)
+            files = try await filesTask
+            trackers = (try? await trackersTask) ?? []
+            let dl = (try? await dlTask) ?? -1
+            let up = (try? await upTask) ?? -1
+            dlLimitKBps = dl < 0 ? "" : "\(max(0, dl / 1024))"
+            upLimitKBps = up < 0 ? "" : "\(max(0, up / 1024))"
             errorText = nil
         } catch {
             errorText = (error as? APIError)?.localizedDescription ?? error.localizedDescription
             files = []
+        }
+    }
+
+    @MainActor
+    private func applyLimits() async {
+        isSavingLimits = true
+        defer { isSavingLimits = false }
+        do {
+            let client = try clientProvider()
+            let dl: Int64 = {
+                let t = dlLimitKBps.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard let kb = Int64(t), kb > 0 else { return -1 }
+                return kb * 1024
+            }()
+            let up: Int64 = {
+                let t = upLimitKBps.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard let kb = Int64(t), kb > 0 else { return -1 }
+                return kb * 1024
+            }()
+            try await client.setDownloadLimit(hash: torrent.hash, limit: dl)
+            try await client.setUploadLimit(hash: torrent.hash, limit: up)
+            limitsMessage = localizer.t.qbLimitsSaved
+            HapticManager.success()
+        } catch {
+            limitsMessage = (error as? APIError)?.localizedDescription ?? error.localizedDescription
+            HapticManager.error()
         }
     }
 }

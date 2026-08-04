@@ -42,6 +42,8 @@ struct OpenListMediaPlayerView: View {
     /// True when format is MKV/AVI/etc. or AVPlayer reports unplayable — offer external apps.
     @State private var showExternalFallback = false
     @State private var openingExternal: ExternalPlayerOption?
+    @State private var pipController: AVPictureInPictureController?
+    @State private var pipPossible = false
     /// Screen resolved from the hosting window (iOS 26: do not use UIScreen.main).
     @State private var hostScreen: UIScreen?
     /// Hidden `MPVolumeView` host used to write system volume + mirror hardware buttons.
@@ -173,8 +175,10 @@ struct OpenListMediaPlayerView: View {
         if isAudio {
             audioBackdrop
         } else if let player {
-            OpenListAVPlayerLayerView(player: player)
-                .ignoresSafeArea()
+            OpenListAVPlayerLayerView(player: player) { layer in
+                configurePiP(with: layer)
+            }
+            .ignoresSafeArea()
         }
     }
 
@@ -494,6 +498,18 @@ struct OpenListMediaPlayerView: View {
                     subtitleMenuButton
                     audioTrackMenuButton
                     landscapeButton
+                    if pipPossible {
+                        Button {
+                            togglePiP()
+                            scheduleHide()
+                        } label: {
+                            toolIcon(
+                                "pip.enter",
+                                label: localizer.t.filesPlayerPiP,
+                                active: pipController?.isPictureInPictureActive == true
+                            )
+                        }
+                    }
                     Button {
                         showLocalSubtitlePicker = true
                         scheduleHide()
@@ -662,6 +678,31 @@ struct OpenListMediaPlayerView: View {
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
+    }
+
+    // MARK: - Picture in Picture
+
+    @MainActor
+    private func configurePiP(with layer: AVPlayerLayer) {
+        guard !isAudio, AVPictureInPictureController.isPictureInPictureSupported() else {
+            pipPossible = false
+            return
+        }
+        if pipController?.playerLayer === layer { return }
+        let controller = AVPictureInPictureController(playerLayer: layer)
+        controller?.canStartPictureInPictureAutomaticallyFromInline = true
+        pipController = controller
+        pipPossible = controller != nil
+    }
+
+    @MainActor
+    private func togglePiP() {
+        guard let pipController else { return }
+        if pipController.isPictureInPictureActive {
+            pipController.stopPictureInPicture()
+        } else {
+            pipController.startPictureInPicture()
+        }
     }
 
     // MARK: - Lifecycle
@@ -1415,16 +1456,19 @@ private struct OpenListHostScreenReader: UIViewRepresentable {
 
 struct OpenListAVPlayerLayerView: UIViewRepresentable {
     let player: AVPlayer
+    var onLayerReady: ((AVPlayerLayer) -> Void)? = nil
 
     func makeUIView(context: Context) -> PlayerUIView {
         let view = PlayerUIView()
         view.playerLayer.videoGravity = .resizeAspect
         view.backgroundColor = .black
+        view.onLayerReady = onLayerReady
         view.attach(player: player)
         return view
     }
 
     func updateUIView(_ uiView: PlayerUIView, context: Context) {
+        uiView.onLayerReady = onLayerReady
         uiView.attach(player: player)
     }
 
@@ -1432,14 +1476,19 @@ struct OpenListAVPlayerLayerView: UIViewRepresentable {
         override class var layerClass: AnyClass { AVPlayerLayer.self }
         var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
         private weak var boundPlayer: AVPlayer?
+        var onLayerReady: ((AVPlayerLayer) -> Void)?
 
         func attach(player: AVPlayer) {
-            guard boundPlayer !== player else { return }
+            guard boundPlayer !== player else {
+                onLayerReady?(playerLayer)
+                return
+            }
             boundPlayer = player
             // Defer off the interactive frame to reduce QoS inversion with AVFoundation.
             Task { @MainActor [weak self] in
                 guard let self, self.boundPlayer === player else { return }
                 self.playerLayer.player = player
+                self.onLayerReady?(self.playerLayer)
             }
         }
     }

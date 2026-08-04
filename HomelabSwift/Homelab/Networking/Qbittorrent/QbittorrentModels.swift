@@ -73,3 +73,26 @@ struct QbittorrentTorrentFile: Decodable, Identifiable, Sendable, Hashable {
         Int((min(max(progress, 0), 1) * 100).rounded())
     }
 }
+
+/// Tracker entry from `GET /api/v2/torrents/trackers`.
+struct QbittorrentTracker: Decodable, Identifiable, Sendable, Hashable {
+    let url: String
+    let status: Int?
+    let num_peers: Int?
+    let num_seeds: Int?
+    let num_leeches: Int?
+    let msg: String?
+
+    var id: String { url }
+
+    var statusLabel: String {
+        switch status {
+        case 0: return "Disabled"
+        case 1: return "Not contacted"
+        case 2: return "Working"
+        case 3: return "Updating"
+        case 4: return "Not working"
+        default: return msg?.isEmpty == false ? (msg ?? "—") : "—"
+        }
+    }
+}
