@@ -88,11 +88,12 @@ actor ArcaneAPIClient {
         if apiKey != nil || jwtToken != nil {
             if (try? await getEnvironments()) != nil { return true }
         }
-        if await engine.pingURL("\(baseURL)/api/health", extraHeaders: authHeaders()) { return true }
-        if !fallbackURL.isEmpty {
-            return await engine.pingURL("\(fallbackURL)/api/health", extraHeaders: authHeaders())
-        }
-        return false
+        return await engine.pingWithAccessMode(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: "/api/health",
+            extraHeaders: authHeaders()
+        )
     }
 
     @discardableResult

@@ -90,11 +90,12 @@ actor BeszelAPIClient {
 
     func ping() async -> Bool {
         if baseURL.isEmpty { return false }
-        if await engine.pingURL("\(baseURL)/api/health", extraHeaders: authHeaders()) { return true }
-        if !fallbackURL.isEmpty {
-            return await engine.pingURL("\(fallbackURL)/api/health", extraHeaders: authHeaders())
-        }
-        return false
+        return await engine.pingWithAccessMode(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: "/api/health",
+            extraHeaders: authHeaders()
+        )
     }
 
     // MARK: - Authentication (PocketBase)

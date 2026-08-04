@@ -59,10 +59,7 @@ actor QbittorrentAPIClient {
             return false
         }
 
-        let primary = await engine.pingURL(baseURL + path, extraHeaders: authHeaders())
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL(fallbackURL + path, extraHeaders: authHeaders())
+        return await engine.pingWithAccessMode(baseURL: baseURL, fallbackURL: fallbackURL, path: path, extraHeaders: authHeaders())
     }
 
     // Authenticate and return the SID cookie value

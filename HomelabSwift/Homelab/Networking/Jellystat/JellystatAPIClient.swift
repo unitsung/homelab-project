@@ -93,10 +93,7 @@ actor JellystatAPIClient {
     func ping() async -> Bool {
         guard !baseURL.isEmpty, !apiKey.isEmpty else { return false }
         let path = statsPath(endpoint: "getViewsByLibraryType", queryItems: [URLQueryItem(name: "days", value: "1")])
-        let primary = await engine.pingURL(baseURL + path, extraHeaders: authHeaders())
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL(fallbackURL + path, extraHeaders: authHeaders())
+        return await engine.pingWithAccessMode(baseURL: baseURL, fallbackURL: fallbackURL, path: path, extraHeaders: authHeaders())
     }
 
     func authenticate(url: String, apiKey: String, fallbackUrl: String? = nil) async throws {

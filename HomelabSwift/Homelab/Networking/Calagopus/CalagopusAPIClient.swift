@@ -126,14 +126,10 @@ actor CalagopusAPIClient {
 
     func ping() async -> Bool {
         guard !baseURL.isEmpty else { return false }
-        let primary = await engine.pingURL(
-            "\(baseURL)/api/client/servers",
-            extraHeaders: authHeaders()
-        )
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL(
-            "\(fallbackURL)/api/client/servers",
+        return await engine.pingWithAccessMode(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: "/api/client/servers",
             extraHeaders: authHeaders()
         )
     }

@@ -177,10 +177,7 @@ actor PlexAPIClient {
     func ping() async -> Bool {
         guard !baseURL.isEmpty, !token.isEmpty else { return false }
         let path = "/identity"
-        let primary = await engine.pingURL(baseURL + path, extraHeaders: authHeaders())
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL(fallbackURL + path, extraHeaders: authHeaders())
+        return await engine.pingWithAccessMode(baseURL: baseURL, fallbackURL: fallbackURL, path: path, extraHeaders: authHeaders())
     }
 
     func authenticate(url: String, token: String, fallbackUrl: String? = nil) async throws {

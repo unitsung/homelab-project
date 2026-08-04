@@ -31,10 +31,12 @@ actor LinuxUpdateAPIClient {
 
     func ping() async -> Bool {
         guard !baseURL.isEmpty, !apiToken.isEmpty else { return false }
-        let primary = await engine.pingURL("\(baseURL)/api/dashboard/stats", extraHeaders: authHeaders())
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL("\(fallbackURL)/api/dashboard/stats", extraHeaders: authHeaders())
+        return await engine.pingWithAccessMode(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: "/api/dashboard/stats",
+            extraHeaders: authHeaders()
+        )
     }
 
     func authenticate(url: String, apiToken: String, fallbackUrl: String? = nil) async throws {
@@ -663,15 +665,12 @@ actor DockhandAPIClient {
         let candidatePaths = ["/api/dashboard/stats", "/api/environments", "/api/containers"]
 
         for path in candidatePaths {
-            if await engine.pingURL("\(baseURL)\(path)", extraHeaders: headers) {
-                return true
-            }
-        }
-
-        guard !fallbackURL.isEmpty else { return false }
-
-        for path in candidatePaths {
-            if await engine.pingURL("\(fallbackURL)\(path)", extraHeaders: headers) {
+            if await engine.pingWithAccessMode(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: path,
+                extraHeaders: headers
+            ) {
                 return true
             }
         }

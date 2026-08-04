@@ -74,6 +74,13 @@ final class SettingsStore {
         }
     }
 
+    /// Global LAN vs remote (Tailscale) access force mode.
+    var networkAccessMode: NetworkAccessMode {
+        didSet {
+            NetworkAccessMode.persist(networkAccessMode)
+        }
+    }
+
     private(set) var availableUpdateVersion: String? = nil {
         didSet {
             UserDefaults.standard.set(availableUpdateVersion, forKey: Keys.availableUpdateVersion)
@@ -135,6 +142,7 @@ final class SettingsStore {
         static let backupRememberSelectionEnabled = "homelab_backup_remember_selection_enabled"
         static let backupSelectedServiceTypes = "homelab_backup_selected_service_types"
         static let checkForUpdatesEnabled = "homelab_check_updates_enabled"
+        static let networkAccessMode = NetworkAccessMode.userDefaultsKey
     }
 
     // Point updates at this fork (upstream JohnnWi/homelab-project is archived).
@@ -169,6 +177,8 @@ final class SettingsStore {
         self.backupRememberSelectionEnabled = UserDefaults.standard.object(forKey: Keys.backupRememberSelectionEnabled) as? Bool ?? true
         let savedBackupSelection = UserDefaults.standard.stringArray(forKey: Keys.backupSelectedServiceTypes) ?? []
         self.backupSelectedServiceTypes = Set(savedBackupSelection.compactMap(Self.serviceType(fromStoredRawValue:)))
+        let savedNetworkMode = UserDefaults.standard.string(forKey: Keys.networkAccessMode)
+        self.networkAccessMode = savedNetworkMode.flatMap(NetworkAccessMode.init(rawValue:)) ?? .local
         self.dismissedUpdateVersion = UserDefaults.standard.string(forKey: Keys.dismissedUpdateVersion)
         self.dismissedPopupVersion = UserDefaults.standard.string(forKey: Keys.dismissedPopupVersion)
         self.availableUpdateVersion = UserDefaults.standard.string(forKey: Keys.availableUpdateVersion)

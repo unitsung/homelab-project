@@ -124,7 +124,14 @@ final class BaseNetworkEngine: Sendable {
         return data
     }
 
-    // MARK: - Core Request (primary → fallback)
+    // MARK: - Access mode (LAN vs remote)
+
+    /// Apply global network access mode so only one base is used (no silent dual-try).
+    static func endpointsForAccessMode(baseURL: String, fallbackURL: String) -> (baseURL: String, fallbackURL: String) {
+        NetworkAccessMode.resolve(primary: baseURL, fallback: fallbackURL)
+    }
+
+    // MARK: - Core Request (respects NetworkAccessMode; force single base)
 
     func request<T: Decodable>(
         baseURL: String,
@@ -135,12 +142,13 @@ final class BaseNetworkEngine: Sendable {
         body: Data? = nil,
         timeout: TimeInterval? = nil
     ) async throws -> T {
-        guard !baseURL.isEmpty else { throw APIError.notConfigured }
+        let endpoints = Self.endpointsForAccessMode(baseURL: baseURL, fallbackURL: fallbackURL)
+        guard !endpoints.baseURL.isEmpty else { throw APIError.notConfigured }
         let effectiveTimeout = timeout ?? timeoutInterval
 
         do {
             return try await performRequest(
-                baseURL: baseURL,
+                baseURL: endpoints.baseURL,
                 path: path,
                 method: method,
                 headers: headers,
@@ -148,10 +156,10 @@ final class BaseNetworkEngine: Sendable {
                 timeout: effectiveTimeout
             )
         } catch let primaryError {
-            guard !fallbackURL.isEmpty else { throw primaryError }
+            guard !endpoints.fallbackURL.isEmpty else { throw primaryError }
             do {
                 return try await performRequest(
-                    baseURL: fallbackURL,
+                    baseURL: endpoints.fallbackURL,
                     path: path,
                     method: method,
                     headers: headers,
@@ -173,14 +181,15 @@ final class BaseNetworkEngine: Sendable {
         headers: [String: String] = [:],
         body: Data? = nil
     ) async throws -> String {
-        guard !baseURL.isEmpty else { throw APIError.notConfigured }
+        let endpoints = Self.endpointsForAccessMode(baseURL: baseURL, fallbackURL: fallbackURL)
+        guard !endpoints.baseURL.isEmpty else { throw APIError.notConfigured }
 
         do {
-            return try await performStringRequest(baseURL: baseURL, path: path, method: method, headers: headers, body: body)
+            return try await performStringRequest(baseURL: endpoints.baseURL, path: path, method: method, headers: headers, body: body)
         } catch let primaryError {
-            guard !fallbackURL.isEmpty else { throw primaryError }
+            guard !endpoints.fallbackURL.isEmpty else { throw primaryError }
             do {
-                return try await performStringRequest(baseURL: fallbackURL, path: path, method: method, headers: headers, body: body)
+                return try await performStringRequest(baseURL: endpoints.fallbackURL, path: path, method: method, headers: headers, body: body)
             } catch let fallbackError {
                 throw APIError.bothURLsFailed(primaryError: primaryError, fallbackError: fallbackError)
             }
@@ -196,14 +205,15 @@ final class BaseNetworkEngine: Sendable {
         headers: [String: String] = [:],
         body: Data? = nil
     ) async throws {
-        guard !baseURL.isEmpty else { throw APIError.notConfigured }
+        let endpoints = Self.endpointsForAccessMode(baseURL: baseURL, fallbackURL: fallbackURL)
+        guard !endpoints.baseURL.isEmpty else { throw APIError.notConfigured }
 
         do {
-            try await performVoidRequest(baseURL: baseURL, path: path, method: method, headers: headers, body: body)
+            try await performVoidRequest(baseURL: endpoints.baseURL, path: path, method: method, headers: headers, body: body)
         } catch let primaryError {
-            guard !fallbackURL.isEmpty else { throw primaryError }
+            guard !endpoints.fallbackURL.isEmpty else { throw primaryError }
             do {
-                try await performVoidRequest(baseURL: fallbackURL, path: path, method: method, headers: headers, body: body)
+                try await performVoidRequest(baseURL: endpoints.fallbackURL, path: path, method: method, headers: headers, body: body)
             } catch let fallbackError {
                 throw APIError.bothURLsFailed(primaryError: primaryError, fallbackError: fallbackError)
             }
@@ -220,12 +230,13 @@ final class BaseNetworkEngine: Sendable {
         body: Data? = nil,
         timeout: TimeInterval? = nil
     ) async throws -> Data {
-        guard !baseURL.isEmpty else { throw APIError.notConfigured }
+        let endpoints = Self.endpointsForAccessMode(baseURL: baseURL, fallbackURL: fallbackURL)
+        guard !endpoints.baseURL.isEmpty else { throw APIError.notConfigured }
         let effectiveTimeout = timeout ?? timeoutInterval
 
         do {
             return try await performDataRequest(
-                baseURL: baseURL,
+                baseURL: endpoints.baseURL,
                 path: path,
                 method: method,
                 headers: headers,
@@ -233,10 +244,10 @@ final class BaseNetworkEngine: Sendable {
                 timeout: effectiveTimeout
             )
         } catch let primaryError {
-            guard !fallbackURL.isEmpty else { throw primaryError }
+            guard !endpoints.fallbackURL.isEmpty else { throw primaryError }
             do {
                 return try await performDataRequest(
-                    baseURL: fallbackURL,
+                    baseURL: endpoints.fallbackURL,
                     path: path,
                     method: method,
                     headers: headers,
@@ -265,6 +276,19 @@ final class BaseNetworkEngine: Sendable {
         } catch {
             return false
         }
+    }
+
+    /// Ping only the base selected by the current network access mode.
+    func pingWithAccessMode(
+        baseURL: String,
+        fallbackURL: String,
+        path: String,
+        extraHeaders: [String: String] = [:]
+    ) async -> Bool {
+        let endpoints = Self.endpointsForAccessMode(baseURL: baseURL, fallbackURL: fallbackURL)
+        guard !endpoints.baseURL.isEmpty else { return false }
+        let suffix = path.hasPrefix("/") || path.isEmpty ? path : "/\(path)"
+        return await pingURL(endpoints.baseURL + suffix, extraHeaders: extraHeaders)
     }
 
     // MARK: - Private

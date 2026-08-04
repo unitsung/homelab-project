@@ -495,18 +495,22 @@ actor ProxmoxAPIClient {
             _ = await refreshTokenWithContinuation()
         }
         let headers = authHeaders()
-        if await engine.pingURL("\(baseURL)/api2/json/version", extraHeaders: headers) { return true }
-        if !fallbackURL.isEmpty {
-            if await engine.pingURL("\(fallbackURL)/api2/json/version", extraHeaders: headers) {
-                return true
-            }
+        if await engine.pingWithAccessMode(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: "/api2/json/version",
+            extraHeaders: headers
+        ) {
+            return true
         }
         if !usesApiToken, await refreshTokenWithContinuation() {
             let refreshedHeaders = authHeaders()
-            if await engine.pingURL("\(baseURL)/api2/json/version", extraHeaders: refreshedHeaders) { return true }
-            if !fallbackURL.isEmpty {
-                return await engine.pingURL("\(fallbackURL)/api2/json/version", extraHeaders: refreshedHeaders)
-            }
+            return await engine.pingWithAccessMode(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api2/json/version",
+                extraHeaders: refreshedHeaders
+            )
         }
         return false
     }

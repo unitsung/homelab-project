@@ -142,10 +142,11 @@ actor TechnitiumAPIClient {
             }
             return true
         } catch {
-            let primary = await engine.pingURL("\(baseURL)/api/user/login")
-            if primary { return true }
-            guard !fallbackURL.isEmpty else { return false }
-            return await engine.pingURL("\(fallbackURL)/api/user/login")
+            return await engine.pingWithAccessMode(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/user/login"
+            )
         }
     }
 

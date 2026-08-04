@@ -1188,6 +1188,11 @@ struct Translations {
     let tailscaleConnected: String
     let tailscaleNotConnected: String
 
+    // Network access mode (LAN vs remote / Tailscale)
+    let networkAccessMode: String
+    let networkAccessLocal: String
+    let networkAccessRemote: String
+
     // Bookmarks v2
     let categoryColor: String
     let bookmarkFavicon: String
@@ -2242,8 +2247,8 @@ extension ArrStrings {
                 statusLabel: "Status",
                 versionLabel: "Version",
                 messageLabel: "Message",
-                urlLabel: "URL",
-                fallbackURLLabel: "Fallback URL",
+                urlLabel: "Local URL",
+                fallbackURLLabel: "Remote URL",
                 apiKeyLabel: "API Key",
                 publicIPLabel: "Public IP",
                 countryLabel: "Country",
@@ -2389,8 +2394,8 @@ extension ArrStrings {
                 statusLabel: "状态",
                 versionLabel: "版本",
                 messageLabel: "消息",
-                urlLabel: "URL",
-                fallbackURLLabel: "备用 URL",
+                urlLabel: "内网 URL",
+                fallbackURLLabel: "外网 URL",
                 apiKeyLabel: "API 密钥",
                 publicIPLabel: "公网 IP",
                 countryLabel: "国家",

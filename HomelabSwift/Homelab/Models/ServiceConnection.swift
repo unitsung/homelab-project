@@ -1,5 +1,52 @@
 import Foundation
 
+/// Global force mode for service base URLs.
+/// - `local`: use primary `url` only (LAN / home).
+/// - `remote`: use `fallbackUrl` when set (Tailscale / external); otherwise primary.
+enum NetworkAccessMode: String, CaseIterable, Codable, Sendable {
+    case local
+    case remote
+
+    static let userDefaultsKey = "homelab_network_access_mode"
+
+    /// Thread-safe read for networking (UserDefaults is safe for concurrent reads).
+    static var current: NetworkAccessMode {
+        let raw = UserDefaults.standard.string(forKey: userDefaultsKey) ?? NetworkAccessMode.local.rawValue
+        return NetworkAccessMode(rawValue: raw) ?? .local
+    }
+
+    static func persist(_ mode: NetworkAccessMode) {
+        UserDefaults.standard.set(mode.rawValue, forKey: userDefaultsKey)
+    }
+
+    /// Force-mode resolution: always returns an empty secondary so callers never dual-try.
+    static func resolve(primary: String, fallback: String?) -> (baseURL: String, fallbackURL: String) {
+        let primaryClean = clean(primary)
+        let fallbackClean = clean(fallback ?? "")
+
+        switch current {
+        case .local:
+            return (primaryClean, "")
+        case .remote:
+            if !fallbackClean.isEmpty {
+                return (fallbackClean, "")
+            }
+            return (primaryClean, "")
+        }
+    }
+
+    /// Convenience for a single effective base (no secondary).
+    static func effectiveBaseURL(primary: String, fallback: String?) -> String {
+        resolve(primary: primary, fallback: fallback).baseURL
+    }
+
+    private static func clean(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "/+$", with: "", options: .regularExpression)
+    }
+}
+
 enum PiHoleAuthMode: String, Codable, Equatable {
     case session
     case legacy
@@ -459,10 +506,14 @@ func resolvedServiceArtworkURL(_ raw: String?, instance: ServiceInstance?) -> St
     guard let instance else {
         return normalizedArtworkURLString(raw)
     }
+    let effectiveBase = NetworkAccessMode.effectiveBaseURL(
+        primary: instance.url,
+        fallback: instance.fallbackUrl
+    )
     return resolvedServiceArtworkURL(
         raw,
-        baseURL: instance.url,
-        fallbackURL: instance.fallbackUrl,
+        baseURL: effectiveBase,
+        fallbackURL: nil,
         apiKey: instance.apiKey
     )
 }
@@ -472,8 +523,17 @@ func serviceArtworkHeaders(for resolvedURL: String?, instance: ServiceInstance?)
         let resolvedURL,
         let instance,
         let apiKey = instance.apiKey?.trimmingCharacters(in: .whitespacesAndNewlines),
-        !apiKey.isEmpty,
-        isServiceHostedArtworkURL(resolvedURL, baseURL: instance.url) || isServiceHostedArtworkURL(resolvedURL, baseURL: instance.fallbackUrl)
+        !apiKey.isEmpty
+    else {
+        return [:]
+    }
+    let effectiveBase = NetworkAccessMode.effectiveBaseURL(
+        primary: instance.url,
+        fallback: instance.fallbackUrl
+    )
+    guard isServiceHostedArtworkURL(resolvedURL, baseURL: effectiveBase)
+        || isServiceHostedArtworkURL(resolvedURL, baseURL: instance.url)
+        || isServiceHostedArtworkURL(resolvedURL, baseURL: instance.fallbackUrl)
     else {
         return [:]
     }

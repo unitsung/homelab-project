@@ -39,10 +39,7 @@ actor LidarrAPIClient {
     func ping() async -> Bool {
         guard !baseURL.isEmpty, !apiKey.isEmpty else { return false }
         let path = "/api/v1/system/status"
-        let primary = await engine.pingURL(baseURL + path, extraHeaders: authHeaders())
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL(fallbackURL + path, extraHeaders: authHeaders())
+        return await engine.pingWithAccessMode(baseURL: baseURL, fallbackURL: fallbackURL, path: path, extraHeaders: authHeaders())
     }
 
     func authenticate(url: String, apiKey: String, fallbackUrl: String? = nil) async throws {

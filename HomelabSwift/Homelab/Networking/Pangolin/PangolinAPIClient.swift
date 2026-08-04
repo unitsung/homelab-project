@@ -315,10 +315,12 @@ actor PangolinAPIClient {
     func ping() async -> Bool {
         guard !baseURL.isEmpty else { return false }
         let pingPath = isOrgScoped ? "/v1/org/\(scopedOrgId)/sites?pageSize=1&page=1" : "/v1/orgs"
-        let primary = await engine.pingURL("\(baseURL)\(pingPath)", extraHeaders: authHeaders())
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL("\(fallbackURL)\(pingPath)", extraHeaders: authHeaders())
+        return await engine.pingWithAccessMode(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: pingPath,
+            extraHeaders: authHeaders()
+        )
     }
 
     func authenticate(url: String, apiKey: String, fallbackUrl: String? = nil, orgId: String? = nil) async throws {

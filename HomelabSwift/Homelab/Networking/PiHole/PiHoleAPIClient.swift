@@ -101,11 +101,12 @@ actor PiHoleAPIClient {
 
     func ping() async -> Bool {
         if baseURL.isEmpty { return false }
-        if await engine.pingURL("\(baseURL)/api/info/version", extraHeaders: authHeaders()) { return true }
-        if !fallbackURL.isEmpty {
-            return await engine.pingURL("\(fallbackURL)/api/info/version", extraHeaders: authHeaders())
-        }
-        return false
+        return await engine.pingWithAccessMode(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: "/api/info/version",
+            extraHeaders: authHeaders()
+        )
     }
 
     // MARK: - Authentication

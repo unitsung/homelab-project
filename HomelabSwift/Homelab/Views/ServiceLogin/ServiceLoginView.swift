@@ -306,7 +306,7 @@ struct ServiceLoginView: View {
                 icon: "globe",
                 placeholder: serviceType == .unifiNetwork && unifiAuthMode == .siteManager
                     ? localizer.t.unifiSiteManagerURLPlaceholder
-                    : serviceType.urlPlaceholder,
+                    : localizer.t.loginUrl,
                 text: $url,
                 keyboardType: .URL
             )

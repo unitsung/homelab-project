@@ -43,11 +43,7 @@ actor GiteaAPIClient {
     func ping() async -> Bool {
         if baseURL.isEmpty { return false }
         // /api/v1/version is public — no auth required
-        if await engine.pingURL("\(baseURL)/api/v1/version") { return true }
-        if !fallbackURL.isEmpty {
-            return await engine.pingURL("\(fallbackURL)/api/v1/version")
-        }
-        return false
+        return await engine.pingWithAccessMode(baseURL: baseURL, fallbackURL: fallbackURL, path: "/api/v1/version")
     }
 
     // MARK: - Authentication

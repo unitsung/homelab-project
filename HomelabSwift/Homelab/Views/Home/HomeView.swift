@@ -44,8 +44,9 @@ struct HomeView: View {
     }
 
     private var topBar: some View {
-        HStack {
-            Spacer()
+        HStack(spacing: 12) {
+            networkAccessToggle
+            Spacer(minLength: 8)
             Button {
                 HapticManager.light()
                 showingCardOrder = true
@@ -59,6 +60,56 @@ struct HomeView: View {
             .buttonStyle(.plain)
         }
         .padding(.top, 12)
+    }
+
+    private var networkAccessToggle: some View {
+        HStack(spacing: 0) {
+            networkModeButton(
+                mode: .local,
+                title: localizer.t.networkAccessLocal,
+                systemImage: "house.fill"
+            )
+            networkModeButton(
+                mode: .remote,
+                title: localizer.t.networkAccessRemote,
+                systemImage: "network"
+            )
+        }
+        .padding(3)
+        .background(.ultraThinMaterial, in: Capsule())
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(localizer.t.networkAccessMode)
+    }
+
+    private func networkModeButton(mode: NetworkAccessMode, title: String, systemImage: String) -> some View {
+        let isSelected = settingsStore.networkAccessMode == mode
+        return Button {
+            guard settingsStore.networkAccessMode != mode else { return }
+            HapticManager.light()
+            settingsStore.networkAccessMode = mode
+            Task {
+                await servicesStore.checkAllReachability(force: true)
+            }
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: systemImage)
+                    .font(.caption.weight(.semibold))
+                Text(title)
+                    .font(.caption.weight(.semibold))
+            }
+            .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background {
+                if isSelected {
+                    Capsule()
+                        .fill(AppTheme.surface)
+                        .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private var systemGrid: some View {

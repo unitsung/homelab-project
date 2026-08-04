@@ -164,6 +164,90 @@ final class ServicesStoreTests: XCTestCase {
         let conn3 = ServiceConnection(type: .pihole, url: "https://pi.local", token: "t", fallbackUrl: "https://backup")
         XCTAssertEqual(conn3.fallbackUrl, "https://backup")
     }
+
+    func testNetworkAccessModeLocalUsesPrimaryOnly() {
+        let previous = UserDefaults.standard.string(forKey: NetworkAccessMode.userDefaultsKey)
+        defer {
+            if let previous {
+                UserDefaults.standard.set(previous, forKey: NetworkAccessMode.userDefaultsKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: NetworkAccessMode.userDefaultsKey)
+            }
+        }
+
+        NetworkAccessMode.persist(.local)
+        let resolved = NetworkAccessMode.resolve(
+            primary: "https://sonarr.lan:8989",
+            fallback: "https://100.64.0.2:8989"
+        )
+        XCTAssertEqual(resolved.baseURL, "https://sonarr.lan:8989")
+        XCTAssertEqual(resolved.fallbackURL, "")
+    }
+
+    func testNetworkAccessModeRemoteUsesFallbackOnly() {
+        let previous = UserDefaults.standard.string(forKey: NetworkAccessMode.userDefaultsKey)
+        defer {
+            if let previous {
+                UserDefaults.standard.set(previous, forKey: NetworkAccessMode.userDefaultsKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: NetworkAccessMode.userDefaultsKey)
+            }
+        }
+
+        NetworkAccessMode.persist(.remote)
+        let resolved = NetworkAccessMode.resolve(
+            primary: "https://sonarr.lan:8989",
+            fallback: "https://100.64.0.2:8989"
+        )
+        XCTAssertEqual(resolved.baseURL, "https://100.64.0.2:8989")
+        XCTAssertEqual(resolved.fallbackURL, "")
+    }
+
+    func testNetworkAccessModeRemoteFallsBackToPrimaryWhenMissing() {
+        let previous = UserDefaults.standard.string(forKey: NetworkAccessMode.userDefaultsKey)
+        defer {
+            if let previous {
+                UserDefaults.standard.set(previous, forKey: NetworkAccessMode.userDefaultsKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: NetworkAccessMode.userDefaultsKey)
+            }
+        }
+
+        NetworkAccessMode.persist(.remote)
+        let resolved = NetworkAccessMode.resolve(
+            primary: "https://sonarr.lan:8989/",
+            fallback: "   "
+        )
+        XCTAssertEqual(resolved.baseURL, "https://sonarr.lan:8989")
+        XCTAssertEqual(resolved.fallbackURL, "")
+    }
+
+    func testBaseNetworkEngineEndpointsRespectAccessMode() {
+        let previous = UserDefaults.standard.string(forKey: NetworkAccessMode.userDefaultsKey)
+        defer {
+            if let previous {
+                UserDefaults.standard.set(previous, forKey: NetworkAccessMode.userDefaultsKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: NetworkAccessMode.userDefaultsKey)
+            }
+        }
+
+        NetworkAccessMode.persist(.remote)
+        let remote = BaseNetworkEngine.endpointsForAccessMode(
+            baseURL: "http://192.168.1.10:9000",
+            fallbackURL: "http://100.64.1.5:9000"
+        )
+        XCTAssertEqual(remote.baseURL, "http://100.64.1.5:9000")
+        XCTAssertEqual(remote.fallbackURL, "")
+
+        NetworkAccessMode.persist(.local)
+        let local = BaseNetworkEngine.endpointsForAccessMode(
+            baseURL: "http://192.168.1.10:9000",
+            fallbackURL: "http://100.64.1.5:9000"
+        )
+        XCTAssertEqual(local.baseURL, "http://192.168.1.10:9000")
+        XCTAssertEqual(local.fallbackURL, "")
+    }
 }
 
 private final class InMemoryKeychainBackend: KeychainBackend, @unchecked Sendable {
