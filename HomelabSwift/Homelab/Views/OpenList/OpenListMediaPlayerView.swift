@@ -19,6 +19,7 @@ struct OpenListMediaPlayerView: View {
     var externalSubtitleURL: URL? = nil
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(Localizer.self) private var localizer
     @State private var player: AVPlayer?
     @State private var isReady = false
     @State private var isPlaying = false
@@ -202,7 +203,7 @@ struct OpenListMediaPlayerView: View {
                 .padding(.horizontal, 28)
 
             if showExternalFallback {
-                Text("MKV / AVI 等格式系统内置解码不支持，请用专业播放器打开")
+                Text(localizer.t.filesPlayerUnsupportedFormatHint)
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.65))
                     .multilineTextAlignment(.center)
@@ -236,7 +237,7 @@ struct OpenListMediaPlayerView: View {
             }
 
             Button { dismiss() } label: {
-                Text("关闭")
+                Text(localizer.t.close)
                     .font(.body.weight(.semibold))
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
@@ -253,7 +254,7 @@ struct OpenListMediaPlayerView: View {
         openingExternal = nil
         if !ok {
             ExternalPlayerRouter.copyToPasteboard(url.absoluteString)
-            errorText = "无法打开 \(option.displayName)，链接已复制"
+            errorText = String(format: localizer.t.filesPlayerOpenExternalFailed, option.displayName)
             showExternalFallback = true
         } else {
             dismiss()
@@ -542,13 +543,13 @@ struct OpenListMediaPlayerView: View {
                 currentCueText = ""
             } label: {
                 if selectedEmbedded == nil, !useExternalSubtitles {
-                    Label("Off", systemImage: "checkmark")
+                    Label(localizer.t.filesPlayerSubtitleOff, systemImage: "checkmark")
                 } else {
-                    Text("Off")
+                    Text(localizer.t.filesPlayerSubtitleOff)
                 }
             }
             if !embeddedSubtitles.isEmpty {
-                Section("Embedded") {
+                Section(localizer.t.filesPlayerSubtitleEmbedded) {
                     ForEach(Array(embeddedSubtitles.enumerated()), id: \.offset) { _, opt in
                         Button {
                             useExternalSubtitles = false
@@ -565,13 +566,15 @@ struct OpenListMediaPlayerView: View {
                 }
             }
             if !externalCues.isEmpty {
-                Section("External") {
+                Section(localizer.t.filesPlayerSubtitleExternal) {
                     Button {
                         selectEmbedded(nil)
                         useExternalSubtitles = true
                         refreshCue()
                     } label: {
-                        let name = externalSubtitleName.isEmpty ? "External" : externalSubtitleName
+                        let name = externalSubtitleName.isEmpty
+                            ? localizer.t.filesPlayerSubtitleExternal
+                            : externalSubtitleName
                         if useExternalSubtitles {
                             Label(name, systemImage: "checkmark")
                         } else {
@@ -583,7 +586,7 @@ struct OpenListMediaPlayerView: View {
             Button {
                 showLocalSubtitlePicker = true
             } label: {
-                Label("Import…", systemImage: "folder")
+                Label(localizer.t.filesPlayerSubtitleImport, systemImage: "folder")
             }
         } label: {
             toolIcon(
@@ -597,7 +600,7 @@ struct OpenListMediaPlayerView: View {
     private var audioTrackMenuButton: some View {
         Menu {
             if audioTracks.isEmpty {
-                Text("Default")
+                Text(localizer.t.filesPlayerAudioDefault)
             } else {
                 ForEach(Array(audioTracks.enumerated()), id: \.offset) { _, opt in
                     Button {
@@ -612,7 +615,7 @@ struct OpenListMediaPlayerView: View {
                 }
             }
         } label: {
-            toolIcon("waveform", label: "Audio", active: audioTracks.count > 1)
+            toolIcon("waveform", label: localizer.t.filesPlayerAudio, active: audioTracks.count > 1)
         }
         .disabled(audioTracks.isEmpty)
         .opacity(audioTracks.isEmpty ? 0.4 : 1)
@@ -626,7 +629,7 @@ struct OpenListMediaPlayerView: View {
         } label: {
             toolIcon(
                 isLandscapePreferred ? "rectangle.portrait.rotate" : "rectangle.landscape.rotate",
-                label: isLandscapePreferred ? "Portrait" : "Landscape"
+                label: isLandscapePreferred ? localizer.t.filesPlayerPortrait : localizer.t.filesPlayerLandscape
             )
         }
     }
@@ -652,7 +655,7 @@ struct OpenListMediaPlayerView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             } else {
-                Text("Speed")
+                Text(localizer.t.filesPlayerSpeed)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(.white.opacity(0.7))
             }
@@ -759,9 +762,9 @@ struct OpenListMediaPlayerView: View {
         showExternalFallback = true
         let ext = extensionName.uppercased()
         if let detail, !detail.isEmpty {
-            errorText = "无法播放 \(ext)\n\(detail)"
+            errorText = String(format: localizer.t.filesPlayerCannotPlayExtDetail, ext, detail)
         } else {
-            errorText = "无法播放 \(ext) 格式"
+            errorText = String(format: localizer.t.filesPlayerCannotPlayExtFormat, ext)
         }
         isReady = false
         player?.pause()

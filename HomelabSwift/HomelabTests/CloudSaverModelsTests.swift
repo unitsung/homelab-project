@@ -232,9 +232,23 @@ final class CloudSaverModelsTests: XCTestCase {
     }
 
     func testPostSaveFollowUpSuffix() {
-        XCTAssertNil(CloudSaverPostSaveFollowUp.skipped.userSuffix)
-        XCTAssertTrue(CloudSaverPostSaveFollowUp.triggered(message: "LitePan推送触发成功！").userSuffix?.contains("LitePan") == true)
-        XCTAssertTrue(CloudSaverPostSaveFollowUp.failed(message: "timeout").userSuffix?.contains("timeout") == true)
+        let zh = Translations.chinese
+        let en = Translations.english
+        XCTAssertNil(CloudSaverPostSaveFollowUp.skipped.userSuffix(using: zh))
+        XCTAssertTrue(
+            CloudSaverPostSaveFollowUp.triggered(message: "LitePan推送触发成功！").userSuffix(using: zh)?.contains("LitePan") == true
+        )
+        XCTAssertTrue(
+            CloudSaverPostSaveFollowUp.failed(message: "timeout").userSuffix(using: zh)?.contains("timeout") == true
+        )
+        XCTAssertEqual(
+            CloudSaverPostSaveFollowUp.triggered(message: "").userSuffix(using: en),
+            en.csPluginTriggeredDefault
+        )
+        XCTAssertEqual(
+            CloudSaverPostSaveFollowUp.failed(message: "").userSuffix(using: zh),
+            zh.csPluginFailedDefault
+        )
     }
 }
 

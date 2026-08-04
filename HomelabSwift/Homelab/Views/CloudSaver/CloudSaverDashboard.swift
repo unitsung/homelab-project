@@ -523,7 +523,7 @@ struct CloudSaverDashboard: View {
             transferredIds.insert(item.id)
             transferState = .transferred
             var parts: [String] = [String(format: localizer.t.csTransferredTo, dest.name)]
-            if let suffix = followUp.userSuffix {
+            if let suffix = followUp.userSuffix(using: localizer.translations) {
                 parts.append(suffix)
             }
             let hint = settings.ingestHint.trimmingCharacters(in: .whitespacesAndNewlines)

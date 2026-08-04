@@ -237,6 +237,20 @@ final class SettingsStore {
         dashboardCardOrder = DashboardCardID.defaultOrder
     }
 
+    /// Restore default order for home-eligible services (keep non-home types where they are).
+    func resetHomeServiceOrder() {
+        let homeDefault = ServiceType.homeServices
+        let homeSet = Set(homeDefault)
+        let rest = serviceOrder.filter { !homeSet.contains($0) }
+        serviceOrder = Self.normalizedServiceOrder(homeDefault + rest)
+    }
+
+    /// Reset overview cards and home service tile order.
+    func resetHomeLayout() {
+        resetDashboardCardOrder()
+        resetHomeServiceOrder()
+    }
+
     func canMoveService(_ type: ServiceType, offset: Int, within allowedTypes: [ServiceType]) -> Bool {
         let allowedSet = Set(allowedTypes)
         let filtered = serviceOrder.filter { allowedSet.contains($0) }
@@ -290,10 +304,13 @@ final class SettingsStore {
         serviceOrder = Self.normalizedServiceOrder(result)
     }
 
-    /// Home service tiles currently shown (configured instances only), in saved order.
-    func orderedHomeServices(configured: Set<ServiceType>) -> [ServiceType] {
+    /// Home service tiles in saved order (configured instances only).
+    /// - Parameter includeHidden: when false, omits services the user hid from home.
+    func orderedHomeServices(configured: Set<ServiceType>, includeHidden: Bool = false) -> [ServiceType] {
         let allowed = Set(ServiceType.homeServices).intersection(configured)
-        return serviceOrder.filter { allowed.contains($0) }
+        let ordered = serviceOrder.filter { allowed.contains($0) }
+        if includeHidden { return ordered }
+        return ordered.filter { !isServiceHidden($0) }
     }
 
     // MARK: - PIN Security

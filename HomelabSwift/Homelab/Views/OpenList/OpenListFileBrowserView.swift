@@ -40,6 +40,8 @@ struct OpenListFileBrowserView: View {
     @State private var searchText = ""
     @State private var searchResults: [FileItem] = []
     @State private var isSearching = false
+    /// True while a search request is in flight (distinct from “showing search results”).
+    @State private var isSearchLoading = false
 
     @State private var isSelecting = false
     @State private var selectedIDs: Set<String> = []
@@ -130,12 +132,14 @@ struct OpenListFileBrowserView: View {
                 .animation(.easeInOut(duration: 0.28), value: isNavigating)
                 .animation(.easeInOut(duration: 0.28), value: path)
                 .animation(.easeInOut(duration: 0.22), value: isSearching)
+                .animation(.easeInOut(duration: 0.22), value: isSearchLoading)
         }
         .searchable(text: $searchText, prompt: localizer.t.filesSearchPlaceholder)
         .onSubmit(of: .search) { Task { await runSearch() } }
         .onChange(of: searchText) { _, v in
             if v.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 isSearching = false
+                isSearchLoading = false
                 searchResults = []
             }
         }
@@ -431,7 +435,7 @@ struct OpenListFileBrowserView: View {
     @ViewBuilder
     private var folderListBody: some View {
         ZStack {
-            if isNavigating {
+            if isNavigating || isSearchLoading {
                 folderLoadingPlaceholder
                     .transition(.opacity.combined(with: .scale(scale: 0.98)))
             } else if displayedItems.isEmpty, case .loaded = state {
@@ -470,11 +474,12 @@ struct OpenListFileBrowserView: View {
     }
 
     private var folderLoadingPlaceholder: some View {
-        VStack(spacing: 10) {
+        let label = isSearchLoading ? localizer.t.filesSearching : localizer.t.loading
+        return VStack(spacing: 10) {
             HStack(spacing: 10) {
                 ProgressView()
                     .controlSize(.small)
-                Text(localizer.t.loading)
+                Text(label)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(AppTheme.textSecondary)
                 Spacer(minLength: 0)
@@ -487,7 +492,7 @@ struct OpenListFileBrowserView: View {
         }
         .frame(maxWidth: .infinity, alignment: .top)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(localizer.t.loading)
+        .accessibilityLabel(label)
     }
 
     private var emptyState: some View {
@@ -605,6 +610,7 @@ struct OpenListFileBrowserView: View {
     private func handleEdgeSwipeBack() async {
         if isSearching {
             isSearching = false
+            isSearchLoading = false
             searchText = ""
             searchResults = []
             return
@@ -821,6 +827,7 @@ struct OpenListFileBrowserView: View {
         let generation = navigateGeneration
 
         isSearching = false
+        isSearchLoading = false
         searchText = ""
         searchResults = []
         isSelecting = false
@@ -882,6 +889,9 @@ struct OpenListFileBrowserView: View {
         let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty, let client else { return }
         isSearching = true
+        isSearchLoading = true
+        searchResults = []
+        defer { isSearchLoading = false }
         do {
             searchResults = try await client.search(keyword: q, path: path)
             state = .loaded(())
@@ -1189,6 +1199,8 @@ struct FileRowView: View {
     var isSelecting: Bool = false
     var isSelected: Bool = false
 
+    @Environment(Localizer.self) private var localizer
+
     var body: some View {
         HStack(spacing: 14) {
             if isSelecting {
@@ -1230,7 +1242,7 @@ struct FileRowView: View {
                     .multilineTextAlignment(.leading)
                 HStack(spacing: 10) {
                     if item.isDirectory {
-                        Text("Folder")
+                        Text(localizer.t.filesFolderKind)
                             .font(.caption)
                             .foregroundStyle(AppTheme.textSecondary)
                     } else {

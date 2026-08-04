@@ -126,8 +126,9 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         .flaresolverr
     ]
 
+    /// Services eligible for the home tile grid (Media-tab apps stay on Media).
     public static var homeServices: [ServiceType] {
-        [.truenas, .openlist, .cloudsaver, .proxmox, .beszel, .portainer, .arcane]
+        allCases.filter { !mediaServices.contains($0) }
     }
 
     public var isMediaService: Bool {

@@ -10,12 +10,12 @@ struct ServiceTileGrid: View {
 
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
-    /// Prefer saved `serviceOrder`; only show services that are configured on this device.
+    /// Prefer saved `serviceOrder`; only show configured, non-hidden home-eligible services.
     private var availableServices: [ServiceType] {
         let configured = Set(
             ServiceType.homeServices.filter { servicesStore.preferredInstance(for: $0) != nil }
         )
-        return settingsStore.orderedHomeServices(configured: configured)
+        return settingsStore.orderedHomeServices(configured: configured, includeHidden: false)
     }
 
     var body: some View {
@@ -43,13 +43,12 @@ struct ServiceTileGrid: View {
             } else {
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(availableServices, id: \.rawValue) { type in
-                        NavigationLink(value: HomeServiceRoute(
-                            type: type,
-                            instanceId: servicesStore.preferredInstance(for: type)!.id
-                        )) {
-                            serviceTile(type: type)
+                        if let instanceId = servicesStore.preferredInstance(for: type)?.id {
+                            NavigationLink(value: HomeServiceRoute(type: type, instanceId: instanceId)) {
+                                serviceTile(type: type)
+                            }
+                            .buttonStyle(TilePressButtonStyle())
                         }
-                        .buttonStyle(TilePressButtonStyle())
                     }
                     addTile
                 }

@@ -198,12 +198,12 @@ private struct DashboardCardOrderSheet: View {
     @Environment(Localizer.self) private var localizer
     @Environment(\.dismiss) private var dismiss
 
-    /// Configured home services in the saved global order.
+    /// All configured home-eligible services (including hidden), for reorder + visibility.
     private var orderedHomeServices: [ServiceType] {
         let configured = Set(
             ServiceType.homeServices.filter { servicesStore.preferredInstance(for: $0) != nil }
         )
-        return settingsStore.orderedHomeServices(configured: configured)
+        return settingsStore.orderedHomeServices(configured: configured, includeHidden: true)
     }
 
     var body: some View {
@@ -236,11 +236,35 @@ private struct DashboardCardOrderSheet: View {
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(orderedHomeServices, id: \.rawValue) { type in
+                            let isHidden = settingsStore.isServiceHidden(type)
                             HStack(spacing: 12) {
                                 ServiceIconView(type: type, size: 22)
                                     .frame(width: 28, height: 28)
-                                Text(type.displayName)
-                                    .font(.body.weight(.medium))
+                                    .opacity(isHidden ? 0.45 : 1)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(type.displayName)
+                                        .font(.body.weight(.medium))
+                                        .foregroundStyle(isHidden ? .secondary : .primary)
+                                    if isHidden {
+                                        Text(localizer.t.homeHiddenBadge)
+                                            .font(.caption2.weight(.semibold))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                Spacer(minLength: 8)
+                                Button {
+                                    settingsStore.toggleServiceVisibility(type)
+                                    HapticManager.light()
+                                } label: {
+                                    Image(systemName: isHidden ? "eye.slash" : "eye")
+                                        .foregroundStyle(isHidden ? AppTheme.textMuted : AppTheme.info)
+                                }
+                                .buttonStyle(.borderless)
+                                .accessibilityLabel(
+                                    isHidden
+                                        ? localizer.t.settingsShowServiceGeneric
+                                        : localizer.t.settingsHideServiceGeneric
+                                )
                             }
                         }
                         .onMove { source, destination in
@@ -269,9 +293,21 @@ private struct DashboardCardOrderSheet: View {
                     Button(localizer.t.done) { dismiss() }
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button(localizer.t.homeResetCardOrder) {
-                        settingsStore.resetDashboardCardOrder()
-                        HapticManager.light()
+                    Menu {
+                        Button(localizer.t.homeResetCardOrder) {
+                            settingsStore.resetDashboardCardOrder()
+                            HapticManager.light()
+                        }
+                        Button(localizer.t.homeReorderServices) {
+                            settingsStore.resetHomeServiceOrder()
+                            HapticManager.light()
+                        }
+                        Button(localizer.t.homeResetLayout) {
+                            settingsStore.resetHomeLayout()
+                            HapticManager.light()
+                        }
+                    } label: {
+                        Text(localizer.t.homeResetCardOrder)
                     }
                 }
             }

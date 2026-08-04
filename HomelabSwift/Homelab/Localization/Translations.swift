@@ -44,6 +44,27 @@ struct Translations {
     let homeHeroCard: String
     let homeReorderCardsHint: String
     let homeReorderServicesHint: String
+    let csPluginTriggeredDefault: String
+    let csPluginFailedDefault: String
+    let csPluginFailedDetail: String
+    let filesFolderKind: String
+    let filesPlayerUnsupportedFormatHint: String
+    let filesPlayerOpenExternalFailed: String
+    let filesPlayerCannotPlayExt: String
+    let filesPlayerCannotPlayExtDetail: String
+    let filesPlayerCannotPlayExtFormat: String
+    let filesPlayerSubtitleOff: String
+    let filesPlayerSubtitleEmbedded: String
+    let filesPlayerSubtitleExternal: String
+    let filesPlayerSubtitleImport: String
+    let filesPlayerAudioDefault: String
+    let filesPlayerAudio: String
+    let filesPlayerSpeed: String
+    let filesPlayerPortrait: String
+    let filesPlayerLandscape: String
+    let filesSearching: String
+    let homeResetLayout: String
+    let homeHiddenBadge: String
     let homeNoSensorData: String
     let overviewEmptyTitle: String
     let overviewEmptyMessage: String

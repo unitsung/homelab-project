@@ -420,18 +420,18 @@ enum CloudSaverPostSaveFollowUp: Equatable, Sendable {
     case triggered(message: String)
     case failed(message: String)
 
-    var userSuffix: String? {
+    func userSuffix(using t: Translations) -> String? {
         switch self {
         case .skipped:
             return nil
         case .triggered(let message):
             let m = message.trimmingCharacters(in: .whitespacesAndNewlines)
-            return m.isEmpty ? "已触发后续插件（LitePan / STRM / 刷库）" : m
+            return m.isEmpty ? t.csPluginTriggeredDefault : m
         case .failed(let message):
             let m = message.trimmingCharacters(in: .whitespacesAndNewlines)
             return m.isEmpty
-                ? "已转存，但后续插件触发失败"
-                : "已转存，但后续插件触发失败：\(m)"
+                ? t.csPluginFailedDefault
+                : String(format: t.csPluginFailedDetail, m)
         }
     }
 }
