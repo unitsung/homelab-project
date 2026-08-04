@@ -2,6 +2,21 @@ import SwiftUI
 import UniformTypeIdentifiers
 import UIKit
 
+/// Direction of folder hierarchy change — drives slide-in/out transitions.
+enum OpenListFolderNavDirection {
+    case forward
+    case backward
+    case none
+
+    var reversed: OpenListFolderNavDirection {
+        switch self {
+        case .forward: return .backward
+        case .backward: return .forward
+        case .none: return .none
+        }
+    }
+}
+
 /// Native file browser modeled after OpenList web UX:
 /// folder → enter · file → built-in preview (player / image / text / md / html / pdf)
 /// + open external player / copy link / delete (same operation model as OpenList web).
@@ -16,6 +31,11 @@ struct OpenListFileBrowserView: View {
     @State private var items: [FileItem] = []
     @State private var canWrite = false
     @State private var state: LoadableState<Void> = .idle
+    /// In-flight folder change (enter / up / breadcrumb). Distinct from full-screen `.loading`.
+    @State private var isNavigating = false
+    @State private var folderNavDirection: OpenListFolderNavDirection = .none
+    /// Bumps on each navigate call so stale responses are ignored.
+    @State private var navigateGeneration = 0
 
     @State private var searchText = ""
     @State private var searchResults: [FileItem] = []
@@ -106,16 +126,10 @@ struct OpenListFileBrowserView: View {
                 selectionBar
             }
 
-            if displayedItems.isEmpty, case .loaded = state {
-                emptyState
-            } else {
-                // Stable list identity — avoid remount/transition thrash when path changes.
-                LazyVStack(spacing: 8) {
-                    ForEach(displayedItems) { item in
-                        fileRow(item)
-                    }
-                }
-            }
+            folderListBody
+                .animation(.easeInOut(duration: 0.28), value: isNavigating)
+                .animation(.easeInOut(duration: 0.28), value: path)
+                .animation(.easeInOut(duration: 0.22), value: isSearching)
         }
         .searchable(text: $searchText, prompt: localizer.t.filesSearchPlaceholder)
         .onSubmit(of: .search) { Task { await runSearch() } }
@@ -412,6 +426,68 @@ struct OpenListFileBrowserView: View {
             }
             .padding(.vertical, 4)
         }
+    }
+
+    @ViewBuilder
+    private var folderListBody: some View {
+        ZStack {
+            if isNavigating {
+                folderLoadingPlaceholder
+                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
+            } else if displayedItems.isEmpty, case .loaded = state {
+                emptyState
+                    .id("empty-\(path)-\(isSearching)")
+                    .transition(folderContentTransition)
+            } else if !displayedItems.isEmpty {
+                LazyVStack(spacing: 8) {
+                    ForEach(displayedItems) { item in
+                        fileRow(item)
+                    }
+                }
+                .id("list-\(path)-\(isSearching)")
+                .transition(folderContentTransition)
+            }
+        }
+        // Reserve space so the layout does not jump when swapping placeholder ↔ list.
+        .frame(maxWidth: .infinity, minHeight: 180, alignment: .top)
+    }
+
+    private var folderContentTransition: AnyTransition {
+        switch folderNavDirection {
+        case .forward:
+            return .asymmetric(
+                insertion: .move(edge: .trailing).combined(with: .opacity),
+                removal: .move(edge: .leading).combined(with: .opacity)
+            )
+        case .backward:
+            return .asymmetric(
+                insertion: .move(edge: .leading).combined(with: .opacity),
+                removal: .move(edge: .trailing).combined(with: .opacity)
+            )
+        case .none:
+            return .opacity
+        }
+    }
+
+    private var folderLoadingPlaceholder: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 10) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(localizer.t.loading)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(AppTheme.textSecondary)
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 4)
+
+            ForEach(0..<6, id: \.self) { _ in
+                SkeletonRow()
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .top)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(localizer.t.loading)
     }
 
     private var emptyState: some View {
@@ -722,38 +798,83 @@ struct OpenListFileBrowserView: View {
         }
     }
 
-    /// Folder change without skeleton flash or list remount animations.
+    /// Enter / leave a folder with loading placeholder + directional slide transition.
     @MainActor
     private func navigate(to newPath: String) async {
         let normalized = OpenListPath.normalize(newPath)
         let from = path
-        if normalized == from, !isSearching { return }
+        let previousItems = items
+        let previousWritable = canWrite
+        if normalized == from, !isSearching, !isNavigating { return }
+
+        let fromDepth = Self.pathDepth(from)
+        let toDepth = Self.pathDepth(normalized)
+        if toDepth > fromDepth {
+            folderNavDirection = .forward
+        } else if toDepth < fromDepth {
+            folderNavDirection = .backward
+        } else {
+            folderNavDirection = .none
+        }
+
+        navigateGeneration += 1
+        let generation = navigateGeneration
 
         isSearching = false
         searchText = ""
         searchResults = []
         isSelecting = false
         selectedIDs.removeAll()
-        // Update path immediately so title/breadcrumb stay in sync; keep previous rows until fetch returns.
-        path = normalized
+
+        // Path + title update immediately; clear stale rows and show loading animation.
+        withAnimation(.easeInOut(duration: 0.22)) {
+            path = normalized
+            items = []
+            isNavigating = true
+        }
 
         guard let client else {
+            isNavigating = false
             state = .error(.notConfigured)
             return
         }
         do {
             let result = try await client.list(path: normalized)
-            // Direct assignment (no withAnimation / id remount) — avoids layout flicker.
-            items = result.items
-            canWrite = result.writable
+            guard generation == navigateGeneration else { return }
+            withAnimation(.easeInOut(duration: 0.3)) {
+                items = result.items
+                canWrite = result.writable
+                isNavigating = false
+            }
             state = .loaded(())
+            HapticManager.light()
         } catch let error as APIError {
-            path = from
+            guard generation == navigateGeneration else { return }
+            withAnimation(.easeInOut(duration: 0.25)) {
+                path = from
+                items = previousItems
+                canWrite = previousWritable
+                isNavigating = false
+                folderNavDirection = folderNavDirection.reversed
+            }
             state = .error(error)
         } catch {
-            path = from
+            guard generation == navigateGeneration else { return }
+            withAnimation(.easeInOut(duration: 0.25)) {
+                path = from
+                items = previousItems
+                canWrite = previousWritable
+                isNavigating = false
+                folderNavDirection = folderNavDirection.reversed
+            }
             state = .error(.networkError(error))
         }
+    }
+
+    private static func pathDepth(_ path: String) -> Int {
+        let n = OpenListPath.normalize(path)
+        if n == "/" { return 0 }
+        return n.split(separator: "/").filter { !$0.isEmpty }.count
     }
 
     @MainActor
