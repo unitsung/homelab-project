@@ -110,6 +110,45 @@ actor QbittorrentAPIClient {
         }
     }
 
+    /// Upload one or more `.torrent` blobs via multipart `torrents` field.
+    func addTorrentFiles(_ files: [(fileName: String, data: Data)]) async throws {
+        guard !files.isEmpty else { return }
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var body = Data()
+        for file in files {
+            let safeName = file.fileName.replacingOccurrences(of: "\"", with: "_")
+            body.append(Data("--\(boundary)\r\n".utf8))
+            body.append(Data("Content-Disposition: form-data; name=\"torrents\"; filename=\"\(safeName)\"\r\n".utf8))
+            body.append(Data("Content-Type: application/x-bittorrent\r\n\r\n".utf8))
+            body.append(file.data)
+            body.append(Data("\r\n".utf8))
+        }
+        body.append(Data("--\(boundary)--\r\n".utf8))
+        var headers = authHeaders()
+        headers["Content-Type"] = "multipart/form-data; boundary=\(boundary)"
+        try await requestVoidWithSessionRefresh {
+            try await engine.requestVoid(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/add",
+                method: "POST",
+                headers: headers,
+                body: body
+            )
+        }
+    }
+
+    func getTorrentFiles(hash: String) async throws -> [QbittorrentTorrentFile] {
+        try await requestWithSessionRefresh {
+            try await engine.request(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/files?hash=\(hash)",
+                headers: authHeaders()
+            )
+        }
+    }
+
     func pauseAll() async throws {
         try await postTorrentControl(primaryPath: "/api/v2/torrents/pause", fallbackPath: "/api/v2/torrents/stop", hashes: "all")
     }

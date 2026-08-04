@@ -59,3 +59,17 @@ struct QbittorrentTransferInfo: Decodable, Sendable {
     let free_space_on_disk: Int64?
     let use_alt_speed_limits: Bool?
 }
+
+/// File entry from `GET /api/v2/torrents/files`.
+struct QbittorrentTorrentFile: Decodable, Identifiable, Sendable, Hashable {
+    let name: String
+    let size: Int64
+    let progress: Double
+    let priority: Int?
+
+    var id: String { name }
+
+    var progressPercent: Int {
+        Int((min(max(progress, 0), 1) * 100).rounded())
+    }
+}

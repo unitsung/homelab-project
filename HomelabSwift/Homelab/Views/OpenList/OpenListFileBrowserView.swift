@@ -46,6 +46,7 @@ struct OpenListFileBrowserView: View {
     @State private var isSelecting = false
     @State private var selectedIDs: Set<String> = []
     @State private var sortMode: OpenListSortMode = .nameAsc
+    @State private var viewMode: OpenListViewMode = .list
 
     @State private var actionMessage: String?
     @State private var toastTask: Task<Void, Never>?
@@ -424,7 +425,6 @@ struct OpenListFileBrowserView: View {
             Text(localizer.t.filesSortBy)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(AppTheme.textSecondary)
-            Spacer()
             Picker(localizer.t.filesSortBy, selection: $sortMode) {
                 Text(localizer.t.filesSortName).tag(OpenListSortMode.nameAsc)
                 Text(localizer.t.filesSortDate).tag(OpenListSortMode.dateDesc)
@@ -433,6 +433,14 @@ struct OpenListFileBrowserView: View {
             }
             .pickerStyle(.menu)
             .labelsHidden()
+            Spacer()
+            Picker(localizer.t.filesViewList, selection: $viewMode) {
+                Image(systemName: "list.bullet").tag(OpenListViewMode.list)
+                Image(systemName: "square.grid.2x2").tag(OpenListViewMode.grid)
+            }
+            .pickerStyle(.segmented)
+            .frame(maxWidth: 120)
+            .accessibilityLabel(viewMode == .list ? localizer.t.filesViewList : localizer.t.filesViewGrid)
         }
         .padding(.vertical, 2)
     }
@@ -481,12 +489,25 @@ struct OpenListFileBrowserView: View {
                     .id("empty-\(path)-\(isSearching)")
                     .transition(folderContentTransition)
             } else if !displayedItems.isEmpty {
-                LazyVStack(spacing: 8) {
-                    ForEach(displayedItems) { item in
-                        fileRow(item)
+                Group {
+                    if viewMode == .grid {
+                        LazyVGrid(
+                            columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
+                            spacing: 10
+                        ) {
+                            ForEach(displayedItems) { item in
+                                fileGridCell(item)
+                            }
+                        }
+                    } else {
+                        LazyVStack(spacing: 8) {
+                            ForEach(displayedItems) { item in
+                                fileRow(item)
+                            }
+                        }
                     }
                 }
-                .id("list-\(path)-\(isSearching)")
+                .id("list-\(path)-\(isSearching)-\(viewMode.rawValue)")
                 .transition(folderContentTransition)
             }
         }
@@ -559,6 +580,58 @@ struct OpenListFileBrowserView: View {
     // MARK: - Rows
 
     @ViewBuilder
+    private func fileGridCell(_ item: FileItem) -> some View {
+        let selected = selectedIDs.contains(item.id)
+        return Button {
+            Task { await handleTap(item) }
+        } label: {
+            VStack(spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(ServiceType.openlist.colors.bg)
+                        .frame(height: 96)
+                    if let thumb = item.thumbnailURL {
+                        OpenListCachedThumbnail(url: thumb, systemImageName: item.systemImageName)
+                            .frame(height: 96)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    } else {
+                        Image(systemName: item.systemImageName)
+                            .font(.title)
+                            .foregroundStyle(ServiceType.openlist.colors.primary)
+                    }
+                    if isSelecting {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(selected ? serviceColor : .white)
+                                    .padding(6)
+                            }
+                            Spacer()
+                        }
+                    }
+                }
+                Text(item.name)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, minHeight: 32, alignment: .top)
+            }
+            .padding(8)
+            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay {
+                if selected {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(serviceColor, lineWidth: 2)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .contextMenu { fileContextMenu(item) }
+    }
+
+    @ViewBuilder
     private func fileRow(_ item: FileItem) -> some View {
         let selected = selectedIDs.contains(item.id)
         Button {
@@ -568,76 +641,79 @@ struct OpenListFileBrowserView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .contextMenu {
-            if item.isDirectory {
-                Button { Task { await navigate(to: item.path) } } label: {
-                    Label(localizer.t.filesOpen, systemImage: "folder")
-                }
-            } else {
-                Button { Task { await openFileSheet(item) } } label: {
-                    Label(localizer.t.filesPreview, systemImage: "eye")
-                }
-                if item.isVideoOrAudio {
-                    Button {
-                        Task { await openBuiltInPlayer(item) }
-                    } label: {
-                        Label(localizer.t.filesPlay, systemImage: "play.fill")
-                    }
-                    Button {
-                        playerPickerItem = item
-                        showPlayerPicker = true
-                    } label: {
-                        Label(localizer.t.filesOpenExternal, systemImage: "arrow.up.forward.app")
-                    }
-                }
-                Button { Task { await downloadItems([item]) } } label: {
-                    Label(localizer.t.filesDownload, systemImage: "arrow.down.circle")
-                }
-                Button { Task { await copyLink(for: item) } } label: {
-                    Label(localizer.t.filesCopyLink, systemImage: "link")
-                }
-                if item.isArchive, canWrite {
-                    Button {
-                        pathPickMode = .extract(item)
-                    } label: {
-                        Label(localizer.t.filesExtract, systemImage: "doc.zipper")
-                    }
-                }
-            }
-            // Rename always offered; server enforces write permission.
-            Button {
-                renameItem = item
-                renameText = item.name
-                showRenameAlert = true
-            } label: {
-                Label(localizer.t.filesRename, systemImage: "pencil")
-            }
-            if canWrite {
-                Button { pathPickMode = .copy([item]) } label: {
-                    Label(localizer.t.filesCopy, systemImage: "doc.on.doc")
-                }
-                Button { pathPickMode = .move([item]) } label: {
-                    Label(localizer.t.filesMove, systemImage: "folder")
-                }
-            }
-            Button { toggleSelect(item) } label: {
-                Label(
-                    selected ? localizer.t.filesDeselect : localizer.t.filesSelect,
-                    systemImage: selected ? "checkmark.circle.fill" : "checkmark.circle"
-                )
-            }
-            Divider()
-            Button(role: .destructive) {
-                pendingDelete = [item]
-                showDeleteConfirm = true
-            } label: {
-                Label(localizer.t.delete, systemImage: "trash")
-            }
-        }
+        .contextMenu { fileContextMenu(item) }
         .onLongPressGesture(minimumDuration: 0.45) {
             HapticManager.medium()
             if !isSelecting { isSelecting = true }
             toggleSelect(item)
+        }
+    }
+
+    @ViewBuilder
+    private func fileContextMenu(_ item: FileItem) -> some View {
+        let selected = selectedIDs.contains(item.id)
+        if item.isDirectory {
+            Button { Task { await navigate(to: item.path) } } label: {
+                Label(localizer.t.filesOpen, systemImage: "folder")
+            }
+        } else {
+            Button { Task { await openFileSheet(item) } } label: {
+                Label(localizer.t.filesPreview, systemImage: "eye")
+            }
+            if item.isVideoOrAudio {
+                Button {
+                    Task { await openBuiltInPlayer(item) }
+                } label: {
+                    Label(localizer.t.filesPlay, systemImage: "play.fill")
+                }
+                Button {
+                    playerPickerItem = item
+                    showPlayerPicker = true
+                } label: {
+                    Label(localizer.t.filesOpenExternal, systemImage: "arrow.up.forward.app")
+                }
+            }
+            Button { Task { await downloadItems([item]) } } label: {
+                Label(localizer.t.filesDownload, systemImage: "arrow.down.circle")
+            }
+            Button { Task { await copyLink(for: item) } } label: {
+                Label(localizer.t.filesCopyLink, systemImage: "link")
+            }
+            if item.isArchive, canWrite {
+                Button {
+                    pathPickMode = .extract(item)
+                } label: {
+                    Label(localizer.t.filesExtract, systemImage: "doc.zipper")
+                }
+            }
+        }
+        Button {
+            renameItem = item
+            renameText = item.name
+            showRenameAlert = true
+        } label: {
+            Label(localizer.t.filesRename, systemImage: "pencil")
+        }
+        if canWrite {
+            Button { pathPickMode = .copy([item]) } label: {
+                Label(localizer.t.filesCopy, systemImage: "doc.on.doc")
+            }
+            Button { pathPickMode = .move([item]) } label: {
+                Label(localizer.t.filesMove, systemImage: "folder")
+            }
+        }
+        Button { toggleSelect(item) } label: {
+            Label(
+                selected ? localizer.t.filesDeselect : localizer.t.filesSelect,
+                systemImage: selected ? "checkmark.circle.fill" : "checkmark.circle"
+            )
+        }
+        Divider()
+        Button(role: .destructive) {
+            pendingDelete = [item]
+            showDeleteConfirm = true
+        } label: {
+            Label(localizer.t.delete, systemImage: "trash")
         }
     }
 
@@ -1233,6 +1309,12 @@ private struct OpenListHierarchicalBackChrome: UIViewControllerRepresentable {
 }
 
 // MARK: - Sort
+
+enum OpenListViewMode: String, CaseIterable, Identifiable {
+    case list
+    case grid
+    var id: String { rawValue }
+}
 
 enum OpenListSortMode: String, CaseIterable, Identifiable {
     case nameAsc

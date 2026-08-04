@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct QbittorrentDashboard: View {
     let instanceId: UUID
@@ -23,6 +24,8 @@ struct QbittorrentDashboard: View {
     @State private var isSelecting = false
     @State private var selectedHashes: Set<String> = []
     @State private var categoryFilter: String? = nil // nil = all
+    @State private var showTorrentFileImporter = false
+    @State private var detailTorrent: QbittorrentTorrent?
     private var arr: ArrStrings { localizer.arr }
     
     // Keep transfer stats closer to real time while refreshing the heavier torrent list less often.
@@ -72,6 +75,20 @@ struct QbittorrentDashboard: View {
         }
         .sheet(isPresented: $showAddSheet) {
             addTorrentSheet
+        }
+        .sheet(item: $detailTorrent) { torrent in
+            QbittorrentTorrentDetailSheet(
+                torrent: torrent,
+                clientProvider: { try requireClient() }
+            )
+            .environment(localizer)
+        }
+        .fileImporter(
+            isPresented: $showTorrentFileImporter,
+            allowedContentTypes: [UTType(filenameExtension: "torrent") ?? .data],
+            allowsMultipleSelection: true
+        ) { result in
+            Task { await importTorrentFiles(result) }
         }
         .confirmationDialog(
             arr.deleteWithDataConfirmTitle,
@@ -472,10 +489,19 @@ struct QbittorrentDashboard: View {
                 Text(arr.torrents)
                     .font(.title2.bold())
                 Spacer()
-                Button {
-                    addURLsText = ""
-                    addValidationError = nil
-                    showAddSheet = true
+                Menu {
+                    Button {
+                        addURLsText = ""
+                        addValidationError = nil
+                        showAddSheet = true
+                    } label: {
+                        Label(arr.addTorrent, systemImage: "link")
+                    }
+                    Button {
+                        showTorrentFileImporter = true
+                    } label: {
+                        Label(localizer.t.qbAddTorrentFile, systemImage: "doc.badge.plus")
+                    }
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .foregroundStyle(AppTheme.primary)
@@ -572,8 +598,11 @@ struct QbittorrentDashboard: View {
                 torrentRow(torrent)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        guard isSelecting else { return }
-                        toggleSelect(torrent.hash)
+                        if isSelecting {
+                            toggleSelect(torrent.hash)
+                        } else {
+                            detailTorrent = torrent
+                        }
                     }
             }
         }
@@ -908,6 +937,31 @@ struct QbittorrentDashboard: View {
         let days = hours / 24
         return "\(days)d \(hours % 24)h"
     }
+
+    @MainActor
+    private func importTorrentFiles(_ result: Result<[URL], Error>) async {
+        switch result {
+        case .failure(let error):
+            showActionError(error)
+        case .success(let urls):
+            guard !urls.isEmpty else { return }
+            var files: [(fileName: String, data: Data)] = []
+            for url in urls {
+                let accessing = url.startAccessingSecurityScopedResource()
+                defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+                do {
+                    let data = try Data(contentsOf: url)
+                    files.append((url.lastPathComponent, data))
+                } catch {
+                    showActionError(error)
+                    return
+                }
+            }
+            await performTorrentAction(successMessage: arr.torrentAdded) {
+                try await requireClient().addTorrentFiles(files)
+            }
+        }
+    }
 }
 
 private enum QbittorrentFilter: CaseIterable {
@@ -915,4 +969,114 @@ private enum QbittorrentFilter: CaseIterable {
     case downloading
     case completed
     case paused
+}
+
+// MARK: - Detail sheet
+
+private struct QbittorrentTorrentDetailSheet: View {
+    let torrent: QbittorrentTorrent
+    let clientProvider: () throws -> QbittorrentAPIClient
+
+    @Environment(Localizer.self) private var localizer
+    @Environment(\.dismiss) private var dismiss
+    @State private var files: [QbittorrentTorrentFile] = []
+    @State private var isLoading = true
+    @State private var errorText: String?
+
+    private var arr: ArrStrings { localizer.arr }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Text(torrent.name)
+                        .font(.headline)
+                        .fixedSize(horizontal: false, vertical: true)
+                    HStack {
+                        Text("\(Int((min(max(torrent.progress, 0), 1) * 100).rounded()))%")
+                            .font(.caption.monospacedDigit().weight(.semibold))
+                        ProgressView(value: min(max(torrent.progress, 0), 1))
+                    }
+                    LabeledContent {
+                        Text("\(Formatters.formatBytes(Double(torrent.downloaded))) / \(Formatters.formatBytes(Double(torrent.size)))")
+                    } label: {
+                        Text(arr.download)
+                    }
+                    if let ratio = torrent.ratio {
+                        LabeledContent(arr.ratioLabel) {
+                            Text(String(format: "%.2f", ratio))
+                        }
+                    }
+                    if let cat = torrent.category, !cat.isEmpty {
+                        Text(cat)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(AppTheme.primary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(AppTheme.primary.opacity(0.12), in: Capsule())
+                    }
+                    if let tags = torrent.tags, !tags.isEmpty {
+                        Text(tags)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section(localizer.t.qbFiles) {
+                    if isLoading {
+                        HStack {
+                            ProgressView()
+                            Text(localizer.t.loading)
+                        }
+                    } else if let errorText {
+                        Text(errorText).foregroundStyle(.red)
+                    } else if files.isEmpty {
+                        Text(localizer.t.qbNoFiles)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(files) { file in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(file.name)
+                                    .font(.subheadline.weight(.medium))
+                                    .lineLimit(2)
+                                HStack {
+                                    Text(Formatters.formatBytes(Double(file.size)))
+                                    Spacer()
+                                    Text("\(file.progressPercent)%")
+                                }
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                ProgressView(value: min(max(file.progress, 0), 1))
+                            }
+                            .padding(.vertical, 2)
+                        }
+                    }
+                }
+            }
+            .navigationTitle(localizer.t.qbTorrentDetail)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(localizer.t.close) { dismiss() }
+                }
+            }
+            .task { await loadFiles() }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+    }
+
+    @MainActor
+    private func loadFiles() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let client = try clientProvider()
+            files = try await client.getTorrentFiles(hash: torrent.hash)
+            errorText = nil
+        } catch {
+            errorText = (error as? APIError)?.localizedDescription ?? error.localizedDescription
+            files = []
+        }
+    }
 }

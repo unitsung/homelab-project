@@ -1951,6 +1951,24 @@ struct Translations {
     let qbBatchResultFormat: String
     let homeQbitDownloadSpeed: String
     let homeQbitUploadSpeed: String
+    let qbAddTorrentFile: String
+    let qbTorrentDetail: String
+    let qbFiles: String
+    let qbNoFiles: String
+    let qbPriority: String
+    let arcaneLogFilter: String
+    let arcaneLogExport: String
+    let arcaneLogEmpty: String
+    let arcaneLogLoading: String
+    let arcaneLogPaused: String
+    let arcaneTerminalFullscreen: String
+    let arcaneTerminalConnected: String
+    let arcaneTerminalDisconnected: String
+    let arcaneTerminalConnect: String
+    let arcaneTerminalDisconnect: String
+    let arcaneTerminalPlaceholder: String
+    let filesViewList: String
+    let filesViewGrid: String
 
     // Home extras + CloudSaver
     let homeNoServices: String

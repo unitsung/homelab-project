@@ -16,6 +16,8 @@ struct ArcaneContainerDetailView: View {
     @State private var resolvedContainerId: String
     @State private var detail: ArcaneContainerDetails?
     @State private var logs: String = ""
+    @State private var logFilter = ""
+    @State private var logAutoScroll = true
     @State private var isLoadingLogs = false
     @State private var isLoading = true
     @State private var isActing = false
@@ -32,6 +34,7 @@ struct ArcaneContainerDetailView: View {
     @State private var historyIndex: Int = -1
     @State private var updateSession: ArcaneUpdateProgressSession?
     @State private var showUpdateProgress = false
+    @State private var showTerminalFullscreen = false
     @State private var logsTask: URLSessionWebSocketTask?
     @State private var logsSession: URLSession?
     @State private var autoUpdateEnabled = false
@@ -147,6 +150,9 @@ struct ArcaneContainerDetailView: View {
             if let updateSession {
                 ArcaneUpdateProgressSheet(session: updateSession)
             }
+        }
+        .fullScreenCover(isPresented: $showTerminalFullscreen) {
+            terminalFullscreenView
         }
     }
 
@@ -340,6 +346,15 @@ struct ArcaneContainerDetailView: View {
         .glassCard()
     }
 
+    private var filteredLogs: String {
+        let q = logFilter.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return logs }
+        return logs
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .filter { $0.localizedCaseInsensitiveContains(q) }
+            .joined(separator: "\n")
+    }
+
     private var logsTab: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -351,6 +366,23 @@ struct ArcaneContainerDetailView: View {
                 }
                 Spacer()
                 Button {
+                    logAutoScroll.toggle()
+                } label: {
+                    Image(systemName: logAutoScroll ? "arrow.down.to.line" : "pause.circle")
+                        .font(.caption.weight(.semibold))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(logAutoScroll ? localizer.t.arcaneLogPaused : localizer.t.arcaneLogPaused)
+
+                if !logs.isEmpty {
+                    ShareLink(item: logs) {
+                        Label(localizer.t.arcaneLogExport, systemImage: "square.and.arrow.up")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Button {
                     Task { await loadLogs(follow: true) }
                 } label: {
                     Label(localizer.t.refresh, systemImage: "arrow.clockwise")
@@ -358,11 +390,32 @@ struct ArcaneContainerDetailView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            HStack(spacing: 8) {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .foregroundStyle(AppTheme.textMuted)
+                TextField(localizer.t.arcaneLogFilter, text: $logFilter)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .font(.caption)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+
             ScrollViewReader { proxy in
                 ScrollView {
-                    Text(logs.isEmpty ? (isLoadingLogs ? "Loading logs…" : "No log output yet.") : logs)
+                    let display: String = {
+                        if filteredLogs.isEmpty {
+                            if isLoadingLogs { return localizer.t.arcaneLogLoading }
+                            if logs.isEmpty { return localizer.t.arcaneLogEmpty }
+                            return localizer.t.noData
+                        }
+                        return filteredLogs
+                    }()
+                    Text(display)
                         .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(logs.isEmpty ? AppTheme.textMuted : Color(white: 0.9))
+                        .foregroundStyle(filteredLogs.isEmpty ? AppTheme.textMuted : Color(white: 0.9))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
                         .id("log-bottom")
@@ -371,6 +424,7 @@ struct ArcaneContainerDetailView: View {
                 .padding(10)
                 .background(Color.black.opacity(0.9), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .onChange(of: logs.count) { _, _ in
+                    guard logAutoScroll else { return }
                     withAnimation { proxy.scrollTo("log-bottom", anchor: .bottom) }
                 }
             }
@@ -381,6 +435,31 @@ struct ArcaneContainerDetailView: View {
     }
 
     private var execTab: some View {
+        terminalChrome(minHeight: 220, showFullscreenButton: true)
+            .padding(14)
+            .frame(maxHeight: .infinity)
+            .glassCard()
+    }
+
+    private var terminalFullscreenView: some View {
+        NavigationStack {
+            terminalChrome(minHeight: 400, showFullscreenButton: false)
+                .padding(16)
+                .background(AppTheme.background.ignoresSafeArea())
+                .navigationTitle(localizer.t.arcaneTabExec)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(localizer.t.close) { showTerminalFullscreen = false }
+                    }
+                }
+                .onAppear {
+                    connectTerminalIfNeeded()
+                }
+        }
+    }
+
+    private func terminalChrome(minHeight: CGFloat, showFullscreenButton: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(localizer.t.arcaneTabExec)
@@ -390,10 +469,10 @@ struct ArcaneContainerDetailView: View {
                 Circle()
                     .fill(isTerminalConnected ? AppTheme.running : AppTheme.stopped)
                     .frame(width: 8, height: 8)
-                Text(isTerminalConnected ? "Connected" : "Disconnected")
+                Text(isTerminalConnected ? localizer.t.arcaneTerminalConnected : localizer.t.arcaneTerminalDisconnected)
                     .font(.caption2)
                     .foregroundStyle(AppTheme.textMuted)
-                Button(isTerminalConnected ? "Disconnect" : "Connect") {
+                Button(isTerminalConnected ? localizer.t.arcaneTerminalDisconnect : localizer.t.arcaneTerminalConnect) {
                     if isTerminalConnected {
                         disconnectTerminal()
                     } else {
@@ -405,18 +484,27 @@ struct ArcaneContainerDetailView: View {
                     terminalBuffer = ""
                 }
                 .font(.caption.weight(.semibold))
+                if showFullscreenButton {
+                    Button {
+                        showTerminalFullscreen = true
+                    } label: {
+                        Label(localizer.t.arcaneTerminalFullscreen, systemImage: "arrow.up.left.and.arrow.down.right")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .buttonStyle(.plain)
+                }
             }
 
             ScrollViewReader { proxy in
                 ScrollView {
-                    Text(terminalBuffer.isEmpty ? "$ connecting…\n" : terminalBuffer)
+                    Text(terminalBuffer.isEmpty ? "$ …\n" : terminalBuffer)
                         .font(.system(.caption2, design: .monospaced))
                         .foregroundStyle(Color.green.opacity(0.92))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
                         .id("term-bottom")
                 }
-                .frame(maxWidth: .infinity, minHeight: 220, maxHeight: .infinity)
+                .frame(maxWidth: .infinity, minHeight: minHeight, maxHeight: .infinity)
                 .padding(10)
                 .background(Color.black.opacity(0.92), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .onChange(of: terminalBuffer.count) { _, _ in
@@ -425,7 +513,6 @@ struct ArcaneContainerDetailView: View {
                 .onTapGesture { isCommandFocused = true }
             }
 
-            // Virtual special keys (Arcane/xterm style control sequences)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
                     termKey("Esc") { sendRaw("\u{1b}") }
@@ -461,7 +548,7 @@ struct ArcaneContainerDetailView: View {
             }
 
             HStack(spacing: 8) {
-                TextField("type command…", text: $commandInput)
+                TextField(localizer.t.arcaneTerminalPlaceholder, text: $commandInput)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .font(.system(.body, design: .monospaced))
@@ -473,9 +560,6 @@ struct ArcaneContainerDetailView: View {
                     .disabled(!isTerminalConnected || commandInput.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         }
-        .padding(14)
-        .frame(maxHeight: .infinity)
-        .glassCard()
     }
 
     private func termKey(_ title: String, action: @escaping () -> Void) -> some View {
