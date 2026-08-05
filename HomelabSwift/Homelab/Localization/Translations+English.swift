@@ -40,7 +40,7 @@ extension Translations {
         csPluginFailedDefault: "Saved, but post-save plugin failed",
         csPluginFailedDetail: "Saved, but post-save plugin failed: %@",
         filesFolderKind: "Folder",
-        filesPlayerUnsupportedFormatHint: "MKV / AVI and similar formats are not supported by the system decoder. Open with a dedicated player.",
+        filesPlayerUnsupportedFormatHint: "If built-in playback fails, open with Infuse / VLC / SenPlayer.",
         filesPlayerOpenExternalFailed: "Could not open %@. Link copied.",
         filesPlayerCannotPlayExt: "Cannot play %@",
         filesPlayerCannotPlayExtDetail: "Cannot play %@\n%@",

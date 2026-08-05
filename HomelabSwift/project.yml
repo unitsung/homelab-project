@@ -21,6 +21,10 @@ packages:
   SwiftTerm:
     url: https://github.com/migueldeicaza/SwiftTerm
     exactVersion: 1.11.2
+  # Official VideoLAN VLCKit (libVLC) for multi-format OpenList playback (MKV/AVI/etc.).
+  VLCKit:
+    url: https://code.videolan.org/videolan/VLCKit.git
+    exactVersion: 4.0.0-a22
 
 targets:
   Homelab:
@@ -32,6 +36,7 @@ targets:
           - "**/.DS_Store"
     dependencies:
       - package: SwiftTerm
+      - package: VLCKit
     configFiles:
       Debug: Config/Signing.xcconfig
       Release: Config/Signing.xcconfig

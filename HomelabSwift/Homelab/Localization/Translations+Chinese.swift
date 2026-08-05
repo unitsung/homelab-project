@@ -40,7 +40,7 @@ extension Translations {
         csPluginFailedDefault: "已转存，但后续插件触发失败",
         csPluginFailedDetail: "已转存，但后续插件触发失败：%@",
         filesFolderKind: "文件夹",
-        filesPlayerUnsupportedFormatHint: "MKV / AVI 等格式系统内置解码不支持，请用专业播放器打开",
+        filesPlayerUnsupportedFormatHint: "若内置播放失败，请用 Infuse / VLC / SenPlayer 打开",
         filesPlayerOpenExternalFailed: "无法打开 %@，链接已复制",
         filesPlayerCannotPlayExt: "无法播放 %@",
         filesPlayerCannotPlayExtDetail: "无法播放 %@\n%@",

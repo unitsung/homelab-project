@@ -57,6 +57,7 @@
 		3C5E508ED29EAEE5107AABF8 /* ServiceTileGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC821B6F0F3E165D79B99875 /* ServiceTileGrid.swift */; };
 		3D3519C51168694146FB2672 /* BeszelLineGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D0F063C9B955AB9794F2AF /* BeszelLineGraph.swift */; };
 		3F93EE54AF0FCD4CFFF0969D /* TechnitiumAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B6BFF54C5FE544768FDAB0 /* TechnitiumAPIClient.swift */; };
+		4117618CCB76722D3BA02065 /* VLCKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6E7B3EA8EF7BC91C08051A7D /* VLCKit */; };
 		43E2CAF833BCA9C112F96FE5 /* DiskMonitorCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DD5023598335B98A724F150 /* DiskMonitorCard.swift */; };
 		44002C75F703B805378EE7E0 /* NpmAccessListForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04940FAEDE28A509EB1E0EEB /* NpmAccessListForm.swift */; };
 		45563EB6F51F8EF1867CF1DC /* BeszelSystemDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 141E9B530530A0BF0D52A289 /* BeszelSystemDetail.swift */; };
@@ -478,6 +479,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				87F55CC2AF6CD863E2016CEC /* SwiftTerm in Frameworks */,
+				4117618CCB76722D3BA02065 /* VLCKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1569,6 +1571,7 @@
 			name = Homelab;
 			packageProductDependencies = (
 				CB5F62A655B68BA8C4B5B40E /* SwiftTerm */,
+				6E7B3EA8EF7BC91C08051A7D /* VLCKit */,
 			);
 			productName = Homelab;
 			productReference = 3A088F5140A5297EA91E3821 /* Homelab.app */;
@@ -1599,6 +1602,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				ACCACFB1418169FCFE13FE66 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+				AE6C268D7130E3EBCC3E8202 /* XCRemoteSwiftPackageReference "VLCKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E163496F466E06D0E015E1FD /* Products */;
@@ -2115,9 +2119,22 @@
 				version = 1.11.2;
 			};
 		};
+		AE6C268D7130E3EBCC3E8202 /* XCRemoteSwiftPackageReference "VLCKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://code.videolan.org/videolan/VLCKit.git";
+			requirement = {
+				kind = exactVersion;
+				version = "4.0.0-a22";
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		6E7B3EA8EF7BC91C08051A7D /* VLCKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AE6C268D7130E3EBCC3E8202 /* XCRemoteSwiftPackageReference "VLCKit" */;
+			productName = VLCKit;
+		};
 		CB5F62A655B68BA8C4B5B40E /* SwiftTerm */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = ACCACFB1418169FCFE13FE66 /* XCRemoteSwiftPackageReference "SwiftTerm" */;

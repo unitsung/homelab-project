@@ -1,86 +1,51 @@
 import AVFoundation
-import AVKit
 import MediaPlayer
 import SwiftUI
-import UniformTypeIdentifiers
+import VLCKit
 #if canImport(UIKit)
 import UIKit
 #endif
 
-/// Full-screen player: auto-plays on open.
-/// Tap center → show/hide chrome (auto-hide after a few seconds).
-/// Bottom: progress · transport · rate · subtitles · audio track · landscape · import local sub.
-/// Sides: left brightness / right volume vertical drag.
+/// Full-screen OpenList player powered by open-source **VLCKit** (libVLC).
+/// Handles MKV/AVI/HEVC and network streams that AVPlayer cannot decode.
+///
+/// Gestures (Infuse-style):
+/// - Center tap → show/hide chrome
+/// - Left vertical drag → brightness
+/// - Right vertical drag → system volume
+/// - Double-tap left/right → seek ±10s
 struct OpenListMediaPlayerView: View {
     let url: URL
     let title: String
     let isAudio: Bool
-    /// Optional external subtitle stream (OpenList /p or /d for .srt/.vtt).
+    /// Optional external subtitle stream (OpenList sibling .srt/.vtt).
     var externalSubtitleURL: URL? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(Localizer.self) private var localizer
-    @State private var player: AVPlayer?
-    @State private var isReady = false
-    @State private var isPlaying = false
-    @State private var duration: Double = 0
-    @State private var current: Double = 0
-    /// Tracks **system** output volume (0…1), not AVPlayer relative gain.
-    @State private var volume: Float = AVAudioSession.sharedInstance().outputVolume
-    @State private var brightness: Double = 0.5
+
+    @StateObject private var engine = OpenListVLCEngine()
     @State private var showControls = true
-    @State private var errorText: String?
-    @State private var timeObserver: Any?
-    @State private var timeObserverPlayer: AVPlayer?
     @State private var hideTask: Task<Void, Never>?
-    @State private var rate: Float = 1.0
-    @State private var statusObservation: NSKeyValueObservation?
     @State private var isLandscapePreferred = true
+    @State private var brightness: Double = 0.5
+    @State private var volume: Float = AVAudioSession.sharedInstance().outputVolume
     @State private var sideHud: SideHUD?
     @State private var dragStartValue: Double = 0
-    @State private var showLocalSubtitlePicker = false
-    /// True when format is MKV/AVI/etc. or AVPlayer reports unplayable — offer external apps.
-    @State private var showExternalFallback = false
-    @State private var openingExternal: ExternalPlayerOption?
-    @State private var pipController: AVPictureInPictureController?
-    @State private var pipPossible = false
-    /// Screen resolved from the hosting window (iOS 26: do not use UIScreen.main).
     @State private var hostScreen: UIScreen?
-    /// Hidden `MPVolumeView` host used to write system volume + mirror hardware buttons.
     @State private var systemVolumeWriter = OpenListSystemVolumeWriter()
-
-    // Embedded subtitle tracks
-    @State private var subtitleGroup: AVMediaSelectionGroup?
-    @State private var embeddedSubtitles: [AVMediaSelectionOption] = []
-    @State private var selectedEmbedded: AVMediaSelectionOption?
-
-    // Audio tracks
-    @State private var audioGroup: AVMediaSelectionGroup?
-    @State private var audioTracks: [AVMediaSelectionOption] = []
-    @State private var selectedAudio: AVMediaSelectionOption?
-
-    // External SRT/VTT overlay (server sibling or local file)
-    @State private var externalCues: [SubtitleCue] = []
-    @State private var useExternalSubtitles = false
-    @State private var currentCueText: String = ""
-    @State private var externalSubtitleName: String = ""
+    @State private var openingExternal: ExternalPlayerOption?
+    @State private var showExternalFallback = false
+    @State private var errorText: String?
 
     private let rateOptions: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0]
 
-    /// Containers Apple AVPlayer typically cannot decode (needs VLC / Infuse / SenPlayer).
-    private static let avPlayerUnfriendlyExtensions: Set<String> = [
-        "mkv", "avi", "wmv", "flv", "rmvb", "rm", "asf", "divx", "xvid", "ogm", "mpg", "mpeg"
-    ]
-
-    /// Shared pre-check so callers can avoid opening the built-in player for unsupported formats.
+    /// Legacy pre-check used when the engine was AVPlayer-only.
+    /// With VLCKit almost all common containers work — always return false.
     static func isBuiltInUnfriendlyExtension(_ ext: String) -> Bool {
-        avPlayerUnfriendlyExtensions.contains(ext.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())
+        _ = ext
+        return false
     }
-
-    private static let observerQueue = DispatchQueue(
-        label: "com.homelab.openlist.player.observer",
-        qos: .userInitiated
-    )
 
     private enum SideHUD: Equatable {
         case brightness(Double)
@@ -92,7 +57,6 @@ struct OpenListMediaPlayerView: View {
             ZStack {
                 Color.black.ignoresSafeArea()
 
-                // Resolve UIScreen from view.window (iOS 26-safe; never UIScreen.main).
                 OpenListHostScreenReader { screen in
                     if hostScreen !== screen {
                         hostScreen = screen
@@ -101,7 +65,6 @@ struct OpenListMediaPlayerView: View {
                 }
                 .frame(width: 0, height: 0)
 
-                // Must stay in hierarchy so MPVolumeView can drive system volume.
                 OpenListSystemVolumeView(writer: systemVolumeWriter)
                     .frame(width: 1, height: 1)
                     .opacity(0.01)
@@ -110,34 +73,24 @@ struct OpenListMediaPlayerView: View {
                 if let errorText {
                     errorBlock(errorText)
                 } else {
-                    videoSurface
-                    if isReady {
+                    if isAudio {
+                        audioBackdrop
+                    } else {
+                        OpenListVLCVideoView(player: engine.player)
+                            .ignoresSafeArea()
+                    }
+
+                    if engine.isReady {
                         sideGestureLayers(size: geo.size)
                     }
 
-                    if useExternalSubtitles, !currentCueText.isEmpty {
-                        VStack {
-                            Spacer()
-                            Text(currentCueText)
-                                .font(.body.weight(.semibold))
-                                .multilineTextAlignment(.center)
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                .padding(.horizontal, 24)
-                                .padding(.bottom, showControls ? 150 : 40)
-                        }
-                        .allowsHitTesting(false)
-                    }
-
-                    // Always keep a dismiss control above gestures so loading is never a dead-end.
-                    if !isReady {
+                    if !engine.isReady {
                         loadingChrome
                     } else if showControls {
                         controlsOverlay
                             .transition(.opacity)
                     }
+
                     if let sideHud {
                         sideHudBadge(sideHud)
                     }
@@ -147,47 +100,27 @@ struct OpenListMediaPlayerView: View {
         .ignoresSafeArea()
         .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)
-        .task { await setup() }
+        .task { await start() }
         .onAppear {
-            if !isAudio {
-                isLandscapePreferred = true
-                applyOrientation(landscape: true)
-            } else {
-                isLandscapePreferred = false
-                applyOrientation(landscape: false)
-            }
+            isLandscapePreferred = !isAudio
+            applyOrientation(landscape: !isAudio ? true : false)
         }
         .onDisappear {
-            teardown()
+            engine.stop()
             applyOrientation(landscape: nil)
+            Task { await Self.deactivateAudioSession() }
         }
-        .fileImporter(
-            isPresented: $showLocalSubtitlePicker,
-            allowedContentTypes: [
-                .plainText,
-                UTType(filenameExtension: "srt") ?? .data,
-                UTType(filenameExtension: "vtt") ?? .data,
-                UTType(filenameExtension: "ass") ?? .data
-            ],
-            allowsMultipleSelection: false
-        ) { result in
-            Task { await handleLocalSubtitleImport(result) }
+        .onChange(of: engine.isPlaying) { _, playing in
+            if playing { scheduleHide() } else { showControls = true }
+        }
+        .onChange(of: engine.failedMessage) { _, msg in
+            guard let msg else { return }
+            errorText = msg
+            showExternalFallback = true
         }
     }
 
     // MARK: - Surfaces
-
-    @ViewBuilder
-    private var videoSurface: some View {
-        if isAudio {
-            audioBackdrop
-        } else if let player {
-            OpenListAVPlayerLayerView(player: player) { layer in
-                configurePiP(with: layer)
-            }
-            .ignoresSafeArea()
-        }
-    }
 
     private var audioBackdrop: some View {
         VStack(spacing: 16) {
@@ -199,6 +132,11 @@ struct OpenListMediaPlayerView: View {
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 28)
+            if engine.isReady {
+                Text(clock(engine.current) + " / " + clock(engine.duration))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.7))
+            }
         }
     }
 
@@ -214,12 +152,6 @@ struct OpenListMediaPlayerView: View {
                 .padding(.horizontal, 28)
 
             if showExternalFallback {
-                Text(localizer.t.filesPlayerUnsupportedFormatHint)
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.65))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-
                 VStack(spacing: 8) {
                     ForEach([ExternalPlayerOption.senPlayer, .vlc, .infuse, .nPlayer, .system], id: \.id) { option in
                         Button {
@@ -227,8 +159,7 @@ struct OpenListMediaPlayerView: View {
                         } label: {
                             HStack {
                                 Image(systemName: option.systemImage)
-                                Text(option.displayName)
-                                    .fontWeight(.semibold)
+                                Text(option.displayName).fontWeight(.semibold)
                                 Spacer()
                                 if openingExternal == option {
                                     ProgressView().tint(.white)
@@ -244,7 +175,6 @@ struct OpenListMediaPlayerView: View {
                     }
                 }
                 .padding(.horizontal, 28)
-                .padding(.top, 4)
             }
 
             Button { dismiss() } label: {
@@ -258,41 +188,249 @@ struct OpenListMediaPlayerView: View {
         }
     }
 
-    @MainActor
-    private func openExternal(_ option: ExternalPlayerOption) async {
-        openingExternal = option
-        let ok = await ExternalPlayerRouter.open(player: option, streamURL: url)
-        openingExternal = nil
-        if !ok {
-            ExternalPlayerRouter.copyToPasteboard(url.absoluteString)
-            errorText = String(format: localizer.t.filesPlayerOpenExternalFailed, option.displayName)
-            showExternalFallback = true
-        } else {
-            dismiss()
+    // MARK: - Chrome
+
+    private var loadingChrome: some View {
+        VStack(spacing: 0) {
+            topBar
+            Spacer()
+            ProgressView()
+                .tint(.white)
+                .scaleEffect(1.15)
+            Text(localizer.t.loading)
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(.white.opacity(0.75))
+                .padding(.top, 10)
+            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
     }
 
-    // MARK: - Gestures (Infuse-style zones)
+    private var controlsOverlay: some View {
+        VStack(spacing: 0) {
+            topBar
+            Spacer()
+            if !engine.isPlaying {
+                Button { engine.togglePlay() } label: {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 64, height: 64)
+                        .background(.white.opacity(0.18), in: Circle())
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer()
+            bottomBar
+        }
+        .background(
+            LinearGradient(
+                colors: [.black.opacity(0.55), .clear, .clear, .black.opacity(0.7)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+        )
+    }
+
+    private var topBar: some View {
+        HStack(spacing: 12) {
+            Button { dismiss() } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(.white.opacity(0.16), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(localizer.t.close)
+
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+            Spacer(minLength: 0)
+
+            Menu {
+                ForEach([ExternalPlayerOption.senPlayer, .vlc, .infuse, .nPlayer, .system], id: \.id) { option in
+                    Button {
+                        Task { await openExternal(option) }
+                    } label: {
+                        Label(option.displayName, systemImage: option.systemImage)
+                    }
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+    }
+
+    private var bottomBar: some View {
+        VStack(spacing: 10) {
+            // Scrubber
+            HStack(spacing: 10) {
+                Text(clock(engine.current))
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.85))
+                    .frame(width: 48, alignment: .leading)
+                Slider(
+                    value: Binding(
+                        get: { engine.duration > 0 ? engine.current / engine.duration : 0 },
+                        set: { engine.seek(toFraction: $0) }
+                    ),
+                    in: 0...1
+                )
+                .tint(.white)
+                Text(clock(engine.duration))
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.85))
+                    .frame(width: 48, alignment: .trailing)
+            }
+            .padding(.horizontal, 14)
+
+            HStack(spacing: 0) {
+                toolButton("gobackward.10", label: "-10s") { engine.jump(by: -10) }
+                toolButton(engine.isPlaying ? "pause.fill" : "play.fill", label: engine.isPlaying ? localizer.t.actionPause : localizer.t.actionResume) {
+                    engine.togglePlay()
+                    scheduleHide()
+                }
+                toolButton("goforward.10", label: "+10s") { engine.jump(by: 10) }
+
+                Menu {
+                    ForEach(rateOptions, id: \.self) { r in
+                        Button {
+                            engine.setRate(r)
+                            scheduleHide()
+                        } label: {
+                            if abs(engine.rate - r) < 0.01 {
+                                Label(rateLabel(r), systemImage: "checkmark")
+                            } else {
+                                Text(rateLabel(r))
+                            }
+                        }
+                    }
+                } label: {
+                    toolIcon(nil, label: rateLabel(engine.rate), textOnly: true)
+                }
+
+                if !engine.textTracks.isEmpty {
+                    Menu {
+                        Button {
+                            engine.deselectSubtitles()
+                        } label: {
+                            Text(localizer.t.filesPlayerSubtitleOff)
+                        }
+                        ForEach(Array(engine.textTracks.enumerated()), id: \.offset) { idx, name in
+                            Button {
+                                engine.selectTextTrack(at: idx)
+                            } label: {
+                                Text(name)
+                            }
+                        }
+                    } label: {
+                        toolIcon("captions.bubble", label: localizer.t.filesPlayerSubtitleEmbedded)
+                    }
+                }
+
+                if !engine.audioTracks.isEmpty {
+                    Menu {
+                        ForEach(Array(engine.audioTracks.enumerated()), id: \.offset) { idx, name in
+                            Button {
+                                engine.selectAudioTrack(at: idx)
+                            } label: {
+                                Text(name)
+                            }
+                        }
+                    } label: {
+                        toolIcon("waveform", label: localizer.t.filesPlayerAudio)
+                    }
+                }
+
+                Button {
+                    isLandscapePreferred.toggle()
+                    applyOrientation(landscape: isLandscapePreferred)
+                    scheduleHide()
+                } label: {
+                    toolIcon(
+                        isLandscapePreferred ? "rectangle.portrait.rotate" : "rectangle.landscape.rotate",
+                        label: isLandscapePreferred ? localizer.t.filesPlayerPortrait : localizer.t.filesPlayerLandscape
+                    )
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.bottom, 18)
+        }
+        .background(
+            LinearGradient(
+                colors: [.black.opacity(0.0), .black.opacity(0.75)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+    }
+
+    private func toolButton(_ systemName: String, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            toolIcon(systemName, label: label)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func toolIcon(_ systemName: String?, label: String, active: Bool = false, textOnly: Bool = false) -> some View {
+        VStack(spacing: 4) {
+            if textOnly {
+                Text(label)
+                    .font(.system(size: 13, weight: .bold).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .frame(height: 22)
+            } else if let systemName {
+                Image(systemName: systemName)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(active ? Color.accentColor : .white)
+                    .frame(height: 22)
+            }
+            if !textOnly {
+                Text(label)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            } else {
+                Text(localizer.t.filesPlayerSpeed)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+    }
+
+    // MARK: - Gestures
 
     private func sideGestureLayers(size: CGSize) -> some View {
         HStack(spacing: 0) {
-            // Left third: brightness vertical · double-tap seek -10
             Color.clear
                 .contentShape(Rectangle())
                 .gesture(verticalDrag(kind: .brightness, height: size.height))
-                .onTapGesture(count: 2) { seek(by: -10) }
+                .onTapGesture(count: 2) { engine.jump(by: -10) }
                 .onTapGesture(count: 1) { handleCenterTap() }
 
-            // Center third: toggle chrome
             Color.clear
                 .contentShape(Rectangle())
                 .onTapGesture { handleCenterTap() }
 
-            // Right third: volume vertical · double-tap seek +10
             Color.clear
                 .contentShape(Rectangle())
                 .gesture(verticalDrag(kind: .volume, height: size.height))
-                .onTapGesture(count: 2) { seek(by: 10) }
+                .onTapGesture(count: 2) { engine.jump(by: 10) }
                 .onTapGesture(count: 1) { handleCenterTap() }
         }
         .ignoresSafeArea()
@@ -304,7 +442,6 @@ struct OpenListMediaPlayerView: View {
         DragGesture(minimumDistance: 10)
             .onChanged { value in
                 if abs(value.translation.height) < abs(value.translation.width) * 1.2 { return }
-                // ~40% of view height spans full 0…1 so upper/lower limits are reachable.
                 let delta = -value.translation.height / max(height * 0.4, 1)
                 switch kind {
                 case .brightness:
@@ -324,13 +461,11 @@ struct OpenListMediaPlayerView: View {
             }
             .onEnded { _ in
                 systemVolumeWriter.isAdjusting = false
-                // Snap HUD to the real system volume after the write settles.
                 volume = currentSystemVolume()
                 withAnimation(.easeOut(duration: 0.3)) { sideHud = nil }
             }
     }
 
-    /// Infuse-like edge pill (left = brightness, right = volume)
     private func sideHudBadge(_ hud: SideHUD) -> some View {
         let isBright: Bool
         let value: Double
@@ -343,15 +478,10 @@ struct OpenListMediaPlayerView: View {
         case .volume(let v):
             isBright = false
             value = v
-            if v < 0.01 {
-                icon = "speaker.slash.fill"
-            } else if v < 0.34 {
-                icon = "speaker.wave.1.fill"
-            } else if v < 0.67 {
-                icon = "speaker.wave.2.fill"
-            } else {
-                icon = "speaker.wave.3.fill"
-            }
+            if v < 0.01 { icon = "speaker.slash.fill" }
+            else if v < 0.34 { icon = "speaker.wave.1.fill" }
+            else if v < 0.67 { icon = "speaker.wave.2.fill" }
+            else { icon = "speaker.wave.3.fill" }
         }
         return HStack {
             if isBright {
@@ -370,7 +500,6 @@ struct OpenListMediaPlayerView: View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 14, weight: .semibold))
-            // Vertical bar
             GeometryReader { g in
                 ZStack(alignment: .bottom) {
                     Capsule().fill(.white.opacity(0.2))
@@ -387,721 +516,22 @@ struct OpenListMediaPlayerView: View {
         .background(.black.opacity(0.45), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
-    // MARK: - Controls (VLC / Infuse layout)
-
-    /// Single loading surface: one spinner + always-tappable close (no second spinner in the scrubber).
-    private var loadingChrome: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 40, height: 40)
-                        .background(.white.opacity(0.16), in: Circle())
-                        .contentShape(Circle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(localizer.t.close)
-
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 14)
-            .padding(.top, 12)
-            .padding(.bottom, 16)
-            .background(
-                LinearGradient(
-                    colors: [.black.opacity(0.7), .black.opacity(0.0)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-
-            Spacer()
-            ProgressView()
-                .tint(.white)
-                .scaleEffect(1.15)
-            Text(localizer.t.loading)
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(.white.opacity(0.75))
-                .padding(.top, 10)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .contentShape(Rectangle())
-    }
-
-    private var controlsOverlay: some View {
-        VStack(spacing: 0) {
-            infuseTopBar
-            Spacer()
-            // Center play when paused (Infuse)
-            if !isPlaying, isReady {
-                Button { togglePlay() } label: {
-                    Image(systemName: "play.fill")
-                        .font(.system(size: 28, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 64, height: 64)
-                        .background(.white.opacity(0.18), in: Circle())
-                }
-                .buttonStyle(.plain)
-            }
-            Spacer()
-            if isReady {
-                infuseBottomBar
-            }
-        }
-    }
-
-    private var infuseTopBar: some View {
-        HStack(spacing: 12) {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 40, height: 40)
-                    .contentShape(Rectangle())
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                if !isAudio {
-                    Text(clock(current) + "  ·  " + clock(duration))
-                        .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.white.opacity(0.65))
-                }
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 12)
-        .padding(.top, 8)
-        .padding(.bottom, 16)
-        .background(
-            LinearGradient(
-                colors: [.black.opacity(0.65), .black.opacity(0.0)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
-    }
-
-    private var infuseBottomBar: some View {
-        VStack(spacing: 14) {
-            // Progress: current ——●—— remaining  (Infuse/VLC)
-            HStack(spacing: 10) {
-                Text(clock(current))
-                    .font(.caption.monospacedDigit().weight(.medium))
-                    .foregroundStyle(.white.opacity(0.9))
-                    .frame(width: 48, alignment: .leading)
-
-                if duration.isFinite, duration > 0, !duration.isNaN {
-                    Slider(
-                        value: Binding(
-                            get: { safe(current, upper: duration) },
-                            set: { seek(to: $0) }
-                        ),
-                        in: 0...duration
-                    )
-                    .tint(.white)
-                } else {
-                    // Placeholder track while duration is unknown — not a second loading spinner.
-                    Capsule()
-                        .fill(.white.opacity(0.25))
-                        .frame(height: 3)
-                        .frame(maxWidth: .infinity)
-                }
-
-                Text(clock(max(0, duration - current)))
-                    .font(.caption.monospacedDigit().weight(.medium))
-                    .foregroundStyle(.white.opacity(0.9))
-                    .frame(width: 48, alignment: .trailing)
-            }
-
-            // Transport
-            HStack(spacing: 0) {
-                Spacer()
-                Button { seek(by: -10) } label: {
-                    Image(systemName: "gobackward.10")
-                        .font(.system(size: 22, weight: .medium))
-                        .foregroundStyle(.white)
-                        .frame(width: 52, height: 44)
-                }
-                Button { togglePlay() } label: {
-                    Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 26, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 64, height: 44)
-                }
-                Button { seek(by: 10) } label: {
-                    Image(systemName: "goforward.10")
-                        .font(.system(size: 22, weight: .medium))
-                        .foregroundStyle(.white)
-                        .frame(width: 52, height: 44)
-                }
-                Spacer()
-            }
-            .buttonStyle(.plain)
-
-            // Icon tool strip (Infuse-style)
-            HStack(spacing: 0) {
-                rateMenuButton
-                if !isAudio {
-                    subtitleMenuButton
-                    audioTrackMenuButton
-                    landscapeButton
-                    if pipPossible {
-                        Button {
-                            togglePiP()
-                            scheduleHide()
-                        } label: {
-                            toolIcon(
-                                "pip.enter",
-                                label: localizer.t.filesPlayerPiP,
-                                active: pipController?.isPictureInPictureActive == true
-                            )
-                        }
-                    }
-                    Button {
-                        showLocalSubtitlePicker = true
-                        scheduleHide()
-                    } label: {
-                        toolIcon("doc.badge.plus", label: "Sub+")
-                    }
-                }
-            }
-        }
-        .padding(.horizontal, 18)
-        .padding(.top, 14)
-        .padding(.bottom, 20)
-        .background(
-            LinearGradient(
-                colors: [.black.opacity(0.0), .black.opacity(0.72)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
-    }
-
-    // MARK: - Tool menus (icon column)
-
-    private var rateMenuButton: some View {
-        Menu {
-            ForEach(rateOptions, id: \.self) { r in
-                Button {
-                    setRate(r)
-                } label: {
-                    if abs(rate - r) < 0.01 {
-                        Label(rateLabel(r), systemImage: "checkmark")
-                    } else {
-                        Text(rateLabel(r))
-                    }
-                }
-            }
-        } label: {
-            toolIcon(nil, label: rateLabel(rate), textOnly: true)
-        }
-    }
-
-    private var subtitleMenuButton: some View {
-        Menu {
-            Button {
-                selectEmbedded(nil)
-                useExternalSubtitles = false
-                currentCueText = ""
-            } label: {
-                if selectedEmbedded == nil, !useExternalSubtitles {
-                    Label(localizer.t.filesPlayerSubtitleOff, systemImage: "checkmark")
-                } else {
-                    Text(localizer.t.filesPlayerSubtitleOff)
-                }
-            }
-            if !embeddedSubtitles.isEmpty {
-                Section(localizer.t.filesPlayerSubtitleEmbedded) {
-                    ForEach(Array(embeddedSubtitles.enumerated()), id: \.offset) { _, opt in
-                        Button {
-                            useExternalSubtitles = false
-                            currentCueText = ""
-                            selectEmbedded(opt)
-                        } label: {
-                            if selectedEmbedded == opt, !useExternalSubtitles {
-                                Label(opt.displayName, systemImage: "checkmark")
-                            } else {
-                                Text(opt.displayName)
-                            }
-                        }
-                    }
-                }
-            }
-            if !externalCues.isEmpty {
-                Section(localizer.t.filesPlayerSubtitleExternal) {
-                    Button {
-                        selectEmbedded(nil)
-                        useExternalSubtitles = true
-                        refreshCue()
-                    } label: {
-                        let name = externalSubtitleName.isEmpty
-                            ? localizer.t.filesPlayerSubtitleExternal
-                            : externalSubtitleName
-                        if useExternalSubtitles {
-                            Label(name, systemImage: "checkmark")
-                        } else {
-                            Text(name)
-                        }
-                    }
-                }
-            }
-            Button {
-                showLocalSubtitlePicker = true
-            } label: {
-                Label(localizer.t.filesPlayerSubtitleImport, systemImage: "folder")
-            }
-        } label: {
-            toolIcon(
-                "captions.bubble",
-                label: "CC",
-                active: selectedEmbedded != nil || useExternalSubtitles
-            )
-        }
-    }
-
-    private var audioTrackMenuButton: some View {
-        Menu {
-            if audioTracks.isEmpty {
-                Text(localizer.t.filesPlayerAudioDefault)
-            } else {
-                ForEach(Array(audioTracks.enumerated()), id: \.offset) { _, opt in
-                    Button {
-                        selectAudio(opt)
-                    } label: {
-                        if selectedAudio == opt {
-                            Label(opt.displayName, systemImage: "checkmark")
-                        } else {
-                            Text(opt.displayName)
-                        }
-                    }
-                }
-            }
-        } label: {
-            toolIcon("waveform", label: localizer.t.filesPlayerAudio, active: audioTracks.count > 1)
-        }
-        .disabled(audioTracks.isEmpty)
-        .opacity(audioTracks.isEmpty ? 0.4 : 1)
-    }
-
-    private var landscapeButton: some View {
-        Button {
-            isLandscapePreferred.toggle()
-            applyOrientation(landscape: isLandscapePreferred)
-            scheduleHide()
-        } label: {
-            toolIcon(
-                isLandscapePreferred ? "rectangle.portrait.rotate" : "rectangle.landscape.rotate",
-                label: isLandscapePreferred ? localizer.t.filesPlayerPortrait : localizer.t.filesPlayerLandscape
-            )
-        }
-    }
-
-    private func toolIcon(_ systemName: String?, label: String, active: Bool = false, textOnly: Bool = false) -> some View {
-        VStack(spacing: 4) {
-            if textOnly {
-                Text(label)
-                    .font(.system(size: 13, weight: .bold).monospacedDigit())
-                    .foregroundStyle(.white)
-                    .frame(height: 22)
-            } else if let systemName {
-                Image(systemName: systemName)
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(active ? Color.accentColor : .white)
-                    .symbolRenderingMode(.hierarchical)
-                    .frame(height: 22)
-            }
-            if !textOnly {
-                Text(label)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.7))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            } else {
-                Text(localizer.t.filesPlayerSpeed)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.7))
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .contentShape(Rectangle())
-    }
-
-    // MARK: - Picture in Picture
-
-    @MainActor
-    private func configurePiP(with layer: AVPlayerLayer) {
-        guard !isAudio, AVPictureInPictureController.isPictureInPictureSupported() else {
-            pipPossible = false
-            return
-        }
-        if pipController?.playerLayer === layer { return }
-        let controller = AVPictureInPictureController(playerLayer: layer)
-        controller?.canStartPictureInPictureAutomaticallyFromInline = true
-        pipController = controller
-        pipPossible = controller != nil
-    }
-
-    @MainActor
-    private func togglePiP() {
-        guard let pipController else { return }
-        if pipController.isPictureInPictureActive {
-            pipController.stopPictureInPicture()
-        } else {
-            pipController.startPictureInPicture()
-        }
-    }
-
     // MARK: - Lifecycle
 
     @MainActor
-    private func setup() async {
-        teardownKeepOrientation()
+    private func start() async {
         errorText = nil
         showExternalFallback = false
         showControls = true
-        isReady = false
-        isPlaying = false
-
-        AppLogger.shared.info("play setup url=\(url.absoluteString) audio=\(isAudio)", source: "OpenListPlayer")
-
-        await configureAudioSession()
         volume = currentSystemVolume()
-        systemVolumeWriter.onExternalChange = { newValue in
-            volume = newValue
-        }
+        systemVolumeWriter.onExternalChange = { volume = $0 }
         systemVolumeWriter.startObserving()
 
-        let fileExt = (title as NSString).pathExtension.lowercased()
-        let unfriendly = Self.avPlayerUnfriendlyExtensions.contains(fileExt)
-            || Self.avPlayerUnfriendlyExtensions.contains(url.pathExtension.lowercased())
+        await configureAudioSession()
+        AppLogger.shared.info("VLC play url=\(url.absoluteString) audio=\(isAudio)", source: "OpenListPlayer")
 
-        // Load external SRT/VTT in parallel (does not block autoplay).
-        if let externalSubtitleURL, !isAudio {
-            Task { await loadExternalSubtitles(from: externalSubtitleURL) }
-        }
-
-        // MKV etc.: AVPlayer cannot decode — skip long timeout and offer Infuse/VLC immediately.
-        // Still attempt play for edge cases (some remuxed streams may work).
-        let asset = AVURLAsset(url: url)
-        var playable = true
-        do {
-            playable = try await asset.load(.isPlayable)
-        } catch {
-            playable = !unfriendly
-        }
-        if Task.isCancelled { return }
-
-        if unfriendly, !playable {
-            presentExternalFormatFallback(extensionName: fileExt.isEmpty ? "mkv" : fileExt)
-            return
-        }
-
-        let item = AVPlayerItem(asset: asset)
-        let av = AVPlayer(playerItem: item)
-        // Full system volume range: keep player gain at 1 and drive MPVolumeView instead.
-        av.volume = 1.0
-        av.automaticallyWaitsToMinimizeStalling = true
-        player = av
-
-        let ready = await waitUntilReady(item: item, timeout: unfriendly ? 12 : 30)
-        guard !Task.isCancelled, player === av else { return }
-
-        switch ready {
-        case .ready:
-            let d = item.duration.seconds
-            if d.isFinite, !d.isNaN, d > 0 { duration = d }
-            isReady = true
-            await loadMediaTracks(from: item)
-            // Auto-play immediately (page 2)
-            attachObserver(to: av)
-            av.play()
-            av.rate = rate
-            isPlaying = true
-            showControls = true
-            scheduleHide()
-        case .failed(let message):
-            AppLogger.shared.error("play failed: \(message)", source: "OpenListPlayer")
-            if unfriendly || Self.looksLikeCodecError(message) {
-                presentExternalFormatFallback(extensionName: fileExt.isEmpty ? "video" : fileExt, detail: message)
-            } else {
-                errorText = message
-                showExternalFallback = true
-            }
-        case .timeout:
-            if unfriendly {
-                presentExternalFormatFallback(extensionName: fileExt.isEmpty ? "mkv" : fileExt)
-            } else {
-                isReady = true
-                await loadMediaTracks(from: item)
-                attachObserver(to: av)
-                av.play()
-                av.rate = rate
-                isPlaying = true
-                showControls = true
-                scheduleHide()
-            }
-        case .cancelled:
-            return
-        }
+        engine.play(url: url, externalSubtitleURL: externalSubtitleURL)
     }
-
-    private func presentExternalFormatFallback(extensionName: String, detail: String? = nil) {
-        showExternalFallback = true
-        let ext = extensionName.uppercased()
-        if let detail, !detail.isEmpty {
-            errorText = String(format: localizer.t.filesPlayerCannotPlayExtDetail, ext, detail)
-        } else {
-            errorText = String(format: localizer.t.filesPlayerCannotPlayExtFormat, ext)
-        }
-        isReady = false
-        player?.pause()
-        player = nil
-    }
-
-    private static func looksLikeCodecError(_ message: String) -> Bool {
-        let m = message.lowercased()
-        return m.contains("format") || m.contains("codec") || m.contains("decode")
-            || m.contains("not supported") || m.contains("无法") || m.contains("不支持")
-            || m.contains("error") || m.contains("failed")
-    }
-
-    private func loadMediaTracks(from item: AVPlayerItem) async {
-        let asset = item.asset
-        do {
-            if let group = try await asset.loadMediaSelectionGroup(for: .legible) {
-                subtitleGroup = group
-                embeddedSubtitles = group.options
-                selectedEmbedded = item.currentMediaSelection.selectedMediaOption(in: group)
-            } else {
-                subtitleGroup = nil
-                embeddedSubtitles = []
-                selectedEmbedded = nil
-            }
-        } catch {
-            subtitleGroup = nil
-            embeddedSubtitles = []
-            selectedEmbedded = nil
-        }
-        do {
-            if let group = try await asset.loadMediaSelectionGroup(for: .audible) {
-                audioGroup = group
-                audioTracks = group.options
-                selectedAudio = item.currentMediaSelection.selectedMediaOption(in: group)
-            } else {
-                audioGroup = nil
-                audioTracks = []
-                selectedAudio = nil
-            }
-        } catch {
-            audioGroup = nil
-            audioTracks = []
-            selectedAudio = nil
-        }
-    }
-
-    private func selectEmbedded(_ option: AVMediaSelectionOption?) {
-        guard let player, let item = player.currentItem, let group = subtitleGroup else {
-            selectedEmbedded = option
-            return
-        }
-        item.select(option, in: group)
-        selectedEmbedded = option
-        scheduleHide()
-    }
-
-    private func selectAudio(_ option: AVMediaSelectionOption) {
-        guard let player, let item = player.currentItem, let group = audioGroup else {
-            selectedAudio = option
-            return
-        }
-        item.select(option, in: group)
-        selectedAudio = option
-        scheduleHide()
-    }
-
-    private func loadExternalSubtitles(from url: URL) async {
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            applySubtitleData(data, name: url.lastPathComponent)
-        } catch {
-            AppLogger.shared.error("external subs failed: \(error.localizedDescription)", source: "OpenListPlayer")
-        }
-    }
-
-    @MainActor
-    private func handleLocalSubtitleImport(_ result: Result<[URL], Error>) async {
-        switch result {
-        case .failure(let error):
-            AppLogger.shared.error("local sub pick failed: \(error.localizedDescription)", source: "OpenListPlayer")
-        case .success(let urls):
-            guard let fileURL = urls.first else { return }
-            let accessing = fileURL.startAccessingSecurityScopedResource()
-            defer { if accessing { fileURL.stopAccessingSecurityScopedResource() } }
-            do {
-                let data = try Data(contentsOf: fileURL)
-                applySubtitleData(data, name: fileURL.lastPathComponent)
-            } catch {
-                AppLogger.shared.error("local sub read failed: \(error.localizedDescription)", source: "OpenListPlayer")
-            }
-        }
-        scheduleHide()
-    }
-
-    @MainActor
-    private func applySubtitleData(_ data: Data, name: String) {
-        guard let text = String(data: data, encoding: .utf8)
-                ?? String(data: data, encoding: .isoLatin1) else { return }
-        let lower = name.lowercased()
-        let cues: [SubtitleCue]
-        if lower.hasSuffix(".vtt") {
-            cues = SubtitleCue.parseVTT(text)
-        } else if lower.hasSuffix(".ass") || lower.hasSuffix(".ssa") {
-            // Best-effort: strip dialogue lines as plain text cues (rough)
-            cues = SubtitleCue.parseASS(text)
-        } else {
-            cues = SubtitleCue.parseSRT(text)
-        }
-        externalCues = cues
-        externalSubtitleName = name
-        if !cues.isEmpty {
-            selectEmbedded(nil)
-            useExternalSubtitles = true
-            refreshCue()
-        }
-        AppLogger.shared.info("subs applied \(name) cues=\(cues.count)", source: "OpenListPlayer")
-    }
-
-    private enum ReadyResult: Sendable {
-        case ready
-        case failed(String)
-        case timeout
-        case cancelled
-    }
-
-    private func waitUntilReady(item: AVPlayerItem, timeout: TimeInterval) async -> ReadyResult {
-        if item.status == .readyToPlay { return .ready }
-        if item.status == .failed {
-            return .failed(item.error?.localizedDescription ?? "Playback failed")
-        }
-        return await withTaskCancellationHandler {
-            await withCheckedContinuation { (continuation: CheckedContinuation<ReadyResult, Never>) in
-                final class Once: @unchecked Sendable {
-                    private let lock = NSLock()
-                    private var done = false
-                    private let cont: CheckedContinuation<ReadyResult, Never>
-                    var observation: NSKeyValueObservation?
-                    init(_ cont: CheckedContinuation<ReadyResult, Never>) { self.cont = cont }
-                    func finish(_ result: ReadyResult) {
-                        lock.lock()
-                        defer { lock.unlock() }
-                        guard !done else { return }
-                        done = true
-                        observation?.invalidate()
-                        observation = nil
-                        cont.resume(returning: result)
-                    }
-                }
-                let once = Once(continuation)
-                once.observation = item.observe(\.status, options: [.initial, .new]) { observed, _ in
-                    switch observed.status {
-                    case .readyToPlay: once.finish(.ready)
-                    case .failed: once.finish(.failed(observed.error?.localizedDescription ?? "Playback failed"))
-                    default: break
-                    }
-                }
-                Task { @MainActor in self.statusObservation = once.observation }
-                Self.observerQueue.asyncAfter(deadline: .now() + timeout) { once.finish(.timeout) }
-            }
-        } onCancel: {
-            Task { @MainActor in
-                statusObservation?.invalidate()
-                statusObservation = nil
-            }
-        }
-    }
-
-    private func attachObserver(to av: AVPlayer) {
-        removeTimeObserverIfNeeded()
-        let interval = CMTime(seconds: 0.25, preferredTimescale: 600)
-        // userInitiated queue + async MainActor hop avoids UI QoS waiting on Default AV work.
-        let token = av.addPeriodicTimeObserver(forInterval: interval, queue: Self.observerQueue) { [weak av] time in
-            guard let av else { return }
-            let seconds = time.seconds
-            let durationSeconds = av.currentItem?.duration.seconds ?? .nan
-            let playing = av.rate > 0
-            Task { @MainActor [weak av] in
-                guard av != nil else { return }
-                if seconds.isFinite, !seconds.isNaN { current = max(0, seconds) }
-                if durationSeconds.isFinite, !durationSeconds.isNaN, durationSeconds > 0 {
-                    duration = durationSeconds
-                }
-                isPlaying = playing
-                refreshCue()
-            }
-        }
-        timeObserver = token
-        timeObserverPlayer = av
-    }
-
-    private func refreshCue() {
-        guard useExternalSubtitles, !externalCues.isEmpty else {
-            if useExternalSubtitles { currentCueText = "" }
-            return
-        }
-        currentCueText = externalCues.first(where: { current >= $0.start && current <= $0.end })?.text ?? ""
-    }
-
-    private func removeTimeObserverIfNeeded() {
-        if let token = timeObserver, let owner = timeObserverPlayer {
-            owner.removeTimeObserver(token)
-        }
-        timeObserver = nil
-        timeObserverPlayer = nil
-    }
-
-    private func teardownKeepOrientation() {
-        hideTask?.cancel()
-        hideTask = nil
-        statusObservation?.invalidate()
-        statusObservation = nil
-        systemVolumeWriter.stopObserving()
-        systemVolumeWriter.onExternalChange = nil
-        systemVolumeWriter.isAdjusting = false
-        removeTimeObserverIfNeeded()
-        player?.pause()
-        player = nil
-        isPlaying = false
-        isReady = false
-        embeddedSubtitles = []
-        selectedEmbedded = nil
-        subtitleGroup = nil
-        audioGroup = nil
-        audioTracks = []
-        selectedAudio = nil
-        externalCues = []
-        useExternalSubtitles = false
-        currentCueText = ""
-        externalSubtitleName = ""
-    }
-
-    private func teardown() {
-        teardownKeepOrientation()
-        // Deactivate off the main path — sync setActive can hitch the UI.
-        Task { await Self.deactivateAudioSession() }
-    }
-
-    // MARK: - Actions
 
     private func handleCenterTap() {
         guard errorText == nil else { return }
@@ -1111,39 +541,25 @@ struct OpenListMediaPlayerView: View {
         if showControls { scheduleHide() }
     }
 
-    private func togglePlay() {
-        guard let player else { return }
-        if isPlaying {
-            player.pause()
-            isPlaying = false
-            showControls = true
-        } else {
-            player.play()
-            player.rate = rate
-            isPlaying = true
-            scheduleHide()
+    private func scheduleHide() {
+        hideTask?.cancel()
+        guard engine.isPlaying, showControls else { return }
+        hideTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 3_500_000_000)
+            if !Task.isCancelled, engine.isPlaying {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showControls = false
+                }
+            }
         }
-    }
-
-    private func seek(to seconds: Double) {
-        guard let player else { return }
-        let t = safe(seconds, upper: duration > 0 ? duration : max(seconds, 0))
-        player.seek(to: CMTime(seconds: t, preferredTimescale: 600))
-        current = t
-        refreshCue()
-        scheduleHide()
-    }
-
-    private func seek(by delta: Double) {
-        seek(to: current + delta)
     }
 
     private func setVolume(_ v: Float) {
         let clamped = max(0, min(1, v))
         volume = clamped
-        // Keep AVPlayer at full gain so the system slider is the real loudness control.
-        player?.volume = 1.0
         systemVolumeWriter.setVolume(clamped)
+        // Keep VLC at full gain so system volume is the real loudness.
+        engine.player.audio?.volume = 100
     }
 
     private func currentSystemVolume() -> Float {
@@ -1152,6 +568,43 @@ struct OpenListMediaPlayerView: View {
             return max(0, min(1, session))
         }
         return volume
+    }
+
+    private func setBrightness(_ v: Double) {
+        brightness = min(max(v, 0), 1)
+        #if canImport(UIKit)
+        hostScreen?.brightness = CGFloat(brightness)
+        #endif
+    }
+
+    private func rateLabel(_ r: Float) -> String {
+        if abs(r - 1) < 0.01 { return "1×" }
+        if r == Float(Int(r)) { return "\(Int(r))×" }
+        return String(format: "%.2g×", r)
+    }
+
+    private func clock(_ seconds: Double) -> String {
+        guard seconds.isFinite, !seconds.isNaN, seconds >= 0 else { return "--:--" }
+        let total = Int(seconds.rounded(.down))
+        let h = total / 3600
+        let m = (total % 3600) / 60
+        let s = total % 60
+        if h > 0 { return String(format: "%d:%02d:%02d", h, m, s) }
+        return String(format: "%d:%02d", m, s)
+    }
+
+    @MainActor
+    private func openExternal(_ option: ExternalPlayerOption) async {
+        openingExternal = option
+        let ok = await ExternalPlayerRouter.open(player: option, streamURL: url)
+        openingExternal = nil
+        if !ok {
+            ExternalPlayerRouter.copyToPasteboard(url.absoluteString)
+            errorText = String(format: localizer.t.filesPlayerOpenExternalFailed, option.displayName)
+            showExternalFallback = true
+        } else {
+            dismiss()
+        }
     }
 
     private func configureAudioSession() async {
@@ -1164,7 +617,6 @@ struct OpenListMediaPlayerView: View {
         }
     }
 
-    /// Activates the shared session without blocking the main thread.
     private static func activateAudioSession() async throws {
         let session = AVAudioSession.sharedInstance()
         if #available(iOS 27.0, *) {
@@ -1186,88 +638,25 @@ struct OpenListMediaPlayerView: View {
                 }
             }
         } else {
-            // iOS 26: keep sync setActive, but never on the main thread.
             try await Task.detached(priority: .userInitiated) {
                 try AVAudioSession.sharedInstance().setActive(true)
             }.value
         }
     }
 
-    /// Deactivates the shared session without blocking the main thread.
     private static func deactivateAudioSession() async {
         let session = AVAudioSession.sharedInstance()
         if #available(iOS 27.0, *) {
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-                session.deactivate(options: .notifyOthersOnDeactivation) { _, error in
-                    if let error {
-                        AppLogger.shared.error(
-                            "audio session deactivate: \(error.localizedDescription)",
-                            source: "OpenListPlayer"
-                        )
-                    }
+                session.deactivate(options: .notifyOthersOnDeactivation) { _, _ in
                     continuation.resume()
                 }
             }
         } else {
-            do {
-                try await Task.detached(priority: .utility) {
-                    try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-                }.value
-            } catch {
-                AppLogger.shared.error(
-                    "audio session deactivate: \(error.localizedDescription)",
-                    source: "OpenListPlayer"
-                )
-            }
+            _ = try? await Task.detached(priority: .utility) {
+                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            }.value
         }
-    }
-
-    private func setBrightness(_ v: Double) {
-        brightness = min(max(v, 0), 1)
-        #if canImport(UIKit)
-        hostScreen?.brightness = CGFloat(brightness)
-        #endif
-    }
-
-    private func setRate(_ r: Float) {
-        rate = r
-        if isPlaying { player?.rate = r }
-        scheduleHide()
-    }
-
-    private func rateLabel(_ r: Float) -> String {
-        if abs(r - 1) < 0.01 { return "1×" }
-        if r == Float(Int(r)) { return "\(Int(r))×" }
-        return String(format: "%.2g×", r)
-    }
-
-    private func scheduleHide() {
-        hideTask?.cancel()
-        guard isPlaying, showControls else { return }
-        hideTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 3_500_000_000)
-            if !Task.isCancelled, isPlaying {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showControls = false
-                }
-            }
-        }
-    }
-
-    private func safe(_ value: Double, upper: Double) -> Double {
-        guard value.isFinite, !value.isNaN else { return 0 }
-        guard upper.isFinite, !upper.isNaN, upper > 0 else { return max(0, value) }
-        return min(max(0, value), upper)
-    }
-
-    private func clock(_ seconds: Double) -> String {
-        guard seconds.isFinite, !seconds.isNaN, seconds >= 0 else { return "--:--" }
-        let total = Int(seconds.rounded(.down))
-        let h = total / 3600
-        let m = (total % 3600) / 60
-        let s = total % 60
-        if h > 0 { return String(format: "%d:%02d:%02d", h, m, s) }
-        return String(format: "%d:%02d", m, s)
     }
 
     private func applyOrientation(landscape: Bool?) {
@@ -1285,279 +674,312 @@ struct OpenListMediaPlayerView: View {
             if #available(iOS 16.0, *) {
                 scene.requestGeometryUpdate(.iOS(interfaceOrientations: mask)) { _ in }
                 scene.windows.forEach { $0.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations() }
-            } else {
-                let orient: UIInterfaceOrientation = (landscape == false) ? .portrait : .landscapeRight
-                UIDevice.current.setValue(orient.rawValue, forKey: "orientation")
-                UIViewController.attemptRotationToDeviceOrientation()
             }
         }
         #endif
     }
 }
 
-// MARK: - Subtitle cues (SRT / VTT)
+// MARK: - VLC engine
 
-struct SubtitleCue: Sendable {
-    let start: Double
-    let end: Double
-    let text: String
+@MainActor
+final class OpenListVLCEngine: NSObject, ObservableObject, VLCMediaPlayerDelegate {
+    let player: VLCMediaPlayer
 
-    static func parseSRT(_ raw: String) -> [SubtitleCue] {
-        let blocks = raw.replacingOccurrences(of: "\r\n", with: "\n")
-            .components(separatedBy: "\n\n")
-        var cues: [SubtitleCue] = []
-        for block in blocks {
-            let lines = block.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
-            guard lines.count >= 2 else { continue }
-            let timeLine = lines.first(where: { $0.contains("-->") }) ?? ""
-            guard let range = parseTimeRange(timeLine, srt: true) else { continue }
-            let textLines = lines.drop(while: { !$0.contains("-->") }).dropFirst()
-            let text = textLines
-                .map { $0.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression) }
-                .joined(separator: "\n")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            if !text.isEmpty {
-                cues.append(SubtitleCue(start: range.0, end: range.1, text: text))
+    @Published private(set) var isReady = false
+    @Published private(set) var isPlaying = false
+    @Published private(set) var current: Double = 0
+    @Published private(set) var duration: Double = 0
+    @Published private(set) var rate: Float = 1.0
+    @Published private(set) var textTracks: [String] = []
+    @Published private(set) var audioTracks: [String] = []
+    @Published var failedMessage: String?
+
+    private var didAttachSubtitle = false
+
+    override init() {
+        // Network-friendly options for OpenList signed / remote streams.
+        player = VLCMediaPlayer(options: [
+            "--network-caching=1500",
+            "--file-caching=1500",
+            "--live-caching=1500",
+            "--http-reconnect",
+            "--avcodec-hw=any"
+        ])
+        super.init()
+        player.delegate = self
+        player.timeChangeUpdateInterval = 0.5
+        player.audio?.volume = 100
+    }
+
+    func play(url: URL, externalSubtitleURL: URL?) {
+        failedMessage = nil
+        isReady = false
+        isPlaying = false
+        current = 0
+        duration = 0
+        didAttachSubtitle = false
+
+        let media = VLCMedia(url: url)
+        // Prefer software fallback path when hardware decode fails on odd streams.
+        media?.addOption(":http-user-agent=Homelab/iOS")
+        player.media = media
+        player.play()
+
+        if let externalSubtitleURL {
+            // Attach after play starts so the input exists.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+                guard let self, !self.didAttachSubtitle else { return }
+                self.didAttachSubtitle = true
+                _ = self.player.addPlaybackSlave(
+                    externalSubtitleURL,
+                    type: .subtitle,
+                    enforce: true
+                )
+                self.refreshTracks()
             }
         }
-        return cues
     }
 
-    static func parseVTT(_ raw: String) -> [SubtitleCue] {
-        let body = raw.replacingOccurrences(of: "\r\n", with: "\n")
-        let blocks = body.components(separatedBy: "\n\n")
-        var cues: [SubtitleCue] = []
-        for block in blocks {
-            if block.hasPrefix("WEBVTT") { continue }
-            let lines = block.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
-            guard let timeLine = lines.first(where: { $0.contains("-->") }) else { continue }
-            guard let range = parseTimeRange(timeLine, srt: false) else { continue }
-            let textLines = lines.drop(while: { !$0.contains("-->") }).dropFirst()
-            let text = textLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
-            if !text.isEmpty {
-                cues.append(SubtitleCue(start: range.0, end: range.1, text: text))
+    func stop() {
+        player.stop()
+        player.drawable = nil
+        isPlaying = false
+        isReady = false
+    }
+
+    func togglePlay() {
+        if player.isPlaying {
+            player.pause()
+            isPlaying = false
+        } else {
+            player.play()
+            player.rate = rate
+            isPlaying = true
+        }
+    }
+
+    func jump(by seconds: Double) {
+        player.jump(withOffset: Int32(seconds * 1000))
+    }
+
+    func seek(toFraction fraction: Double) {
+        let f = min(max(fraction, 0), 1)
+        player.position = f
+        if duration > 0 {
+            current = duration * f
+        }
+    }
+
+    func setRate(_ r: Float) {
+        rate = r
+        player.rate = r
+    }
+
+    func selectTextTrack(at index: Int) {
+        player.selectTrack(at: index, type: .text)
+    }
+
+    func deselectSubtitles() {
+        player.deselectAllTextTracks()
+    }
+
+    func selectAudioTrack(at index: Int) {
+        player.selectTrack(at: index, type: .audio)
+    }
+
+    private func refreshTracks() {
+        textTracks = player.textTracks.map { trackDisplayName($0) }
+        audioTracks = player.audioTracks.map { trackDisplayName($0) }
+    }
+
+    private func trackDisplayName(_ track: VLCMediaPlayer.Track) -> String {
+        let name = track.trackName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !name.isEmpty { return name }
+        let id = track.trackId.trimmingCharacters(in: .whitespacesAndNewlines)
+        return id.isEmpty ? "Track" : id
+    }
+
+    // MARK: VLCMediaPlayerDelegate
+
+    nonisolated func mediaPlayerStateChanged(_ newState: VLCMediaPlayerState) {
+        Task { @MainActor in
+            switch newState {
+            case .playing:
+                self.isReady = true
+                self.isPlaying = true
+                self.refreshDuration()
+                self.refreshTracks()
+            case .paused:
+                self.isPlaying = false
+                self.isReady = true
+            case .error:
+                self.failedMessage = "Playback failed"
+                self.isPlaying = false
+            case .stopped, .stopping:
+                self.isPlaying = false
+            default:
+                // Opening / buffering / unknown — keep spinner until .playing
+                break
             }
         }
-        return cues
     }
 
-    /// Rough ASS/SSA: Dialogue lines → simple timed cues (style ignored).
-    static func parseASS(_ raw: String) -> [SubtitleCue] {
-        var cues: [SubtitleCue] = []
-        let lines = raw.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
-        for line in lines where line.hasPrefix("Dialogue:") {
-            // Dialogue: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
-            let body = String(line.dropFirst("Dialogue:".count)).trimmingCharacters(in: .whitespaces)
-            let parts = body.split(separator: ",", maxSplits: 9, omittingEmptySubsequences: false).map(String.init)
-            guard parts.count >= 10 else { continue }
-            guard let start = parseASSTime(parts[1]), let end = parseASSTime(parts[2]) else { continue }
-            var text = parts[9]
-                .replacingOccurrences(of: "\\N", with: "\n")
-                .replacingOccurrences(of: "\\n", with: "\n")
-            text = text.replacingOccurrences(of: "\\{[^}]*\\}", with: "", options: .regularExpression)
-            text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !text.isEmpty {
-                cues.append(SubtitleCue(start: start, end: end, text: text))
+    nonisolated func mediaPlayerTimeChanged(_ aNotification: Notification) {
+        Task { @MainActor in
+            let ms = Double(self.player.time.intValue)
+            if ms.isFinite, ms >= 0 {
+                self.current = ms / 1000.0
+            }
+            self.refreshDuration()
+            self.isPlaying = self.player.isPlaying
+            if self.player.isPlaying {
+                self.isReady = true
             }
         }
-        return cues
     }
 
-    private static func parseASSTime(_ raw: String) -> Double? {
-        // H:MM:SS.cs
-        let bits = raw.trimmingCharacters(in: .whitespaces).split(separator: ":").map(String.init)
-        guard bits.count == 3,
-              let h = Double(bits[0]),
-              let m = Double(bits[1]),
-              let s = Double(bits[2]) else { return nil }
-        return h * 3600 + m * 60 + s
-    }
-
-    private static func parseTimeRange(_ line: String, srt: Bool) -> (Double, Double)? {
-        let parts = line.components(separatedBy: "-->")
-        guard parts.count >= 2 else { return nil }
-        let startRaw = parts[0].trimmingCharacters(in: .whitespaces)
-        let endRaw = parts[1].split(separator: " ").first.map(String.init) ?? parts[1]
-        guard let s = parseTimestamp(startRaw, srt: srt),
-              let e = parseTimestamp(endRaw.trimmingCharacters(in: .whitespaces), srt: srt) else { return nil }
-        return (s, e)
-    }
-
-    private static func parseTimestamp(_ raw: String, srt: Bool) -> Double? {
-        // 00:00:01,000 or 00:00:01.000 or 00:01.000
-        let cleaned = raw.replacingOccurrences(of: ",", with: ".")
-        let bits = cleaned.split(separator: ":").map(String.init)
-        guard bits.count == 2 || bits.count == 3 else { return nil }
-        if bits.count == 2 {
-            guard let m = Double(bits[0]), let s = Double(bits[1]) else { return nil }
-            return m * 60 + s
+    nonisolated func mediaPlayerLengthChanged(_ length: Int64) {
+        Task { @MainActor in
+            if length > 0 {
+                self.duration = Double(length) / 1000.0
+            }
         }
-        guard let h = Double(bits[0]), let m = Double(bits[1]), let s = Double(bits[2]) else { return nil }
-        return h * 3600 + m * 60 + s
+    }
+
+    nonisolated func mediaPlayerBufferingChanged(_ progress: Float) {
+        Task { @MainActor in
+            if progress >= 1.0, self.player.isPlaying {
+                self.isReady = true
+            }
+        }
+    }
+
+    nonisolated func mediaPlayerTrackAdded(_ trackId: String, trackType: VLCMedia.TrackType) {
+        Task { @MainActor in
+            self.refreshTracks()
+        }
+    }
+
+    private func refreshDuration() {
+        if let media = player.media {
+            let ms = media.length.intValue
+            if ms > 0 {
+                duration = Double(ms) / 1000.0
+            }
+        }
+    }
+}
+
+// MARK: - Video host
+
+/// UIView that VLC draws into via `drawable`.
+struct OpenListVLCVideoView: UIViewRepresentable {
+    let player: VLCMediaPlayer
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.backgroundColor = .black
+        view.clipsToBounds = true
+        // Defer drawable assignment until layout has a non-zero size.
+        DispatchQueue.main.async {
+            player.drawable = view
+            player.videoFitMode = .smaller
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        if player.drawable as? UIView !== uiView {
+            player.drawable = uiView
+        }
+    }
+
+    static func dismantleUIView(_ uiView: UIView, coordinator: ()) {
+        // Caller owns player lifecycle; clear drawable only if still bound here.
+        _ = uiView
     }
 }
 
 // MARK: - Orientation lock
 
-@MainActor
 enum OpenListOrientationLock {
-    static var mask: UIInterfaceOrientationMask = [.portrait, .landscapeLeft, .landscapeRight, .portraitUpsideDown]
+    nonisolated(unsafe) static var mask: UIInterfaceOrientationMask = [
+        .portrait, .landscapeLeft, .landscapeRight, .portraitUpsideDown
+    ]
 }
 
 // MARK: - System volume (MPVolumeView)
 
-/// Holds a reference to the slider inside a hidden `MPVolumeView` so gestures can write system volume.
 @MainActor
 final class OpenListSystemVolumeWriter {
-    weak var slider: UISlider?
-    /// True while the in-player vertical drag is writing volume (ignore echo from KVO).
     var isAdjusting = false
-    /// Fired on the main actor when hardware buttons (or other apps) change output volume.
     var onExternalChange: ((Float) -> Void)?
 
+    private var slider: UISlider?
     private var observation: NSKeyValueObservation?
+
+    func attach(slider: UISlider) {
+        self.slider = slider
+    }
 
     func setVolume(_ value: Float) {
         let clamped = max(0, min(1, value))
-        guard let slider else { return }
-        // Only write when changed to reduce system volume HUD spam / work.
-        if abs(slider.value - clamped) < 0.001 { return }
-        slider.value = clamped
+        slider?.value = clamped
     }
 
     func startObserving() {
         observation?.invalidate()
+        // Observe on main; AVAudioSession delivers KVO there for outputVolume.
         observation = AVAudioSession.sharedInstance().observe(\.outputVolume, options: [.new]) { [weak self] _, change in
-            guard let next = change.newValue else { return }
             Task { @MainActor in
-                guard let self, !self.isAdjusting else { return }
-                self.onExternalChange?(max(0, min(1, next)))
+                guard let self, !self.isAdjusting, let v = change.newValue else { return }
+                self.onExternalChange?(v)
             }
         }
     }
 
-    func stopObserving() {
+    deinit {
         observation?.invalidate()
-        observation = nil
     }
 }
 
-/// Embeds a zero-size `MPVolumeView` so we can drive the system volume slider.
 private struct OpenListSystemVolumeView: UIViewRepresentable {
     let writer: OpenListSystemVolumeWriter
 
     func makeUIView(context: Context) -> MPVolumeView {
-        let view = MPVolumeView(frame: CGRect(x: -1000, y: -1000, width: 1, height: 1))
+        let view = MPVolumeView(frame: .zero)
         view.showsVolumeSlider = true
-        view.alpha = 0.01
-        view.isUserInteractionEnabled = false
+        // Hide the system route button; we only need the internal slider.
+        view.showsRouteButton = false
         DispatchQueue.main.async {
-            self.bindSlider(in: view, attempt: 0)
+            if let slider = view.subviews.compactMap({ $0 as? UISlider }).first {
+                writer.attach(slider: slider)
+            }
         }
         return view
     }
 
-    func updateUIView(_ uiView: MPVolumeView, context: Context) {
-        if writer.slider == nil {
-            DispatchQueue.main.async {
-                self.bindSlider(in: uiView, attempt: 0)
-            }
-        }
-    }
-
-    private func bindSlider(in volumeView: MPVolumeView, attempt: Int) {
-        if let slider = volumeView.subviews.compactMap({ $0 as? UISlider }).first {
-            writer.slider = slider
-            return
-        }
-        // Slider is created lazily after the volume view is in a window.
-        guard attempt < 12 else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            self.bindSlider(in: volumeView, attempt: attempt + 1)
-        }
-    }
+    func updateUIView(_ uiView: MPVolumeView, context: Context) {}
 }
 
-// MARK: - Layer host
+// MARK: - Host screen
 
-#if canImport(UIKit)
-/// Reads `view.window?.windowScene?.screen` — never `UIScreen.main` (deprecated iOS 26).
 private struct OpenListHostScreenReader: UIViewRepresentable {
-    let onResolve: (UIScreen) -> Void
+    let onScreen: (UIScreen) -> Void
 
-    func makeUIView(context: Context) -> HostView {
-        let view = HostView()
-        view.onResolve = onResolve
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = .clear
         return view
     }
 
-    func updateUIView(_ uiView: HostView, context: Context) {
-        uiView.onResolve = onResolve
-        uiView.publishIfPossible()
-    }
-
-    final class HostView: UIView {
-        var onResolve: ((UIScreen) -> Void)?
-
-        override func didMoveToWindow() {
-            super.didMoveToWindow()
-            publishIfPossible()
-        }
-
-        func publishIfPossible() {
-            guard let screen = window?.windowScene?.screen else { return }
-            onResolve?(screen)
-        }
-    }
-}
-
-struct OpenListAVPlayerLayerView: UIViewRepresentable {
-    let player: AVPlayer
-    var onLayerReady: ((AVPlayerLayer) -> Void)? = nil
-
-    func makeUIView(context: Context) -> PlayerUIView {
-        let view = PlayerUIView()
-        view.playerLayer.videoGravity = .resizeAspect
-        view.backgroundColor = .black
-        view.onLayerReady = onLayerReady
-        view.attach(player: player)
-        return view
-    }
-
-    func updateUIView(_ uiView: PlayerUIView, context: Context) {
-        uiView.onLayerReady = onLayerReady
-        uiView.attach(player: player)
-    }
-
-    final class PlayerUIView: UIView {
-        override class var layerClass: AnyClass { AVPlayerLayer.self }
-        var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
-        private weak var boundPlayer: AVPlayer?
-        var onLayerReady: ((AVPlayerLayer) -> Void)?
-
-        func attach(player: AVPlayer) {
-            guard boundPlayer !== player else {
-                onLayerReady?(playerLayer)
-                return
-            }
-            boundPlayer = player
-            // Defer off the interactive frame to reduce QoS inversion with AVFoundation.
-            Task { @MainActor [weak self] in
-                guard let self, self.boundPlayer === player else { return }
-                self.playerLayer.player = player
-                self.onLayerReady?(self.playerLayer)
+    func updateUIView(_ uiView: UIView, context: Context) {
+        DispatchQueue.main.async {
+            if let screen = uiView.window?.windowScene?.screen {
+                onScreen(screen)
             }
         }
     }
 }
-#else
-private struct OpenListHostScreenReader: View {
-    let onResolve: (Any) -> Void
-    var body: some View { EmptyView() }
-}
-
-struct OpenListAVPlayerLayerView: View {
-    let player: AVPlayer
-    var body: some View { VideoPlayer(player: player) }
-}
-#endif

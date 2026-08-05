@@ -235,13 +235,7 @@ struct OpenListFilePreviewView: View {
                         .padding(.horizontal, 16)
                         .shadow(radius: 2)
 
-                    if OpenListMediaPlayerView.isBuiltInUnfriendlyExtension(item.fileExtension) {
-                        Text(localizer.t.filesPlayerUnsupportedFormatHint)
-                            .font(.caption)
-                            .foregroundStyle(.white.opacity(0.8))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    } else if streamURL == nil, !isLoading {
+                    if streamURL == nil, !isLoading {
                         Text(localizer.t.filesNoPlayableURL)
                             .font(.caption)
                             .foregroundStyle(.white.opacity(0.75))

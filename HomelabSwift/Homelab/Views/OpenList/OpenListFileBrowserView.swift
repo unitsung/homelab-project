@@ -1232,28 +1232,12 @@ struct OpenListFileBrowserView: View {
 
     @MainActor
     private func openBuiltInPlayer(_ item: FileItem) async {
-        // Pre-check extension before opening the player (avoid dead-end loading page for MKV/AVI…).
-        let ext = item.fileExtension.lowercased()
-        if OpenListMediaPlayerView.isBuiltInUnfriendlyExtension(ext) {
-            showToast(localizer.t.filesPlayerUnsupportedFormatHint)
-            playerPickerItem = item
-            showPlayerPicker = true
-            return
-        }
-
+        // VLCKit handles MKV/AVI/etc. — no longer bounce users to external apps for those.
         do {
             let detail = try await ensureDetail(for: item)
             // Prefer OpenList /d stream for media (sign-auth). contentURL (/p) as fallback.
             guard let url = detail.playURL ?? detail.contentURL else {
                 showToast(localizer.t.filesNoPlayableURL)
-                return
-            }
-            // Also check URL path extension (some servers rewrite names).
-            let urlExt = url.pathExtension.lowercased()
-            if OpenListMediaPlayerView.isBuiltInUnfriendlyExtension(urlExt) {
-                showToast(localizer.t.filesPlayerUnsupportedFormatHint)
-                playerPickerItem = item
-                showPlayerPicker = true
                 return
             }
             var subtitleURL: URL?
