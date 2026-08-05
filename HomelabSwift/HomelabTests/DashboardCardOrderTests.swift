@@ -32,9 +32,9 @@ final class DashboardCardOrderTests: XCTestCase {
         XCTAssertEqual(result.filter { $0 == .hero }.count, 1)
     }
 
-    func testSpansFullWidthAllCards() {
-        for id in DashboardCardID.allCases {
-            XCTAssertTrue(id.spansFullWidth, "\(id.rawValue) should span full width")
-        }
+    func testSpansFullWidthHeroOnly() {
+        XCTAssertTrue(DashboardCardID.hero.spansFullWidth)
+        XCTAssertFalse(DashboardCardID.docker.spansFullWidth)
+        XCTAssertFalse(DashboardCardID.qbittorrent.spansFullWidth)
     }
 }

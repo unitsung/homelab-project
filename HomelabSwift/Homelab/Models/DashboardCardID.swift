@@ -8,8 +8,13 @@ enum DashboardCardID: String, CaseIterable, Codable, Identifiable, Hashable, Sen
 
     var id: String { rawValue }
 
-    /// Home overview cards each occupy a full row (hero / Docker / qBittorrent).
-    var spansFullWidth: Bool { true }
+    /// Hero (Beszel overview) is full-width; Docker + qBittorrent share a two-column row.
+    var spansFullWidth: Bool {
+        switch self {
+        case .hero: return true
+        case .docker, .qbittorrent: return false
+        }
+    }
 
     /// Default display order for the home metric/overview strip.
     static var defaultOrder: [DashboardCardID] { Array(allCases) }

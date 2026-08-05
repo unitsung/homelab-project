@@ -111,14 +111,51 @@ struct HomeView: View {
     }
 
     /// Overview cards driven by `settingsStore.dashboardCardOrder` (not a hard-coded layout).
-    /// Each card is full-width on its own row (Beszel overview / Docker / qBittorrent).
+    /// Hero is full-width; Docker and qBittorrent pair into a two-column row when adjacent.
     private var dashboardCards: some View {
-        VStack(spacing: 12) {
-            ForEach(settingsStore.dashboardCardOrder) { id in
-                dashboardCard(for: id)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+        let rows = Self.packDashboardRows(settingsStore.dashboardCardOrder)
+        return VStack(spacing: 12) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                switch row.count {
+                case 1:
+                    dashboardCard(for: row[0])
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                default:
+                    HStack(alignment: .top, spacing: 12) {
+                        ForEach(row) { id in
+                            dashboardCard(for: id)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                }
             }
         }
+    }
+
+    /// Pack ordered card IDs into rows: full-width alone; half-width pair left-to-right.
+    private static func packDashboardRows(_ order: [DashboardCardID]) -> [[DashboardCardID]] {
+        var rows: [[DashboardCardID]] = []
+        var halfBuffer: [DashboardCardID] = []
+
+        func flushHalf() {
+            guard !halfBuffer.isEmpty else { return }
+            rows.append(halfBuffer)
+            halfBuffer.removeAll(keepingCapacity: true)
+        }
+
+        for id in order {
+            if id.spansFullWidth {
+                flushHalf()
+                rows.append([id])
+            } else {
+                halfBuffer.append(id)
+                if halfBuffer.count == 2 {
+                    flushHalf()
+                }
+            }
+        }
+        flushHalf()
+        return rows
     }
 
     @ViewBuilder
