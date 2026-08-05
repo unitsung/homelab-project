@@ -276,7 +276,7 @@ struct ArcaneContainerDetailView: View {
     // MARK: - Tabs
 
     private var tabBar: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 8) {
             ForEach(Tab.allCases) { tab in
                 Button {
                     HapticManager.light()
@@ -284,15 +284,11 @@ struct ArcaneContainerDetailView: View {
                 } label: {
                     Text(tab.title(using: localizer.translations))
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(activeTab == tab ? arcaneColor : AppTheme.textSecondary)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(activeTab == tab ? arcaneColor.opacity(0.12) : Color.clear)
                 }
-                .buttonStyle(.plain)
+                .glassChipStyle(selected: activeTab == tab, tint: arcaneColor)
             }
         }
-        .glassCard(cornerRadius: 14)
     }
 
     @ViewBuilder
@@ -381,7 +377,7 @@ struct ArcaneContainerDetailView: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .glassCard(cornerRadius: 10, tint: arcaneColor.opacity(0.08))
     }
 
     private func statPill(_ title: String, _ value: String, _ color: Color) -> some View {
@@ -395,7 +391,7 @@ struct ArcaneContainerDetailView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .glassCard(cornerRadius: 8, tint: color.opacity(0.14))
     }
 
     @MainActor

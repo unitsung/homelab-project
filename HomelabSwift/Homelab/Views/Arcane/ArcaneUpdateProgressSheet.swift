@@ -124,7 +124,10 @@ struct ArcaneUpdateProgressSheet: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(AppTheme.surface)
+                        .glassCard(
+                            cornerRadius: 0,
+                            tint: (session.didFail ? AppTheme.danger : AppTheme.running).opacity(0.14)
+                        )
                 }
             }
             .navigationTitle(session.title)
@@ -181,7 +184,7 @@ struct ArcaneUpdateProgressSheet: View {
                     .padding(.bottom, 8)
             }
         }
-        .background(AppTheme.surface)
+        .glassCard(cornerRadius: 0, tint: arcaneAccent.opacity(0.1))
     }
 
     private var arcaneAccent: Color { ServiceType.arcane.colors.primary }

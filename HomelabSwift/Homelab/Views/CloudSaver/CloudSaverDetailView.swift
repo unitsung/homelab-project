@@ -145,8 +145,7 @@ struct CloudSaverDetailView: View {
             Spacer(minLength: 0)
         }
         .padding(12)
-        .background(AppTheme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .glassCard(cornerRadius: 14, tint: accent.opacity(0.08))
     }
 
     private var metaSection: some View {
@@ -168,8 +167,7 @@ struct CloudSaverDetailView: View {
         .foregroundStyle(AppTheme.textMuted)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(AppTheme.surface.opacity(0.5))
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .glassCard(cornerRadius: 10, tint: accent.opacity(0.06))
     }
 
     private var linkSection: some View {
@@ -183,8 +181,7 @@ struct CloudSaverDetailView: View {
                 .textSelection(.enabled)
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .glassCard(cornerRadius: 10, tint: accent.opacity(0.06))
 
             HStack(spacing: 10) {
                 Button {
@@ -195,7 +192,7 @@ struct CloudSaverDetailView: View {
                     Label(localizer.t.csCopyLink, systemImage: "doc.on.doc")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
 
                 if let url = URL(string: item.shareURL), item.cloudType != .unknown {
                     Button {
@@ -204,7 +201,7 @@ struct CloudSaverDetailView: View {
                         Label(localizer.t.csOpenInBrowser, systemImage: "safari")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.glass)
                 }
             }
 
@@ -248,8 +245,7 @@ struct CloudSaverDetailView: View {
         .font(.subheadline.weight(.medium))
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppTheme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .glassCard(cornerRadius: 10, tint: accent.opacity(0.08))
     }
 
     // MARK: - Path (browse / preset / custom)
@@ -277,8 +273,7 @@ struct CloudSaverDetailView: View {
                     }
                 }
                 .padding(12)
-                .background(AppTheme.surface.opacity(0.5))
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .glassCard(cornerRadius: 10, tint: accent.opacity(0.06))
             }
         }
     }
@@ -291,9 +286,8 @@ struct CloudSaverDetailView: View {
                 } label: {
                     Label(localizer.t.csWantDefaultFolder, systemImage: "heart.fill")
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
                 .tint(accent)
                 .disabled(isSaving || isTransferred || health.isInvalid || settings.defaultFolder(for: .cloud115) == nil)
             }
@@ -311,10 +305,9 @@ struct CloudSaverDetailView: View {
                         .font(.headline)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(accent.opacity(item.cloudType == .cloud115 ? 0.85 : 1))
+            .buttonStyle(.glassProminent)
+            .tint(accent)
             .disabled(isSaving || isTransferred || health.isInvalid)
         }
     }
@@ -370,9 +363,8 @@ struct CloudSaverDetailView: View {
                             .font(.headline)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
                 .tint(accent)
                 .disabled(isSaving || isTransferred || !canSaveWithSelectedFolder)
 

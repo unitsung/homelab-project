@@ -615,7 +615,7 @@ struct ArcaneDashboard: View {
                             }
                             .font(.caption.weight(.semibold))
                         }
-                        .applyArcaneFilterChipStyle(selected: filter == item, tint: arcaneColor)
+                        .glassChipStyle(selected: filter == item, tint: arcaneColor)
                     }
                 }
             }
@@ -684,7 +684,7 @@ struct ArcaneDashboard: View {
                                     .foregroundStyle(AppTheme.warning)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(AppTheme.warning.opacity(0.15), in: Capsule())
+                                    .glassCard(cornerRadius: 20, tint: AppTheme.warning.opacity(0.2))
                             }
                         }
                         Text(container.image)
@@ -1271,18 +1271,6 @@ struct ArcaneDashboard: View {
     }
 }
 
-private extension View {
-    /// Selected filters use glassProminent; others use glass — keeps Liquid Glass consistent.
-    @ViewBuilder
-    func applyArcaneFilterChipStyle(selected: Bool, tint: Color) -> some View {
-        if selected {
-            self.buttonStyle(.glassProminent).tint(tint).controlSize(.small)
-        } else {
-            self.buttonStyle(.glass).tint(tint).controlSize(.small)
-        }
-    }
-}
-
 // MARK: - Routes
 
 enum ArcaneRoute: Hashable {
@@ -1341,7 +1329,7 @@ private struct ArcaneImagesSheet: View {
                                         .foregroundStyle(AppTheme.warning)
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
-                                        .background(AppTheme.warning.opacity(0.15), in: Capsule())
+                                        .glassCard(cornerRadius: 20, tint: AppTheme.warning.opacity(0.2))
                                 }
                             }
                             HStack {

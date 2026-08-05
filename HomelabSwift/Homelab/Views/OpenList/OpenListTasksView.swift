@@ -250,10 +250,10 @@ struct OpenListTasksView: View {
                         if !task.creator.isEmpty {
                             Text(task.creator.uppercased())
                                 .font(.caption2.weight(.bold))
+                                .foregroundStyle(serviceColor)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
-                                .background(Color(hex: "#A78BFA").opacity(0.22), in: Capsule())
-                                .foregroundStyle(Color(hex: "#7C3AED"))
+                                .glassCard(cornerRadius: 20, tint: serviceColor.opacity(0.18))
                         }
                         stateBadge(task)
                         Spacer(minLength: 0)
@@ -376,12 +376,13 @@ struct OpenListTasksView: View {
     }
 
     private func stateBadge(_ task: OpenListTaskInfo) -> some View {
-        Text(stateLabel(task.state))
+        let color = stateColor(task.state)
+        return Text(stateLabel(task.state))
             .font(.caption2.weight(.semibold))
+            .foregroundStyle(color)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(stateColor(task.state).opacity(0.15), in: Capsule())
-            .foregroundStyle(stateColor(task.state))
+            .glassCard(cornerRadius: 20, tint: color.opacity(0.18))
     }
 
     private func progressTint(for task: OpenListTaskInfo) -> Color {

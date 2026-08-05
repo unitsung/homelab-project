@@ -210,13 +210,8 @@ struct CloudSaverDashboard: View {
         } label: {
             Text(chip.title(using: localizer.translations))
                 .font(.caption.weight(.semibold))
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .foregroundStyle(selected ? Color.white : Color.primary)
-                .background(selected ? accent : AppTheme.surface)
-                .clipShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .glassChipStyle(selected: selected, tint: accent)
     }
 
     // MARK: - Search
@@ -228,20 +223,18 @@ struct CloudSaverDashboard: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .padding(12)
-                    .background(AppTheme.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .glassCard(cornerRadius: 12, tint: accent.opacity(0.08))
                     .onSubmit { Task { await search(reset: true) } }
 
                 Button {
                     Task { await search(reset: true) }
                 } label: {
                     Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.white)
+                        .font(.body.weight(.semibold))
                         .frame(width: 44, height: 44)
-                        .background(accent)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .opacity(isSearching ? 0.6 : 1)
                 }
+                .buttonStyle(.glassProminent)
+                .tint(accent)
                 .disabled(isSearching || keyword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
 
@@ -319,9 +312,8 @@ struct CloudSaverDashboard: View {
                                             .font(.caption.weight(.semibold))
                                     }
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 8)
                                 }
-                                .buttonStyle(.borderedProminent)
+                                .buttonStyle(.glassProminent)
                                 .tint(accent)
                                 .disabled(
                                     transferringIds.contains(item.id)
@@ -344,8 +336,9 @@ struct CloudSaverDashboard: View {
                                 .font(.subheadline.weight(.semibold))
                         }
                     }
+                    .buttonStyle(.glass)
+                    .tint(accent)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
                 }
             }
         }
@@ -753,11 +746,11 @@ struct CloudSaverPosterCell: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .top)
-        .background(AppTheme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+        .glassCard(cornerRadius: 14, tint: ServiceType.cloudsaver.colors.primary.opacity(0.06))
     }
 }
+
+
 
 // MARK: - Search filter / sort
 

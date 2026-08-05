@@ -126,11 +126,7 @@ struct QbittorrentDashboard: View {
                     .font(.body.monospaced())
                     .frame(minHeight: 140)
                     .padding(8)
-                    .background(AppTheme.surface.opacity(0.9), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
-                    )
+                    .glassCard(cornerRadius: 12, tint: AppTheme.primary.opacity(0.08))
 
                 if let addValidationError {
                     Text(addValidationError)
@@ -209,10 +205,13 @@ struct QbittorrentDashboard: View {
                 Spacer()
                 Text(connectionLabel(transferInfo.connection_status))
                     .font(.caption.weight(.heavy))
+                    .foregroundStyle(transferInfo.connection_status.lowercased() == "connected" ? AppTheme.running : AppTheme.warning)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(transferInfo.connection_status.lowercased() == "connected" ? AppTheme.running.opacity(0.15) : AppTheme.warning.opacity(0.15), in: Capsule())
-                    .foregroundStyle(transferInfo.connection_status.lowercased() == "connected" ? AppTheme.running : AppTheme.warning)
+                    .glassCard(
+                        cornerRadius: 20,
+                        tint: (transferInfo.connection_status.lowercased() == "connected" ? AppTheme.running : AppTheme.warning).opacity(0.18)
+                    )
             }
 
             HStack(spacing: 16) {
@@ -263,19 +262,17 @@ struct QbittorrentDashboard: View {
             || text.localizedCaseInsensitiveContains("error")
             || text.contains("失败")
             || text.contains("错误")
+        let tint = isError ? AppTheme.danger : AppTheme.running
         return HStack(spacing: 8) {
             Image(systemName: isError ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
-                .foregroundStyle(isError ? AppTheme.danger : AppTheme.running)
+                .foregroundStyle(tint)
             Text(text)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(isError ? AppTheme.danger : AppTheme.running)
+                .foregroundStyle(tint)
             Spacer()
         }
         .padding(12)
-        .background(
-            (isError ? AppTheme.danger : AppTheme.running).opacity(0.12),
-            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-        )
+        .glassCard(cornerRadius: 10, tint: tint.opacity(0.2))
     }
 
     private var filterSection: some View {
@@ -327,13 +324,14 @@ struct QbittorrentDashboard: View {
                 } label: {
                     Text(isSelecting ? localizer.t.done : localizer.t.qbSelect)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(AppTheme.primary)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.glass)
+                .tint(AppTheme.primary)
+                .controlSize(.small)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .glassCard(cornerRadius: 12, tint: AppTheme.primary.opacity(0.06))
         }
         .padding(.top, 8)
     }
@@ -349,21 +347,27 @@ struct QbittorrentDashboard: View {
     }
 
     private var selectionBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Text(String(format: localizer.t.qbSelectedCount, selectedHashes.count))
                 .font(.subheadline.weight(.semibold))
             Spacer()
             Button(localizer.t.qbResumeSelected) {
                 Task { await batchControl(resume: true) }
             }
+            .buttonStyle(.glass)
+            .tint(AppTheme.running)
             .disabled(selectedHashes.isEmpty || isRunningTorrentAction)
             Button(localizer.t.qbPauseSelected) {
                 Task { await batchControl(resume: false) }
             }
+            .buttonStyle(.glass)
+            .tint(AppTheme.warning)
             .disabled(selectedHashes.isEmpty || isRunningTorrentAction)
             Button(localizer.t.qbDeleteSelected, role: .destructive) {
                 Task { await batchDelete(deleteFiles: false) }
             }
+            .buttonStyle(.glass)
+            .tint(AppTheme.danger)
             .disabled(selectedHashes.isEmpty || isRunningTorrentAction)
         }
         .font(.caption.weight(.semibold))
@@ -460,7 +464,7 @@ struct QbittorrentDashboard: View {
                 .font(.body.weight(.semibold))
                 .foregroundStyle(color)
                 .frame(width: 34, height: 34)
-                .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .glassCard(cornerRadius: 10, tint: color.opacity(0.16))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
@@ -504,11 +508,10 @@ struct QbittorrentDashboard: View {
                     }
                 } label: {
                     Image(systemName: "plus.circle.fill")
-                        .foregroundStyle(AppTheme.primary)
-                        .padding(8)
-                        .background(AppTheme.primary.opacity(0.15), in: Circle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.glassProminent)
+                .tint(AppTheme.primary)
+                .controlSize(.small)
                 .accessibilityLabel(arr.addTorrent)
                 .disabled(isRunningTorrentAction)
 
@@ -531,11 +534,10 @@ struct QbittorrentDashboard: View {
                     }
                 } label: {
                     Image(systemName: "speedometer")
-                        .foregroundStyle(AppTheme.info)
-                        .padding(8)
-                        .background(AppTheme.info.opacity(0.15), in: Circle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.glass)
+                .tint(AppTheme.info)
+                .controlSize(.small)
                 .disabled(isRunningTorrentAction)
 
                 Button {
@@ -557,14 +559,13 @@ struct QbittorrentDashboard: View {
                     }
                 } label: {
                     Image(systemName: "play.fill")
-                        .foregroundStyle(AppTheme.running)
-                        .padding(8)
-                        .background(AppTheme.running.opacity(0.15), in: Circle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.glass)
+                .tint(AppTheme.running)
+                .controlSize(.small)
                 .disabled(isRunningTorrentAction)
-                .padding(.horizontal, 4)
-                
+                .padding(.horizontal, 2)
+
                 Button {
                     Task {
                         guard !isRunningTorrentAction else { return }
@@ -584,11 +585,10 @@ struct QbittorrentDashboard: View {
                     }
                 } label: {
                     Image(systemName: "pause.fill")
-                        .foregroundStyle(AppTheme.warning)
-                        .padding(8)
-                        .background(AppTheme.warning.opacity(0.15), in: Circle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.glass)
+                .tint(AppTheme.warning)
+                .controlSize(.small)
                 .disabled(isRunningTorrentAction)
             }
             .padding(.bottom, 8)
@@ -760,7 +760,7 @@ struct QbittorrentDashboard: View {
                             .foregroundStyle(AppTheme.primary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(AppTheme.primary.opacity(0.12), in: Capsule())
+                            .glassCard(cornerRadius: 20, tint: AppTheme.primary.opacity(0.16))
                     }
                     if !tags.isEmpty {
                         Text(tags)
@@ -1003,7 +1003,7 @@ private struct QbittorrentTorrentDetailSheet: View {
                             .foregroundStyle(AppTheme.primary)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
-                            .background(AppTheme.primary.opacity(0.12), in: Capsule())
+                            .glassCard(cornerRadius: 20, tint: AppTheme.primary.opacity(0.16))
                     }
                     if let tags = torrent.tags, !tags.isEmpty {
                         Text(tags)
