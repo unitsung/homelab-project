@@ -136,7 +136,7 @@ struct ArcaneContainerDetailView: View {
         } message: {
             Text(actionError ?? "")
         }
-        .confirmationDialog(localizer.t.delete, isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+        .alert(localizer.t.delete, isPresented: $showDeleteConfirm) {
             Button(localizer.t.delete, role: .destructive) {
                 Task { await deleteContainer() }
             }
@@ -512,12 +512,15 @@ struct ArcaneContainerDetailView: View {
     private var terminalFullscreenView: some View {
         NavigationStack {
             terminalChrome(minHeight: 480, showFullscreenButton: false)
-                .padding(16)
-                .background(AppTheme.background.ignoresSafeArea())
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                // Respect Dynamic Island / home indicator (iPhone 17 Pro etc.).
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(AppTheme.background)
                 .navigationTitle(localizer.t.arcaneTabExec)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
+                    ToolbarItem(placement: .topBarLeading) {
                         Button(localizer.t.close) { showTerminalFullscreen = false }
                     }
                 }

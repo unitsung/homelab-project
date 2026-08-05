@@ -82,8 +82,10 @@ struct HomeView: View {
     private func networkModeButton(mode: NetworkAccessMode, title: String, systemImage: String) -> some View {
         let isSelected = settingsStore.networkAccessMode == mode
         return Button {
+            // Always give tactile feedback on tap (including re-select).
+            HapticManager.selection()
+            HapticManager.medium()
             guard settingsStore.networkAccessMode != mode else { return }
-            HapticManager.light()
             settingsStore.networkAccessMode = mode
             Task {
                 await servicesStore.checkAllReachability(force: true)
@@ -98,6 +100,7 @@ struct HomeView: View {
             .foregroundStyle(isSelected ? Color.primary : Color.secondary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
+            .contentShape(Capsule())
             .background {
                 if isSelected {
                     Capsule()

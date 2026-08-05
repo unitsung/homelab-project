@@ -22,6 +22,8 @@ struct QbittorrentDashboard: View {
     @State private var addURLsText = ""
     @State private var addValidationError: String?
     @State private var pendingDeleteWithFilesHash: String?
+    @State private var pendingDeleteHash: String?
+    @State private var confirmBatchDelete = false
     @State private var isSelecting = false
     @State private var selectedHashes: Set<String> = []
     @State private var categoryFilter: String? = nil // nil = all
@@ -91,13 +93,12 @@ struct QbittorrentDashboard: View {
         ) { result in
             Task { await importTorrentFiles(result) }
         }
-        .confirmationDialog(
+        .alert(
             arr.deleteWithDataConfirmTitle,
             isPresented: Binding(
                 get: { pendingDeleteWithFilesHash != nil },
                 set: { if !$0 { pendingDeleteWithFilesHash = nil } }
-            ),
-            titleVisibility: .visible
+            )
         ) {
             Button(arr.deleteWithData, role: .destructive) {
                 guard let hash = pendingDeleteWithFilesHash else { return }
@@ -113,6 +114,31 @@ struct QbittorrentDashboard: View {
             }
         } message: {
             Text(arr.deleteWithDataConfirmMessage)
+        }
+        .alert(localizer.t.delete, isPresented: Binding(
+            get: { pendingDeleteHash != nil },
+            set: { if !$0 { pendingDeleteHash = nil } }
+        )) {
+            Button(localizer.t.delete, role: .destructive) {
+                guard let hash = pendingDeleteHash else { return }
+                pendingDeleteHash = nil
+                Task {
+                    await performTorrentAction(successMessage: arr.torrentDeleted) {
+                        try await requireClient().deleteTorrent(hash: hash, deleteFiles: false)
+                    }
+                }
+            }
+            Button(localizer.t.cancel, role: .cancel) {
+                pendingDeleteHash = nil
+            }
+        }
+        .alert(localizer.t.qbDeleteSelected, isPresented: $confirmBatchDelete) {
+            Button(localizer.t.delete, role: .destructive) {
+                Task { await batchDelete(deleteFiles: false) }
+            }
+            Button(localizer.t.cancel, role: .cancel) {}
+        } message: {
+            Text(String(format: localizer.t.qbSelectedCount, selectedHashes.count))
         }
     }
 
@@ -366,7 +392,7 @@ struct QbittorrentDashboard: View {
             .tint(AppTheme.warning)
             .disabled(selectedHashes.isEmpty || isRunningTorrentAction)
             Button(localizer.t.qbDeleteSelected, role: .destructive) {
-                Task { await batchDelete(deleteFiles: false) }
+                confirmBatchDelete = true
             }
             .buttonStyle(.glass)
             .tint(AppTheme.danger)
@@ -662,12 +688,8 @@ struct QbittorrentDashboard: View {
                         }
                     }
 
-                    Button(localizer.t.delete) {
-                        Task {
-                            await performTorrentAction(successMessage: arr.torrentDeleted) {
-                                try await requireClient().deleteTorrent(hash: torrent.hash, deleteFiles: false)
-                            }
-                        }
+                    Button(localizer.t.delete, role: .destructive) {
+                        pendingDeleteHash = torrent.hash
                     }
 
                     Button(arr.deleteWithData, role: .destructive) {

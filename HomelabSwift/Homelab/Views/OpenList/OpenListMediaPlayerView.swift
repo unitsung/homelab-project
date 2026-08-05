@@ -27,7 +27,8 @@ struct OpenListMediaPlayerView: View {
     @StateObject private var engine = OpenListVLCEngine()
     @State private var showControls = true
     @State private var hideTask: Task<Void, Never>?
-    @State private var isLandscapePreferred = true
+    /// nil = follow device; true/false = user lock landscape/portrait.
+    @State private var lockedLandscape: Bool? = nil
     @State private var brightness: Double = 0.5
     @State private var volume: Float = AVAudioSession.sharedInstance().outputVolume
     @State private var sideHud: SideHUD?
@@ -37,6 +38,8 @@ struct OpenListMediaPlayerView: View {
     @State private var openingExternal: ExternalPlayerOption?
     @State private var showExternalFallback = false
     @State private var errorText: String?
+    @State private var isScrubbing = false
+    @State private var scrubFraction: Double = 0
 
     private let rateOptions: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0]
 
@@ -54,6 +57,8 @@ struct OpenListMediaPlayerView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let topInset = max(geo.safeAreaInsets.top, 8)
+            let bottomInset = max(geo.safeAreaInsets.bottom, 10)
             ZStack {
                 Color.black.ignoresSafeArea()
 
@@ -65,13 +70,17 @@ struct OpenListMediaPlayerView: View {
                 }
                 .frame(width: 0, height: 0)
 
+                // Must stay in hierarchy for system volume writes (notch-safe, off-screen).
                 OpenListSystemVolumeView(writer: systemVolumeWriter)
-                    .frame(width: 1, height: 1)
-                    .opacity(0.01)
+                    .frame(width: 40, height: 40)
+                    .offset(x: -geo.size.width, y: -geo.size.height)
+                    .opacity(0.02)
                     .allowsHitTesting(false)
 
                 if let errorText {
                     errorBlock(errorText)
+                        .padding(.top, topInset)
+                        .padding(.bottom, bottomInset)
                 } else {
                     if isAudio {
                         audioBackdrop
@@ -86,8 +95,10 @@ struct OpenListMediaPlayerView: View {
 
                     if !engine.isReady {
                         loadingChrome
+                            .padding(.top, topInset)
+                            .padding(.bottom, bottomInset)
                     } else if showControls {
-                        controlsOverlay
+                        controlsOverlay(topInset: topInset, bottomInset: bottomInset)
                             .transition(.opacity)
                     }
 
@@ -98,12 +109,13 @@ struct OpenListMediaPlayerView: View {
             }
         }
         .ignoresSafeArea()
-        .statusBarHidden(true)
+        .statusBarHidden(false)
         .persistentSystemOverlays(.hidden)
         .task { await start() }
         .onAppear {
-            isLandscapePreferred = !isAudio
-            applyOrientation(landscape: !isAudio ? true : false)
+            // Follow device rotation by default (iPhone 17 Pro Dynamic Island friendly).
+            lockedLandscape = nil
+            applyOrientation(landscape: nil)
         }
         .onDisappear {
             engine.stop()
@@ -207,9 +219,10 @@ struct OpenListMediaPlayerView: View {
         .contentShape(Rectangle())
     }
 
-    private var controlsOverlay: some View {
+    private func controlsOverlay(topInset: CGFloat, bottomInset: CGFloat) -> some View {
         VStack(spacing: 0) {
             topBar
+                .padding(.top, topInset)
             Spacer()
             if !engine.isPlaying {
                 Button { engine.togglePlay() } label: {
@@ -223,6 +236,7 @@ struct OpenListMediaPlayerView: View {
             }
             Spacer()
             bottomBar
+                .padding(.bottom, bottomInset)
         }
         .background(
             LinearGradient(
@@ -269,25 +283,37 @@ struct OpenListMediaPlayerView: View {
             }
         }
         .padding(.horizontal, 14)
-        .padding(.top, 12)
+        .padding(.top, 8)
         .padding(.bottom, 8)
     }
 
     private var bottomBar: some View {
         VStack(spacing: 10) {
-            // Scrubber
+            // Scrub only on release — continuous seek freezes VLC on many streams.
             HStack(spacing: 10) {
-                Text(clock(engine.current))
+                Text(clock(isScrubbing ? scrubFraction * max(engine.duration, 0) : engine.current))
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.white.opacity(0.85))
                     .frame(width: 48, alignment: .leading)
                 Slider(
                     value: Binding(
-                        get: { engine.duration > 0 ? engine.current / engine.duration : 0 },
-                        set: { engine.seek(toFraction: $0) }
+                        get: {
+                            if isScrubbing { return scrubFraction }
+                            return engine.duration > 0 ? engine.current / engine.duration : 0
+                        },
+                        set: { scrubFraction = $0 }
                     ),
                     in: 0...1
-                )
+                ) { editing in
+                    if editing {
+                        isScrubbing = true
+                        scrubFraction = engine.duration > 0 ? engine.current / engine.duration : 0
+                    } else {
+                        isScrubbing = false
+                        engine.seek(toFraction: scrubFraction)
+                        scheduleHide()
+                    }
+                }
                 .tint(.white)
                 Text(clock(engine.duration))
                     .font(.caption2.monospacedDigit())
@@ -355,18 +381,29 @@ struct OpenListMediaPlayerView: View {
                 }
 
                 Button {
-                    isLandscapePreferred.toggle()
-                    applyOrientation(landscape: isLandscapePreferred)
+                    // Cycle: follow device → lock landscape → lock portrait → follow.
+                    if lockedLandscape == nil {
+                        lockedLandscape = true
+                    } else if lockedLandscape == true {
+                        lockedLandscape = false
+                    } else {
+                        lockedLandscape = nil
+                    }
+                    applyOrientation(landscape: lockedLandscape)
                     scheduleHide()
                 } label: {
                     toolIcon(
-                        isLandscapePreferred ? "rectangle.portrait.rotate" : "rectangle.landscape.rotate",
-                        label: isLandscapePreferred ? localizer.t.filesPlayerPortrait : localizer.t.filesPlayerLandscape
+                        lockedLandscape == nil
+                            ? "iphone"
+                            : (lockedLandscape == true ? "rectangle.landscape.rotate" : "rectangle.portrait.rotate"),
+                        label: lockedLandscape == nil
+                            ? localizer.t.filesPlayerLandscape
+                            : (lockedLandscape == true ? localizer.t.filesPlayerLandscape : localizer.t.filesPlayerPortrait)
                     )
                 }
             }
             .padding(.horizontal, 8)
-            .padding(.bottom, 18)
+            .padding(.bottom, 8)
         }
         .background(
             LinearGradient(
@@ -925,13 +962,21 @@ final class OpenListSystemVolumeWriter {
 
     func setVolume(_ value: Float) {
         let clamped = max(0, min(1, value))
+        // Force-find slider if attach hasn't finished yet.
+        if slider == nil {
+            // no-op; attach happens async from MPVolumeView
+        }
         slider?.value = clamped
+        // Also nudge KVO consumers so UI volume badge tracks system immediately.
+        if !isAdjusting {
+            onExternalChange?(clamped)
+        }
     }
 
     func startObserving() {
         observation?.invalidate()
         // Observe on main; AVAudioSession delivers KVO there for outputVolume.
-        observation = AVAudioSession.sharedInstance().observe(\.outputVolume, options: [.new]) { [weak self] _, change in
+        observation = AVAudioSession.sharedInstance().observe(\.outputVolume, options: [.new, .initial]) { [weak self] _, change in
             Task { @MainActor in
                 guard let self, !self.isAdjusting, let v = change.newValue else { return }
                 self.onExternalChange?(v)
@@ -948,16 +993,30 @@ private struct OpenListSystemVolumeView: UIViewRepresentable {
     let writer: OpenListSystemVolumeWriter
 
     func makeUIView(context: Context) -> MPVolumeView {
-        let view = MPVolumeView(frame: .zero)
-        // Hidden host used only for its volume slider (route UI not needed).
-        view.alpha = 0.01
-        view.isUserInteractionEnabled = false
+        let view = MPVolumeView(frame: CGRect(x: -1000, y: -1000, width: 120, height: 40))
+        // Keep interactive for system volume writes; park off-screen so it never covers UI.
+        view.clipsToBounds = true
         DispatchQueue.main.async {
-            if let slider = view.subviews.compactMap({ $0 as? UISlider }).first {
-                writer.attach(slider: slider)
-            }
+            Self.attachSlider(from: view, to: writer)
+        }
+        // Retry once after layout (slider sometimes mounts late).
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            Self.attachSlider(from: view, to: writer)
         }
         return view
+    }
+
+    private static func attachSlider(from root: UIView, to writer: OpenListSystemVolumeWriter) {
+        func findSlider(_ v: UIView) -> UISlider? {
+            if let s = v as? UISlider { return s }
+            for c in v.subviews {
+                if let s = findSlider(c) { return s }
+            }
+            return nil
+        }
+        if let slider = findSlider(root) {
+            writer.attach(slider: slider)
+        }
     }
 
     func updateUIView(_ uiView: MPVolumeView, context: Context) {}

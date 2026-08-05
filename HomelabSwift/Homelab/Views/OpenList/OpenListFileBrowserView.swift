@@ -366,10 +366,10 @@ struct OpenListFileBrowserView: View {
             }
             .presentationDetents([.medium, .large])
         }
-        .confirmationDialog(
+        // Centered alert (not bottom action sheet) — clearer on notched iPhones.
+        .alert(
             localizer.t.filesDeleteConfirm,
-            isPresented: $showDeleteConfirm,
-            titleVisibility: .visible
+            isPresented: $showDeleteConfirm
         ) {
             Button(localizer.t.delete, role: .destructive) {
                 Task { await performDelete(pendingDelete) }
@@ -636,15 +636,16 @@ struct OpenListFileBrowserView: View {
             VStack(spacing: 6) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(ServiceType.openlist.colors.bg)
+                        .fill(item.isDirectory ? serviceColor.opacity(0.14) : ServiceType.openlist.colors.bg)
                         .frame(height: 88)
-                    if let thumb = item.thumbnailURL {
+                    if let thumb = item.thumbnailURL, !item.isDirectory {
                         OpenListCachedThumbnail(url: thumb, systemImageName: item.systemImageName)
                             .frame(height: 88)
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     } else {
-                        Image(systemName: item.systemImageName)
+                        Image(systemName: item.isDirectory ? "folder.fill" : item.systemImageName)
                             .font(.title2)
+                            .symbolRenderingMode(.hierarchical)
                             .foregroundStyle(serviceColor)
                     }
                     if isSelecting {
@@ -1567,15 +1568,16 @@ struct FileRowView: View {
 
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(ServiceType.openlist.colors.bg)
+                    .fill(item.isDirectory ? accent.opacity(0.14) : ServiceType.openlist.colors.bg)
                     .frame(width: 40, height: 40)
-                if let thumb = item.thumbnailURL {
+                if let thumb = item.thumbnailURL, !item.isDirectory {
                     OpenListCachedThumbnail(url: thumb, systemImageName: item.systemImageName)
                         .frame(width: 40, height: 40)
                         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 } else {
-                    Image(systemName: item.systemImageName)
-                        .font(.body.weight(.medium))
+                    Image(systemName: item.isDirectory ? "folder.fill" : item.systemImageName)
+                        .font(.body.weight(.semibold))
+                        .symbolRenderingMode(.hierarchical)
                         .foregroundStyle(accent)
                 }
             }

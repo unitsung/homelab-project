@@ -37,6 +37,7 @@ struct ArcaneDashboard: View {
     /// Server-side `updates=has_update` result (authoritative when local flags are missing).
     @State private var serverUpdateContainers: [ArcaneContainer] = []
     @State private var isLoadingUpdatesFilter = false
+    @State private var pendingDeleteId: String?
 
     private let arcaneColor = ServiceType.arcane.colors.primary
 
@@ -169,31 +170,32 @@ struct ArcaneDashboard: View {
                 )
             }
         }
-        .confirmationDialog(localizer.t.arcaneConfirmStopAll, isPresented: $confirmStopAll, titleVisibility: .visible) {
+        // Centered alerts (more reliable than bottom action sheets on notched iPhones).
+        .alert(localizer.t.arcaneConfirmStopAll, isPresented: $confirmStopAll) {
             Button(localizer.t.arcaneStopAll, role: .destructive) {
                 Task { await runStopAll() }
             }
             Button(localizer.t.cancel, role: .cancel) {}
         }
-        .confirmationDialog(localizer.t.arcaneConfirmStartAll, isPresented: $confirmStartAll, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmStartAll, isPresented: $confirmStartAll) {
             Button(localizer.t.arcaneStartAll) {
                 Task { await runStartAll() }
             }
             Button(localizer.t.cancel, role: .cancel) {}
         }
-        .confirmationDialog(localizer.t.arcaneConfirmUpdateSelected, isPresented: $confirmBatchUpdate, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmUpdateSelected, isPresented: $confirmBatchUpdate) {
             Button(localizer.t.arcaneUpdate) {
                 Task { await runBatchUpdate() }
             }
             Button(localizer.t.cancel, role: .cancel) {}
         }
-        .confirmationDialog(localizer.t.arcaneConfirmDeleteSelected, isPresented: $confirmBatchDelete, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmDeleteSelected, isPresented: $confirmBatchDelete) {
             Button(localizer.t.delete, role: .destructive) {
                 Task { await runBatchDelete() }
             }
             Button(localizer.t.cancel, role: .cancel) {}
         }
-        .confirmationDialog(localizer.t.arcaneConfirmPruneDangling, isPresented: $confirmPruneDangling, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmPruneDangling, isPresented: $confirmPruneDangling) {
             Button(localizer.t.arcanePruneDangling, role: .destructive) {
                 Task { await runPruneImages(danglingOnly: true) }
             }
@@ -201,7 +203,7 @@ struct ArcaneDashboard: View {
         } message: {
             Text(localizer.t.arcanePruneDanglingHint)
         }
-        .confirmationDialog(localizer.t.arcaneConfirmPruneUnusedImages, isPresented: $confirmPruneUnusedImages, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmPruneUnusedImages, isPresented: $confirmPruneUnusedImages) {
             Button(localizer.t.arcanePruneUnusedImages, role: .destructive) {
                 Task { await runPruneImages(danglingOnly: false) }
             }
@@ -209,7 +211,7 @@ struct ArcaneDashboard: View {
         } message: {
             Text(localizer.t.arcanePruneUnusedImagesHint)
         }
-        .confirmationDialog(localizer.t.arcaneConfirmPruneVolumes, isPresented: $confirmPruneVolumes, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmPruneVolumes, isPresented: $confirmPruneVolumes) {
             Button(localizer.t.arcanePruneVolumes, role: .destructive) {
                 Task { await runPruneVolumes() }
             }
@@ -217,13 +219,29 @@ struct ArcaneDashboard: View {
         } message: {
             Text(localizer.t.arcanePruneVolumesHint)
         }
-        .confirmationDialog(localizer.t.arcaneConfirmSystemPrune, isPresented: $confirmSystemPrune, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmSystemPrune, isPresented: $confirmSystemPrune) {
             Button(localizer.t.arcaneSystemPrune, role: .destructive) {
                 Task { await runSystemPrune() }
             }
             Button(localizer.t.cancel, role: .cancel) {}
         } message: {
             Text(localizer.t.arcaneSystemPruneHint)
+        }
+        .alert(localizer.t.delete, isPresented: Binding(
+            get: { pendingDeleteId != nil },
+            set: { if !$0 { pendingDeleteId = nil } }
+        )) {
+            Button(localizer.t.delete, role: .destructive) {
+                if let id = pendingDeleteId {
+                    pendingDeleteId = nil
+                    Task { await deleteOne(id) }
+                }
+            }
+            Button(localizer.t.cancel, role: .cancel) {
+                pendingDeleteId = nil
+            }
+        } message: {
+            Text(localizer.t.arcaneForceRemove)
         }
         .sheet(isPresented: $showUpdateProgress) {
             if let updateSession {
@@ -722,7 +740,9 @@ struct ArcaneDashboard: View {
                             Button { Task { await redeployOne(container.id) } } label: {
                                 Label(localizer.t.arcaneRedeploy, systemImage: "arrow.triangle.2.circlepath")
                             }
-                            Button(role: .destructive) { Task { await deleteOne(container.id) } } label: {
+                            Button(role: .destructive) {
+                                pendingDeleteId = container.id
+                            } label: {
                                 Label(localizer.t.delete, systemImage: "trash")
                             }
                         } label: {
@@ -1352,23 +1372,29 @@ private struct ArcaneImagesSheet: View {
                     .listStyle(.insetGrouped)
                 }
             }
-            .navigationTitle(localizer.t.arcaneImagesTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(localizer.t.arcaneImagesTitle)
+                        .font(.headline)
+                        .lineLimit(1)
+                }
                 ToolbarItem(placement: .cancellationAction) {
                     Button(localizer.t.close) { dismiss() }
                 }
-                ToolbarItem(placement: .primaryAction) {
-                    Picker("", selection: $updatesOnly) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Picker(localizer.t.arcaneImagesTitle, selection: $updatesOnly) {
                         Text(localizer.t.arcaneImagesAll).tag(false)
                         Text(localizer.t.arcaneImagesWithUpdates).tag(true)
                     }
                     .pickerStyle(.menu)
+                    .labelsHidden()
                 }
             }
             .task(id: updatesOnly) { await load() }
         }
         .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     @MainActor

@@ -69,7 +69,9 @@ struct ServiceTileGrid: View {
             VStack(spacing: 4) {
                 Text(type.displayName)
                     .font(.caption.weight(.semibold))
+                    .multilineTextAlignment(.center)
                     .lineLimit(1)
+                    .frame(maxWidth: .infinity)
 
                 HStack(spacing: 4) {
                     Circle()
@@ -79,10 +81,11 @@ struct ServiceTileGrid: View {
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
+                .frame(maxWidth: .infinity)
             }
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity, minHeight: tileMinHeight, alignment: .top)
+        .frame(maxWidth: .infinity, minHeight: tileMinHeight)
         .padding(.vertical, 14)
         .padding(.horizontal, 6)
         .contentShape(Rectangle())
@@ -109,15 +112,18 @@ struct ServiceTileGrid: View {
                     Text(localizer.t.homeAdd)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
                         .lineLimit(1)
+                        .frame(maxWidth: .infinity)
                     // Reserve the same second line as service tiles (online status).
                     Text(" ")
                         .font(.caption2)
                         .opacity(0)
+                        .frame(maxWidth: .infinity)
                 }
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity, minHeight: tileMinHeight, alignment: .top)
+            .frame(maxWidth: .infinity, minHeight: tileMinHeight)
             .padding(.vertical, 14)
             .padding(.horizontal, 6)
             .contentShape(Rectangle())
