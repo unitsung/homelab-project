@@ -59,10 +59,19 @@ struct OpenListTasksView: View {
                 actionBar
                     .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
                     .listRowBackground(Color.clear)
+            }
 
+            Section {
                 Toggle(isOn: $mineOnly) {
-                    Text(localizer.t.filesTaskMineOnly)
-                        .font(.subheadline)
+                    Label {
+                        Text(localizer.t.filesTaskMineOnly)
+                            .font(.subheadline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                    } icon: {
+                        Image(systemName: "person.crop.circle")
+                            .foregroundStyle(serviceColor)
+                    }
                 }
                 .tint(serviceColor)
             }

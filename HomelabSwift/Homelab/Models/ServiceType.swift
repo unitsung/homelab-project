@@ -491,9 +491,10 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .truenas:            return ServiceColorSet(primary: .truenasAccessibleAccent, dark: Color(hex: "#006EA3"), bg: Color(hex: "#0095D5").opacity(0.09))
         case .pterodactyl:        return ServiceColorSet(primary: Color(hex: "#0E4BEF"), dark: Color(hex: "#0B38C5"), bg: Color(hex: "#0E4BEF").opacity(0.09))
         case .calagopus:          return ServiceColorSet(primary: Color(hex: "#16A34A"), dark: Color(hex: "#15803D"), bg: Color(hex: "#16A34A").opacity(0.09))
-        case .openlist:           return ServiceColorSet(primary: Color(hex: "#3B82F6"), dark: Color(hex: "#1D4ED8"), bg: Color(hex: "#3B82F6").opacity(0.09))
-        case .arcane:             return ServiceColorSet(primary: Color(hex: "#F97316"), dark: Color(hex: "#C2410C"), bg: Color(hex: "#F97316").opacity(0.08))
-        case .cloudsaver:        return ServiceColorSet(primary: Color(hex: "#8B5CF6"), dark: Color(hex: "#6D28D9"), bg: Color(hex: "#8B5CF6").opacity(0.10))
+        // OpenList / AList brand green; Arcane leans violet to match its purple mark.
+        case .openlist:           return ServiceColorSet(primary: Color(hex: "#22C55E"), dark: Color(hex: "#15803D"), bg: Color(hex: "#22C55E").opacity(0.10))
+        case .arcane:             return ServiceColorSet(primary: Color(hex: "#8B5CF6"), dark: Color(hex: "#6D28D9"), bg: Color(hex: "#8B5CF6").opacity(0.11))
+        case .cloudsaver:        return ServiceColorSet(primary: Color(hex: "#A78BFA"), dark: Color(hex: "#7C3AED"), bg: Color(hex: "#A78BFA").opacity(0.10))
         }
     }
 }

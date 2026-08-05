@@ -57,6 +57,9 @@ struct ServiceTileGrid: View {
         .sheet(isPresented: $showAddPicker) { addServicePickerSheet }
     }
 
+    /// Shared height so the “Add” tile matches real service tiles.
+    private let tileMinHeight: CGFloat = 112
+
     private func serviceTile(type: ServiceType) -> some View {
         VStack(spacing: 10) {
             ServiceIconView(type: type, size: 30)
@@ -77,8 +80,9 @@ struct ServiceTileGrid: View {
                         .foregroundStyle(.tertiary)
                 }
             }
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, minHeight: tileMinHeight, alignment: .top)
         .padding(.vertical, 14)
         .padding(.horizontal, 6)
         .contentShape(Rectangle())
@@ -93,7 +97,7 @@ struct ServiceTileGrid: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .stroke(style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
-                        .foregroundStyle(.tertiary.opacity(0.4))
+                        .foregroundStyle(.tertiary.opacity(0.45))
                         .frame(width: 42, height: 42)
 
                     Image(systemName: "plus")
@@ -101,13 +105,22 @@ struct ServiceTileGrid: View {
                         .foregroundStyle(.tertiary)
                 }
 
-                Text(localizer.t.homeAdd)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                VStack(spacing: 4) {
+                    Text(localizer.t.homeAdd)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                    // Reserve the same second line as service tiles (online status).
+                    Text(" ")
+                        .font(.caption2)
+                        .opacity(0)
+                }
+                Spacer(minLength: 0)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, minHeight: tileMinHeight, alignment: .top)
             .padding(.vertical, 14)
             .padding(.horizontal, 6)
+            .contentShape(Rectangle())
             .glassCard()
         }
         .buttonStyle(TilePressButtonStyle())

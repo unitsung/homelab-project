@@ -36,8 +36,6 @@ struct CloudSaverDashboard: View {
     @State private var imageAllowSelfSigned = true
     @State private var linkHealthById: [String: CloudSaverLinkHealth] = [:]
     @State private var sourceFilter: CloudSaverSourceFilter = .all
-    @State private var resultSort: CloudSaverResultSort = .defaultOrder
-    @State private var doubanSort: CloudSaverResultSort = .defaultOrder
     @State private var toastMessage: String?
     @State private var transferMessageTask: Task<Void, Never>?
 
@@ -156,13 +154,6 @@ struct CloudSaverDashboard: View {
                 }
             }
 
-            Picker(localizer.t.csSort, selection: $doubanSort) {
-                ForEach(CloudSaverResultSort.allCases) { s in
-                    Text(s.title(using: localizer.translations)).tag(s)
-                }
-            }
-            .pickerStyle(.segmented)
-
             if isLoadingDouban && doubanItems.isEmpty {
                 ProgressView(localizer.t.csLoadingCharts)
                     .frame(maxWidth: .infinity)
@@ -177,7 +168,7 @@ struct CloudSaverDashboard: View {
                 .padding(.top, 24)
             } else {
                 LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(displayedDoubanItems) { item in
+                    ForEach(doubanItems) { item in
                         Button {
                             Task { await openDoubanItem(item) }
                         } label: {
@@ -218,42 +209,36 @@ struct CloudSaverDashboard: View {
 
     private var searchSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 TextField(localizer.t.csSearchPlaceholder, text: $keyword)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                    .padding(12)
-                    .glassCard(cornerRadius: 12, tint: accent.opacity(0.08))
+                    .font(.subheadline)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 9)
+                    .glassCard(cornerRadius: 10, tint: accent.opacity(0.08))
                     .onSubmit { Task { await search(reset: true) } }
 
                 Button {
                     Task { await search(reset: true) }
                 } label: {
                     Image(systemName: "magnifyingglass")
-                        .font(.body.weight(.semibold))
-                        .frame(width: 44, height: 44)
+                        .font(.subheadline.weight(.semibold))
+                        .frame(width: 36, height: 36)
                 }
                 .buttonStyle(.glassProminent)
                 .tint(accent)
+                .controlSize(.small)
                 .disabled(isSearching || keyword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
 
             if !results.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Picker(localizer.t.csSource, selection: $sourceFilter) {
-                        ForEach(CloudSaverSourceFilter.allCases) { f in
-                            Text(f.title(using: localizer.translations)).tag(f)
-                        }
+                Picker(localizer.t.csSource, selection: $sourceFilter) {
+                    ForEach(CloudSaverSourceFilter.allCases) { f in
+                        Text(f.title(using: localizer.translations)).tag(f)
                     }
-                    .pickerStyle(.segmented)
-
-                    Picker(localizer.t.csSort, selection: $resultSort) {
-                        ForEach(CloudSaverResultSort.allCases) { s in
-                            Text(s.title(using: localizer.translations)).tag(s)
-                        }
-                    }
-                    .pickerStyle(.segmented)
                 }
+                .pickerStyle(.segmented)
             }
 
             // Single loading indicator for search (avoid button + status + empty-state all spinning)
@@ -436,35 +421,9 @@ struct CloudSaverDashboard: View {
     }
 
     /// 「想看」仅 115 → 默认目录（接口选中的 CID）。夸克等不展示。
-    /// 后续可接 STRM / 刷新媒体库；当前成功语义为 transferred。
-    private var displayedDoubanItems: [CloudSaverDoubanItem] {
-        var items = doubanItems
-        switch doubanSort {
-        case .defaultOrder: break
-        case .rating:
-            items.sort { (Double($0.rate) ?? 0) > (Double($1.rate) ?? 0) }
-        case .year:
-            items.sort { ($0.year ?? 0) > ($1.year ?? 0) }
-        }
-        return items
-    }
-
+    /// Keep API result order — no client-side rating/year re-sort.
     private var displayedSearchResults: [CloudSaverSearchResult] {
-        var items = results.filter { sourceFilter.matches($0.cloudType) }
-        switch resultSort {
-        case .defaultOrder:
-            break
-        case .rating:
-            items.sort { lhs, rhs in
-                let lr = ratingProxy(lhs)
-                let rr = ratingProxy(rhs)
-                if lr != rr { return lr > rr }
-                return lhs.count > rhs.count
-            }
-        case .year:
-            items.sort { yearProxy($0) > yearProxy($1) }
-        }
-        return items
+        results.filter { sourceFilter.matches($0.cloudType) }
     }
 
     private func doubanSubtitle(_ item: CloudSaverDoubanItem) -> String? {
@@ -474,27 +433,6 @@ struct CloudSaverDashboard: View {
             parts.append(String(format: localizer.t.csRatingCount, item.ratingCount))
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
-    }
-
-    private func ratingProxy(_ item: CloudSaverSearchResult) -> Double {
-        let text = item.title + " " + item.description
-        if let r = try? NSRegularExpression(pattern: #"(?<![0-9])([0-9]\.[0-9])(?![0-9])"#),
-           let m = r.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-           let range = Range(m.range(at: 1), in: text) {
-            return Double(text[range]) ?? 0
-        }
-        if case .valid(let n) = linkHealthById[item.id] { return Double(n) }
-        return Double(item.count)
-    }
-
-    private func yearProxy(_ item: CloudSaverSearchResult) -> Int {
-        let text = item.title + " " + item.description + " " + item.pubDate
-        if let r = try? NSRegularExpression(pattern: #"(19|20)\d{2}"#),
-           let m = r.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-           let range = Range(m.range, in: text) {
-            return Int(text[range]) ?? 0
-        }
-        return 0
     }
 
     private func wantToWatch(_ item: CloudSaverSearchResult) async {
@@ -769,18 +707,6 @@ enum CloudSaverSourceFilter: String, CaseIterable, Identifiable {
         case .all: return true
         case .cloud115: return t == .cloud115
         case .quark: return t == .quark
-        }
-    }
-}
-
-enum CloudSaverResultSort: String, CaseIterable, Identifiable {
-    case defaultOrder, rating, year
-    var id: String { rawValue }
-    func title(using t: Translations) -> String {
-        switch self {
-        case .defaultOrder: return t.csSortDefault
-        case .rating: return t.csSortRating
-        case .year: return t.csSortYear
         }
     }
 }

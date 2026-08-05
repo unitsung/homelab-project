@@ -548,7 +548,7 @@ struct OpenListFileBrowserView: View {
                             }
                         }
                     } else {
-                        LazyVStack(spacing: 8) {
+                        LazyVStack(spacing: 6) {
                             ForEach(displayedItems) { item in
                                 fileRow(item)
                             }
@@ -633,26 +633,27 @@ struct OpenListFileBrowserView: View {
         Button {
             Task { await handleTap(item) }
         } label: {
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(ServiceType.openlist.colors.bg)
-                        .frame(height: 96)
+                        .frame(height: 88)
                     if let thumb = item.thumbnailURL {
                         OpenListCachedThumbnail(url: thumb, systemImageName: item.systemImageName)
-                            .frame(height: 96)
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .frame(height: 88)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     } else {
                         Image(systemName: item.systemImageName)
-                            .font(.title)
-                            .foregroundStyle(ServiceType.openlist.colors.primary)
+                            .font(.title2)
+                            .foregroundStyle(serviceColor)
                     }
                     if isSelecting {
                         VStack {
                             HStack {
                                 Spacer()
                                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(selected ? serviceColor : .white)
+                                    .font(.body.weight(.semibold))
+                                    .foregroundStyle(selected ? serviceColor : .white.opacity(0.9))
                                     .padding(6)
                             }
                             Spacer()
@@ -660,22 +661,19 @@ struct OpenListFileBrowserView: View {
                     }
                 }
                 Text(item.name)
-                    .font(.caption.weight(.semibold))
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, minHeight: 32, alignment: .top)
+                    .frame(maxWidth: .infinity, minHeight: 28, alignment: .top)
             }
             .padding(8)
             .frame(maxWidth: .infinity)
-            .glassCard(
-                cornerRadius: 14,
-                tint: selected ? serviceColor.opacity(0.22) : ServiceType.openlist.colors.primary.opacity(0.06)
-            )
+            .glassCard(cornerRadius: 12, tint: selected ? serviceColor.opacity(0.16) : nil)
             .overlay {
                 if selected {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(serviceColor, lineWidth: 2)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(serviceColor.opacity(0.45), lineWidth: 1.5)
                 }
             }
         }
@@ -1556,94 +1554,87 @@ struct FileRowView: View {
     var isSelected: Bool = false
 
     @Environment(Localizer.self) private var localizer
+    private var accent: Color { ServiceType.openlist.colors.primary }
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 12) {
             if isSelecting {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundStyle(isSelected ? ServiceType.openlist.colors.primary : AppTheme.textSecondary)
-                    .frame(width: 28, height: 28)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(isSelected ? accent : AppTheme.textSecondary)
+                    .frame(width: 22, height: 22)
             }
 
             ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(ServiceType.openlist.colors.bg)
-                    .frame(width: 52, height: 52)
+                    .frame(width: 40, height: 40)
                 if let thumb = item.thumbnailURL {
                     OpenListCachedThumbnail(url: thumb, systemImageName: item.systemImageName)
-                        .frame(width: 52, height: 52)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .frame(width: 40, height: 40)
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 } else {
                     Image(systemName: item.systemImageName)
-                        .font(.title3)
-                        .foregroundStyle(ServiceType.openlist.colors.primary)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(accent)
                 }
             }
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(item.name)
-                    .font(.body.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                HStack(spacing: 10) {
-                    if item.isDirectory {
-                        Text(localizer.t.filesFolderKind)
-                            .font(.caption)
-                            .foregroundStyle(AppTheme.textSecondary)
-                    } else {
-                        Text(ByteCountFormatter.string(fromByteCount: item.size, countStyle: .file))
-                            .font(.caption)
-                            .foregroundStyle(AppTheme.textSecondary)
-                        Text(item.previewKind.shortLabel)
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(ServiceType.openlist.colors.primary.opacity(0.85))
-                    }
-                    if let modified = item.modifiedAt {
-                        Text(modified, style: .relative)
-                            .font(.caption)
-                            .foregroundStyle(AppTheme.textSecondary)
-                    }
-                }
+                    .lineLimit(1)
+                Text(subtitleLine)
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textMuted)
+                    .lineLimit(1)
             }
-            Spacer(minLength: 0)
+            Spacer(minLength: 4)
+
             if !isSelecting {
-                if item.isDirectory {
-                    Image(systemName: "chevron.right")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .frame(minWidth: 28, minHeight: 44)
-                } else {
-                    Image(systemName: trailingGlyph(for: item))
-                        .font(.title3)
-                        .foregroundStyle(ServiceType.openlist.colors.primary.opacity(0.9))
-                        .frame(minWidth: 36, minHeight: 44)
-                }
+                Image(systemName: item.isDirectory ? "chevron.right" : trailingGlyph(for: item))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(item.isDirectory ? AppTheme.textMuted : accent.opacity(0.85))
+                    .frame(width: 20)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .frame(minHeight: 72)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(minHeight: 56)
+        .contentShape(Rectangle())
         .glassCard(
-            cornerRadius: 16,
-            tint: isSelected
-                ? ServiceType.openlist.colors.primary.opacity(0.2)
-                : ServiceType.openlist.colors.primary.opacity(0.05)
+            cornerRadius: 12,
+            tint: isSelected ? accent.opacity(0.16) : nil
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(isSelected ? ServiceType.openlist.colors.primary.opacity(0.4) : .clear, lineWidth: 1.5)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(isSelected ? accent.opacity(0.35) : Color.clear, lineWidth: 1)
         )
+    }
+
+    private var subtitleLine: String {
+        var parts: [String] = []
+        if item.isDirectory {
+            parts.append(localizer.t.filesFolderKind)
+        } else {
+            parts.append(ByteCountFormatter.string(fromByteCount: item.size, countStyle: .file))
+            let kind = item.previewKind.shortLabel
+            if kind != "File" { parts.append(kind) }
+        }
+        if let modified = item.modifiedAt {
+            parts.append(modified.formatted(.relative(presentation: .named)))
+        }
+        return parts.joined(separator: " · ")
     }
 
     private func trailingGlyph(for item: FileItem) -> String {
         switch item.previewKind {
-        case .video, .audio: return "play.circle.fill"
-        case .image: return "photo.circle"
-        case .markdown, .text, .html: return "eye.circle"
-        case .pdf: return "doc.circle"
-        case .download, .none: return "ellipsis.circle"
+        case .video, .audio: return "play.fill"
+        case .image: return "photo"
+        case .markdown, .text, .html: return "doc.text"
+        case .pdf: return "doc.richtext"
+        case .download, .none: return "ellipsis"
         }
     }
 }
