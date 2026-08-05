@@ -253,7 +253,9 @@ struct ArcaneSwiftTermView: UIViewRepresentable {
 
         func bell(source: TerminalView) {
             #if canImport(UIKit)
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Task { @MainActor in
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }
             #endif
         }
 

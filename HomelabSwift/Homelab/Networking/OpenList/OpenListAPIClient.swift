@@ -484,10 +484,11 @@ actor OpenListAPIClient {
             throw APIError.custom("No download URL")
         }
         let data = try await downloadFileBytes(from: remote)
-        let name = preferredName
-            ?? detail.item.name
-            ?? OpenListPath.normalize(path).split(separator: "/").last.map(String.init)
-            ?? "download"
+        let name: String = {
+            if let preferredName, !preferredName.isEmpty { return preferredName }
+            if !detail.item.name.isEmpty { return detail.item.name }
+            return OpenListPath.normalize(path).split(separator: "/").last.map(String.init) ?? "download"
+        }()
         let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
             .appendingPathComponent("Downloads", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

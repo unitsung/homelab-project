@@ -949,9 +949,9 @@ private struct OpenListSystemVolumeView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> MPVolumeView {
         let view = MPVolumeView(frame: .zero)
-        view.showsVolumeSlider = true
-        // Hide the system route button; we only need the internal slider.
-        view.showsRouteButton = false
+        // Hidden host used only for its volume slider (route UI not needed).
+        view.alpha = 0.01
+        view.isUserInteractionEnabled = false
         DispatchQueue.main.async {
             if let slider = view.subviews.compactMap({ $0 as? UISlider }).first {
                 writer.attach(slider: slider)

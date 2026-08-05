@@ -630,7 +630,7 @@ struct OpenListFileBrowserView: View {
     @ViewBuilder
     private func fileGridCell(_ item: FileItem) -> some View {
         let selected = selectedIDs.contains(item.id)
-        return Button {
+        Button {
             Task { await handleTap(item) }
         } label: {
             VStack(spacing: 8) {
