@@ -25,13 +25,8 @@ struct ArcaneContainerDetailView: View {
     @State private var activeTab: Tab = .info
     @State private var actionError: String?
     @State private var showDeleteConfirm = false
-    @State private var commandInput = ""
-    @State private var terminalBuffer: String = ""
-    @State private var terminalTask: URLSessionWebSocketTask?
-    @State private var terminalSession: URLSession?
-    @State private var isTerminalConnected = false
-    @State private var commandHistory: [String] = []
-    @State private var historyIndex: Int = -1
+    @StateObject private var terminalSession = ArcaneTerminalSession()
+    @State private var selectedShell = "/bin/sh"
     @State private var updateSession: ArcaneUpdateProgressSession?
     @State private var showUpdateProgress = false
     @State private var showTerminalFullscreen = false
@@ -40,11 +35,12 @@ struct ArcaneContainerDetailView: View {
     @State private var autoUpdateEnabled = false
     @State private var liveStats: ArcaneContainerStats?
     @State private var statsUnavailable = false
-    @FocusState private var isCommandFocused: Bool
 
     private let arcaneColor = ServiceType.arcane.colors.primary
     private let quickCommands = ["ls -la", "pwd", "ps aux", "df -h", "top -bn1 | head", "env", "cat /etc/os-release"]
+    private let shellOptions = ["/bin/sh", "/bin/bash", "/bin/ash", "/bin/zsh"]
     private let autoUpdateLabelKey = "com.getarcaneapp.arcane.updater"
+    @Environment(\.openURL) private var openURL
 
     init(instanceId: UUID, environmentId: String, containerId: String) {
         self.instanceId = instanceId
@@ -123,13 +119,14 @@ struct ArcaneContainerDetailView: View {
                 Task { await loadLogs(follow: true) }
             }
             if tab == .exec {
-                connectTerminalIfNeeded()
+                Task { await connectTerminalIfNeeded() }
             } else {
                 // Keep terminal session alive only on Exec tab to save battery.
+                terminalSession.disconnect()
             }
         }
         .onDisappear {
-            disconnectTerminal()
+            terminalSession.disconnect()
             stopLiveLogs()
         }
         .alert(localizer.t.error, isPresented: Binding(
@@ -522,7 +519,7 @@ struct ArcaneContainerDetailView: View {
 
     private var terminalFullscreenView: some View {
         NavigationStack {
-            terminalChrome(minHeight: 400, showFullscreenButton: false)
+            terminalChrome(minHeight: 480, showFullscreenButton: false)
                 .padding(16)
                 .background(AppTheme.background.ignoresSafeArea())
                 .navigationTitle(localizer.t.arcaneTabExec)
@@ -532,79 +529,104 @@ struct ArcaneContainerDetailView: View {
                         Button(localizer.t.close) { showTerminalFullscreen = false }
                     }
                 }
-                .onAppear {
-                    connectTerminalIfNeeded()
+                .task {
+                    await connectTerminalIfNeeded()
                 }
         }
     }
 
+    /// Interactive terminal powered by open-source SwiftTerm (xterm/VT100).
+    /// Type directly in the terminal — no line-buffered TextField.
     private func terminalChrome(minHeight: CGFloat, showFullscreenButton: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
+            HStack(spacing: 8) {
                 Text(localizer.t.arcaneTabExec)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(AppTheme.textMuted)
-                Spacer()
+                Spacer(minLength: 0)
                 Circle()
-                    .fill(isTerminalConnected ? AppTheme.running : AppTheme.stopped)
+                    .fill(terminalSession.isConnected ? AppTheme.running : AppTheme.stopped)
                     .frame(width: 8, height: 8)
-                Text(isTerminalConnected ? localizer.t.arcaneTerminalConnected : localizer.t.arcaneTerminalDisconnected)
+                Text(terminalSession.isConnected
+                     ? localizer.t.arcaneTerminalConnected
+                     : localizer.t.arcaneTerminalDisconnected)
                     .font(.caption2)
                     .foregroundStyle(AppTheme.textMuted)
-                Button(isTerminalConnected ? localizer.t.arcaneTerminalDisconnect : localizer.t.arcaneTerminalConnect) {
-                    if isTerminalConnected {
-                        disconnectTerminal()
+                    .lineLimit(1)
+
+                Menu {
+                    ForEach(shellOptions, id: \.self) { shell in
+                        Button {
+                            selectedShell = shell
+                            Task { await reconnectTerminal() }
+                        } label: {
+                            if selectedShell == shell {
+                                Label(shell, systemImage: "checkmark")
+                            } else {
+                                Text(shell)
+                            }
+                        }
+                    }
+                } label: {
+                    Text((selectedShell as NSString).lastPathComponent)
+                        .font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.secondary.opacity(0.14), in: Capsule())
+                }
+
+                Button(terminalSession.isConnected
+                       ? localizer.t.arcaneTerminalDisconnect
+                       : localizer.t.arcaneTerminalConnect) {
+                    if terminalSession.isConnected {
+                        terminalSession.disconnect()
                     } else {
-                        connectTerminalIfNeeded()
+                        Task { await connectTerminalIfNeeded() }
                     }
                 }
                 .font(.caption.weight(.semibold))
+
                 Button(localizer.t.arcaneClear) {
-                    terminalBuffer = ""
+                    terminalSession.clearScreen()
                 }
                 .font(.caption.weight(.semibold))
+
                 if showFullscreenButton {
                     Button {
                         showTerminalFullscreen = true
                     } label: {
-                        Label(localizer.t.arcaneTerminalFullscreen, systemImage: "arrow.up.left.and.arrow.down.right")
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
                             .font(.caption.weight(.semibold))
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(localizer.t.arcaneTerminalFullscreen)
                 }
             }
 
-            ScrollViewReader { proxy in
-                ScrollView {
-                    Text(terminalBuffer.isEmpty ? "$ …\n" : terminalBuffer)
-                        .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(Color.green.opacity(0.92))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .textSelection(.enabled)
-                        .id("term-bottom")
-                }
-                .frame(maxWidth: .infinity, minHeight: minHeight, maxHeight: .infinity)
-                .padding(10)
-                .background(Color.black.opacity(0.92), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .onChange(of: terminalBuffer.count) { _, _ in
-                    proxy.scrollTo("term-bottom", anchor: .bottom)
-                }
-                .onTapGesture { isCommandFocused = true }
+            ArcaneSwiftTermView(session: terminalSession, fontSize: showFullscreenButton ? 12.5 : 14) { url in
+                openURL(url)
             }
+            .frame(maxWidth: .infinity, minHeight: minHeight, maxHeight: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Color.secondary.opacity(0.18), lineWidth: 1)
+            )
 
+            // Soft function keys for common control sequences (SwiftTerm keyboard still handles typing).
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
-                    termKey("Esc") { sendRaw("\u{1b}") }
-                    termKey("Tab") { sendRaw("\t") }
-                    termKey("Ctrl+C") { sendRaw("\u{0003}") }
-                    termKey("Ctrl+D") { sendRaw("\u{0004}") }
-                    termKey("Ctrl+L") { sendRaw("\u{000c}") }
-                    termKey("↑") { historyUp() }
-                    termKey("↓") { historyDown() }
-                    termKey("←") { sendRaw("\u{1b}[D") }
-                    termKey("→") { sendRaw("\u{1b}[C") }
-                    termKey("Home") { sendRaw("\u{1b}[H") }
-                    termKey("End") { sendRaw("\u{1b}[F") }
+                    termKey("Esc") { terminalSession.sendText("\u{1b}") }
+                    termKey("Tab") { terminalSession.sendText("\t") }
+                    termKey("Ctrl+C") { terminalSession.sendText("\u{0003}") }
+                    termKey("Ctrl+D") { terminalSession.sendText("\u{0004}") }
+                    termKey("Ctrl+L") { terminalSession.sendText("\u{000c}") }
+                    termKey("↑") { terminalSession.sendText("\u{1b}[A") }
+                    termKey("↓") { terminalSession.sendText("\u{1b}[B") }
+                    termKey("←") { terminalSession.sendText("\u{1b}[D") }
+                    termKey("→") { terminalSession.sendText("\u{1b}[C") }
+                    termKey("Home") { terminalSession.sendText("\u{1b}[H") }
+                    termKey("End") { terminalSession.sendText("\u{1b}[F") }
                     termKey("Paste") { pasteFromClipboard() }
                 }
             }
@@ -613,30 +635,27 @@ struct ArcaneContainerDetailView: View {
                 HStack(spacing: 6) {
                     ForEach(quickCommands, id: \.self) { cmd in
                         Button(cmd) {
-                            commandInput = cmd
-                            sendCommand()
+                            // Inject as if typed, then Enter — works with interactive shells / prompts.
+                            terminalSession.sendText(cmd + "\r")
                         }
                         .font(.caption2.weight(.semibold))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 6)
                         .background(arcaneColor.opacity(0.12), in: Capsule())
                         .buttonStyle(.plain)
-                        .disabled(!isTerminalConnected)
+                        .disabled(!terminalSession.isConnected)
                     }
                 }
             }
 
-            HStack(spacing: 8) {
-                TextField(localizer.t.arcaneTerminalPlaceholder, text: $commandInput)
-                    .textInputAutocapitalization(.never)
-                    .disableAutocorrection(true)
-                    .font(.system(.body, design: .monospaced))
-                    .focused($isCommandFocused)
-                    .onSubmit { sendCommand() }
-                Button(localizer.t.arcaneSend) { sendCommand() }
-                    .buttonStyle(.borderedProminent)
-                    .tint(arcaneColor)
-                    .disabled(!isTerminalConnected || commandInput.trimmingCharacters(in: .whitespaces).isEmpty)
+            if let statusMessage = terminalSession.statusMessage {
+                Text(statusMessage)
+                    .font(.caption2)
+                    .foregroundStyle(AppTheme.danger)
+            } else {
+                Text(localizer.t.arcaneTerminalInteractiveHint)
+                    .font(.caption2)
+                    .foregroundStyle(AppTheme.textMuted)
             }
         }
     }
@@ -648,7 +667,7 @@ struct ArcaneContainerDetailView: View {
             .padding(.vertical, 6)
             .background(Color.secondary.opacity(0.15), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
             .buttonStyle(.plain)
-            .disabled(!isTerminalConnected && title != "Paste")
+            .disabled(!terminalSession.isConnected && title != "Paste")
     }
 
     private func envTab(_ detail: ArcaneContainerDetails) -> some View {
@@ -1019,144 +1038,37 @@ struct ArcaneContainerDetailView: View {
         }
     }
 
-    // MARK: - Terminal WebSocket (raw PTY bytes — matches Arcane xterm client)
+    // MARK: - Terminal (SwiftTerm + Arcane WebSocket PTY)
 
-    private func connectTerminalIfNeeded() {
-        guard !isTerminalConnected else { return }
-        Task {
-            guard let client = await servicesStore.arcaneClient(instanceId: instanceId) else { return }
-            do {
-                // Prefer bash when available; Arcane default is /bin/sh.
-                let url = try await client.terminalWebSocketURL(
-                    containerId: resolvedContainerId,
-                    environmentId: environmentId,
-                    shell: "/bin/sh"
-                )
-                var request = URLRequest(url: url)
-                for (k, v) in await client.currentAuthHeaders() {
-                    request.setValue(v, forHTTPHeaderField: k)
-                }
-                let session = URLSession(configuration: .default, delegate: InsecureTrustDelegate(), delegateQueue: nil)
-                let task = session.webSocketTask(with: request)
-                await MainActor.run {
-                    terminalSession = session
-                    terminalTask = task
-                    isTerminalConnected = true
-                    if !terminalBuffer.isEmpty { terminalBuffer += "\n" }
-                    terminalBuffer += "[connected] \(url.path)\r\n"
-                }
-                task.resume()
-                await receiveTerminalLoop(task)
-            } catch {
-                await MainActor.run {
-                    terminalBuffer += "\r\n[error] \(error.localizedDescription)\r\n"
-                    isTerminalConnected = false
-                }
-            }
+    @MainActor
+    private func connectTerminalIfNeeded() async {
+        guard !terminalSession.isConnected else { return }
+        guard let client = await servicesStore.arcaneClient(instanceId: instanceId) else {
+            terminalSession.feedLocal("\r\n\u{1b}[31m[error] \(localizer.t.arcaneClientUnavailable)\u{1b}[0m\r\n")
+            return
         }
+        await terminalSession.connect(
+            client: client,
+            containerId: resolvedContainerId,
+            environmentId: environmentId,
+            shell: selectedShell
+        )
     }
 
     @MainActor
-    private func receiveTerminalLoop(_ task: URLSessionWebSocketTask) async {
-        while terminalTask === task {
-            do {
-                let message = try await task.receive()
-                // Arcane exec stream is binary PTY output (see pipeExecOutputInternal).
-                let text: String
-                switch message {
-                case .string(let s):
-                    text = s
-                case .data(let d):
-                    text = String(data: d, encoding: .utf8)
-                        ?? String(decoding: d, as: UTF8.self)
-                @unknown default:
-                    text = ""
-                }
-                guard !text.isEmpty else { continue }
-                // Strip ANSI/CSI so color codes don't show as `[1;32m…` garbage.
-                let cleaned = ArcaneTextSanitizer.stripANSI(text)
-                terminalBuffer += cleaned
-                if terminalBuffer.count > 100_000 {
-                    terminalBuffer = String(terminalBuffer.suffix(70_000))
-                }
-            } catch {
-                if terminalTask === task {
-                    isTerminalConnected = false
-                    terminalBuffer += "\r\n[disconnected] \(error.localizedDescription)\r\n"
-                    terminalTask = nil
-                    terminalSession?.invalidateAndCancel()
-                    terminalSession = nil
-                }
-                break
-            }
-        }
-    }
-
-    private func sendRaw(_ payload: String) {
-        guard isTerminalConnected, let task = terminalTask else { return }
-        // Send as binary to mirror browser WebSocket + xterm onData.
-        guard let data = payload.data(using: .utf8) else { return }
-        Task { @MainActor in
-            do {
-                try await task.send(.data(data))
-            } catch {
-                terminalBuffer += "\r\n[send error] \(error.localizedDescription)\r\n"
-            }
-        }
-    }
-
-    private func sendCommand() {
-        let cmd = commandInput.trimmingCharacters(in: .newlines)
-        guard !cmd.isEmpty else { return }
-        if commandHistory.last != cmd {
-            commandHistory.append(cmd)
-        }
-        historyIndex = -1
-        // Interactive shell: type the command + Enter (\\r matches most PTY shells).
-        sendRaw(cmd + "\r")
-        commandInput = ""
-    }
-
-    private func historyUp() {
-        guard !commandHistory.isEmpty else { return }
-        if historyIndex < 0 {
-            historyIndex = commandHistory.count - 1
-        } else if historyIndex > 0 {
-            historyIndex -= 1
-        }
-        commandInput = commandHistory[historyIndex]
-    }
-
-    private func historyDown() {
-        guard !commandHistory.isEmpty else { return }
-        if historyIndex < 0 { return }
-        if historyIndex < commandHistory.count - 1 {
-            historyIndex += 1
-            commandInput = commandHistory[historyIndex]
-        } else {
-            historyIndex = -1
-            commandInput = ""
-        }
+    private func reconnectTerminal() async {
+        terminalSession.disconnect(notifyUI: false)
+        terminalSession.clearScreen()
+        await connectTerminalIfNeeded()
     }
 
     private func pasteFromClipboard() {
         #if canImport(UIKit)
         if let text = UIPasteboard.general.string, !text.isEmpty {
-            if isTerminalConnected {
-                // Paste into the remote PTY (same as xterm paste).
-                sendRaw(text)
-            } else {
-                commandInput += text
+            if terminalSession.isConnected {
+                terminalSession.sendText(text)
             }
         }
         #endif
-    }
-
-    private func disconnectTerminal() {
-        terminalTask?.cancel(with: .goingAway, reason: nil)
-        terminalSession?.invalidateAndCancel()
-        terminalTask = nil
-        terminalSession = nil
-        isTerminalConnected = false
     }
 }

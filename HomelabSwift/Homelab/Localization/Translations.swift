@@ -1979,6 +1979,7 @@ struct Translations {
     let arcaneTerminalConnect: String
     let arcaneTerminalDisconnect: String
     let arcaneTerminalPlaceholder: String
+    let arcaneTerminalInteractiveHint: String
     let filesViewList: String
     let filesViewGrid: String
     let arcaneImagesTitle: String

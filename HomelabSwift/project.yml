@@ -15,6 +15,13 @@ settings:
     Release:
       SWIFT_COMPILATION_MODE: incremental
 
+# Open-source VT100/xterm emulator for Arcane interactive container shell.
+# Pin pre-Metal (≤1.11.x): Xcode beta CI may lack MetalToolchain; CoreText renderer is enough for mobile.
+packages:
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    exactVersion: 1.11.2
+
 targets:
   Homelab:
     type: application
@@ -23,6 +30,8 @@ targets:
       - path: Homelab
         excludes:
           - "**/.DS_Store"
+    dependencies:
+      - package: SwiftTerm
     configFiles:
       Debug: Config/Signing.xcconfig
       Release: Config/Signing.xcconfig

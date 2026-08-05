@@ -1906,6 +1906,7 @@ extension Translations {
         arcaneTerminalConnect: "连接",
         arcaneTerminalDisconnect: "断开",
         arcaneTerminalPlaceholder: "输入命令…",
+        arcaneTerminalInteractiveHint: "点终端即可直接输入，交互式 shell（SwiftTerm）。上方提供 Ctrl 快捷键。",
         filesViewList: "列表",
         filesViewGrid: "网格",
         arcaneImagesTitle: "镜像",

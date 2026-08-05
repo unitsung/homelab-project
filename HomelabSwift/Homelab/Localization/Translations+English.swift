@@ -1906,6 +1906,7 @@ extension Translations {
         arcaneTerminalConnect: "Connect",
         arcaneTerminalDisconnect: "Disconnect",
         arcaneTerminalPlaceholder: "type command…",
+        arcaneTerminalInteractiveHint: "Tap the terminal and type freely — interactive shell (SwiftTerm). Ctrl keys above.",
         filesViewList: "List",
         filesViewGrid: "Grid",
         arcaneImagesTitle: "Images",
