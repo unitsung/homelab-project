@@ -522,12 +522,9 @@ struct ArcaneDashboard: View {
         } label: {
             Label(title, systemImage: icon)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(disabled ? AppTheme.textMuted : color)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background((disabled ? Color.secondary : color).opacity(0.12), in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.glass)
+        .tint(disabled ? Color.secondary : color)
         .disabled(disabled || isBatchRunning)
     }
 
@@ -617,14 +614,8 @@ struct ArcaneDashboard: View {
                                 }
                             }
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(filter == item ? .white : AppTheme.textSecondary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(
-                                Capsule().fill(filter == item ? arcaneColor : Color.secondary.opacity(0.12))
-                            )
                         }
-                        .buttonStyle(.plain)
+                        .applyArcaneFilterChipStyle(selected: filter == item, tint: arcaneColor)
                     }
                 }
             }
@@ -1255,20 +1246,18 @@ struct ArcaneDashboard: View {
 
     private func bannerView(_ text: String) -> some View {
         let isError = Self.bannerLooksLikeError(text)
+        let tint = isError ? AppTheme.danger : AppTheme.running
         return HStack(spacing: 8) {
             Image(systemName: isError ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
-                .foregroundStyle(isError ? AppTheme.danger : AppTheme.running)
+                .foregroundStyle(tint)
             Text(text)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(isError ? AppTheme.danger : AppTheme.running)
+                .foregroundStyle(tint)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .background(
-            (isError ? AppTheme.danger : AppTheme.running).opacity(0.12),
-            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-        )
+        .glassCard(cornerRadius: 10, tint: tint.opacity(0.2))
     }
 
     private static func bannerLooksLikeError(_ text: String) -> Bool {
@@ -1279,6 +1268,18 @@ struct ArcaneDashboard: View {
             || text.contains("失败")
             || text.contains("错误")
             || text.contains("不可用")
+    }
+}
+
+private extension View {
+    /// Selected filters use glassProminent; others use glass — keeps Liquid Glass consistent.
+    @ViewBuilder
+    func applyArcaneFilterChipStyle(selected: Bool, tint: Color) -> some View {
+        if selected {
+            self.buttonStyle(.glassProminent).tint(tint).controlSize(.small)
+        } else {
+            self.buttonStyle(.glass).tint(tint).controlSize(.small)
+        }
     }
 }
 

@@ -28,10 +28,8 @@ struct OpenListExternalPlayerList: View {
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color(uiColor: .tertiarySystemFill))
-                    )
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .glassCard(cornerRadius: 12, tint: player.accentColor.opacity(0.12))
                 }
                 .buttonStyle(.plain)
             }
@@ -50,10 +48,8 @@ struct OpenListExternalPlayerList: View {
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color(uiColor: .tertiarySystemFill))
-                    )
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .glassCard(cornerRadius: 12)
                 }
                 .buttonStyle(.plain)
             }

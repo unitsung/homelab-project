@@ -268,12 +268,9 @@ struct ArcaneContainerDetailView: View {
         } label: {
             Label(title, systemImage: icon)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(color)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .background(color.opacity(0.12), in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.glass)
+        .tint(color)
     }
 
     // MARK: - Tabs
@@ -476,7 +473,7 @@ struct ArcaneContainerDetailView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
-            .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .glassCard(cornerRadius: 8, tint: arcaneColor.opacity(0.08))
 
             ScrollViewReader { proxy in
                 ScrollView {
@@ -569,10 +566,9 @@ struct ArcaneContainerDetailView: View {
                 } label: {
                     Text((selectedShell as NSString).lastPathComponent)
                         .font(.caption2.weight(.semibold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.secondary.opacity(0.14), in: Capsule())
                 }
+                .buttonStyle(.glass)
+                .controlSize(.small)
 
                 Button(terminalSession.isConnected
                        ? localizer.t.arcaneTerminalDisconnect

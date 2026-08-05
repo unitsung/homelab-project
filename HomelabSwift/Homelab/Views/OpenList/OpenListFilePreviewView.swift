@@ -270,10 +270,7 @@ struct OpenListFilePreviewView: View {
             }
         }
         .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(uiColor: .secondarySystemGroupedBackground))
-        )
+        .glassCard(cornerRadius: 16, tint: serviceColor.opacity(0.08))
     }
 
     private var coverURL: URL? {
@@ -349,7 +346,7 @@ struct OpenListFilePreviewView: View {
             .font(.system(.footnote, design: .monospaced))
             .frame(minHeight: 320)
             .padding(8)
-            .background(Color(uiColor: .secondarySystemGroupedBackground))
+            .glassCard(cornerRadius: 12, tint: serviceColor.opacity(0.06))
     }
 
     @ViewBuilder
@@ -379,7 +376,7 @@ struct OpenListFilePreviewView: View {
             }
         }
         .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .glassCard(cornerRadius: 12, tint: serviceColor.opacity(0.06))
     }
 
     private var htmlPane: some View {
@@ -390,7 +387,7 @@ struct OpenListFilePreviewView: View {
                 HTMLPreviewWebView(html: textBody, baseURL: streamURL)
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: 360)
-                    .background(Color(uiColor: .secondarySystemGroupedBackground))
+                    .glassCard(cornerRadius: 12, tint: serviceColor.opacity(0.06))
             } else if let url = streamURL {
                 HTMLURLWebView(url: url)
                     .frame(maxWidth: .infinity)
@@ -428,12 +425,12 @@ struct OpenListFilePreviewView: View {
             Button(action: onDownload) {
                 Label(localizer.t.filesDownload, systemImage: "arrow.down.circle")
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.glassProminent)
             .tint(serviceColor)
         }
         .frame(maxWidth: .infinity)
         .padding(32)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .glassCard(cornerRadius: 16, tint: serviceColor.opacity(0.08))
     }
 
     private func placeholder(icon: String, text: String) -> some View {
@@ -448,7 +445,7 @@ struct OpenListFilePreviewView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(32)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .glassCard(cornerRadius: 16, tint: serviceColor.opacity(0.06))
     }
 
     private var metaCard: some View {
@@ -468,10 +465,7 @@ struct OpenListFilePreviewView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(uiColor: .secondarySystemGroupedBackground))
-        )
+        .glassCard(cornerRadius: 14, tint: serviceColor.opacity(0.08))
     }
 
     private func labeled(_ title: String, _ value: String) -> some View {
@@ -498,15 +492,14 @@ struct OpenListFilePreviewView: View {
                                 Task { await saveText() }
                             } label: {
                                 if isSaving {
-                                    ProgressView().frame(maxWidth: .infinity).padding(.vertical, 12)
+                                    ProgressView().frame(maxWidth: .infinity)
                                 } else {
                                     Label(localizer.t.filesSave, systemImage: "square.and.arrow.down")
                                         .font(.subheadline.weight(.semibold))
                                         .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
                                 }
                             }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.glassProminent)
                             .tint(serviceColor)
                             .disabled(isSaving)
                         } else {
@@ -517,9 +510,8 @@ struct OpenListFilePreviewView: View {
                                 Label(localizer.t.filesEdit, systemImage: "pencil")
                                     .font(.subheadline.weight(.semibold))
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
                             }
-                            .buttonStyle(.bordered)
+                            .buttonStyle(.glass)
                             .tint(serviceColor)
                         }
                     }
@@ -528,14 +520,12 @@ struct OpenListFilePreviewView: View {
                         Label(localizer.t.filesDownload, systemImage: "arrow.down.circle")
                             .font(.subheadline.weight(.semibold))
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.glassProminent)
                     .tint(serviceColor)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
-                .background(.ultraThinMaterial)
             }
         }
     }

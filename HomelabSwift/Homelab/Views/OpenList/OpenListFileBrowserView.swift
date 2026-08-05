@@ -347,7 +347,7 @@ struct OpenListFileBrowserView: View {
                         .font(.body.monospaced())
                         .frame(minHeight: 160)
                         .padding(8)
-                        .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .glassCard(cornerRadius: 12, tint: serviceColor.opacity(0.08))
                     Spacer(minLength: 0)
                 }
                 .padding(16)
@@ -393,7 +393,7 @@ struct OpenListFileBrowserView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(serviceColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .glassCard(cornerRadius: 12, tint: serviceColor.opacity(0.18))
     }
 
     private var breadcrumbBar: some View {
@@ -432,10 +432,8 @@ struct OpenListFileBrowserView: View {
                 } label: {
                     Label(localizer.t.filesNewFolder, systemImage: "folder.badge.plus")
                         .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
                 .tint(serviceColor)
                 .disabled(uploadProgress != nil)
 
@@ -444,10 +442,8 @@ struct OpenListFileBrowserView: View {
                 } label: {
                     Label(localizer.t.filesUpload, systemImage: "plus.circle.fill")
                         .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
                 .tint(serviceColor)
                 .disabled(uploadProgress != nil)
 
@@ -457,10 +453,8 @@ struct OpenListFileBrowserView: View {
                 } label: {
                     Label(localizer.t.filesOfflineDownload, systemImage: "arrow.down.circle")
                         .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
                 .tint(serviceColor)
             }
         }
@@ -493,24 +487,29 @@ struct OpenListFileBrowserView: View {
 
     private var selectionBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 Text(String(format: localizer.t.filesSelectedCount, selectedIDs.count))
                     .font(.subheadline.weight(.semibold))
                 Button(localizer.t.filesDownload) {
                     Task { await downloadItems(selectedItems) }
                 }
+                .buttonStyle(.glassProminent)
+                .tint(serviceColor)
                 .disabled(selectedItems.filter { !$0.isDirectory }.isEmpty)
                 Button(localizer.t.filesCopy) {
                     pathPickMode = .copy(selectedItems)
                 }
+                .buttonStyle(.glass)
                 .disabled(selectedIDs.isEmpty || !canWrite)
                 Button(localizer.t.filesMove) {
                     pathPickMode = .move(selectedItems)
                 }
+                .buttonStyle(.glass)
                 .disabled(selectedIDs.isEmpty || !canWrite)
                 Button(localizer.t.filesCopyLink) {
                     Task { await copyLinks(for: selectedItems) }
                 }
+                .buttonStyle(.glass)
                 .disabled(selectedItems.filter { !$0.isDirectory }.isEmpty)
                 Button(role: .destructive) {
                     pendingDelete = selectedItems
@@ -518,8 +517,11 @@ struct OpenListFileBrowserView: View {
                 } label: {
                     Text(localizer.t.delete)
                 }
+                .buttonStyle(.glass)
+                .tint(AppTheme.danger)
                 .disabled(selectedIDs.isEmpty)
             }
+            .font(.subheadline.weight(.semibold))
             .padding(.vertical, 4)
         }
     }
@@ -613,9 +615,9 @@ struct OpenListFileBrowserView: View {
                     newFolderName = ""
                     showNewFolderAlert = true
                 } label: {
-                    Text(localizer.t.filesNewFolder)
+                    Label(localizer.t.filesNewFolder, systemImage: "folder.badge.plus")
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
                 .tint(serviceColor)
             }
         }
@@ -665,7 +667,11 @@ struct OpenListFileBrowserView: View {
                     .frame(maxWidth: .infinity, minHeight: 32, alignment: .top)
             }
             .padding(8)
-            .background(AppTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .frame(maxWidth: .infinity)
+            .glassCard(
+                cornerRadius: 14,
+                tint: selected ? serviceColor.opacity(0.22) : ServiceType.openlist.colors.primary.opacity(0.06)
+            )
             .overlay {
                 if selected {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -1619,13 +1625,15 @@ struct FileRowView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(minHeight: 72)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(isSelected ? ServiceType.openlist.colors.bg : Color(uiColor: .secondarySystemGroupedBackground))
+        .glassCard(
+            cornerRadius: 16,
+            tint: isSelected
+                ? ServiceType.openlist.colors.primary.opacity(0.2)
+                : ServiceType.openlist.colors.primary.opacity(0.05)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(isSelected ? ServiceType.openlist.colors.primary.opacity(0.35) : .clear, lineWidth: 1.5)
+                .strokeBorder(isSelected ? ServiceType.openlist.colors.primary.opacity(0.4) : .clear, lineWidth: 1.5)
         )
     }
 
