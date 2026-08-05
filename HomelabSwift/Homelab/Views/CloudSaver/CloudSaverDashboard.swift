@@ -19,6 +19,9 @@ struct CloudSaverDashboard: View {
     @State private var lastMessageId = ""
     @State private var isSearching = false
     @State private var isLoadingMore = false
+    /// Bumps on each search so stale pages / link probes cannot overwrite newer results.
+    @State private var searchGeneration = 0
+    @State private var probeGeneration = 0
 
     @State private var errorMessage: String?
     @State private var transferMessage: String?
@@ -36,6 +39,7 @@ struct CloudSaverDashboard: View {
     @State private var resultSort: CloudSaverResultSort = .defaultOrder
     @State private var doubanSort: CloudSaverResultSort = .defaultOrder
     @State private var toastMessage: String?
+    @State private var transferMessageTask: Task<Void, Never>?
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -388,6 +392,12 @@ struct CloudSaverDashboard: View {
         }
 
         if reset {
+            searchGeneration += 1
+            probeGeneration += 1
+        }
+        let generation = searchGeneration
+
+        if reset {
             isSearching = true
             errorMessage = nil
             transferMessage = nil
@@ -401,8 +411,10 @@ struct CloudSaverDashboard: View {
             isLoadingMore = true
         }
         defer {
-            isSearching = false
-            isLoadingMore = false
+            if generation == searchGeneration {
+                isSearching = false
+                isLoadingMore = false
+            }
         }
 
         do {
@@ -410,6 +422,7 @@ struct CloudSaverDashboard: View {
                 keyword: q,
                 lastMessageId: reset ? nil : (lastMessageId.isEmpty ? nil : lastMessageId)
             )
+            guard generation == searchGeneration else { return }
             if reset {
                 results = page.results
             } else {
@@ -421,9 +434,10 @@ struct CloudSaverDashboard: View {
             if results.isEmpty {
                 errorMessage = localizer.t.csNoResults
             } else if reset {
-                Task { await probeLinkHealth(for: page.results) }
+                Task { await probeLinkHealth(for: page.results, generation: generation) }
             }
         } catch {
+            guard generation == searchGeneration else { return }
             errorMessage = CloudSaverUserFacingError.message(from: error, using: localizer.translations)
         }
     }
@@ -533,9 +547,12 @@ struct CloudSaverDashboard: View {
             let msg = parts.joined(separator: "。")
             transferMessage = msg
             showToast(msg)
+            scheduleTransferMessageClear()
         } catch {
             transferState = .failed
             transferMessage = CloudSaverUserFacingError.message(from: error, using: localizer.translations)
+            // Keep failure message longer so the user can read it.
+            scheduleTransferMessageClear(after: 5.0)
         }
     }
 
@@ -566,9 +583,15 @@ struct CloudSaverDashboard: View {
     }
 
     /// Probe first N search results for dead shares (share-info empty/error).
-    private func probeLinkHealth(for items: [CloudSaverSearchResult], limit: Int = 12) async {
+    private func probeLinkHealth(
+        for items: [CloudSaverSearchResult],
+        limit: Int = 12,
+        generation: Int
+    ) async {
         guard let client else { return }
+        probeGeneration = generation
         for item in items.prefix(limit) {
+            guard generation == searchGeneration, generation == probeGeneration else { return }
             if linkHealthById[item.id] != nil { continue }
             if item.shareCode.isEmpty {
                 linkHealthById[item.id] = .invalid(localizer.t.csNoShareCode)
@@ -585,12 +608,26 @@ struct CloudSaverDashboard: View {
                     receiveCode: item.receiveCode,
                     cloud: item.cloudType
                 )
+                guard generation == searchGeneration, generation == probeGeneration else { return }
                 linkHealthById[item.id] = info.files.isEmpty
                     ? .invalid(localizer.t.csNoFiles)
                     : .valid(fileCount: info.files.count)
             } catch {
+                guard generation == searchGeneration, generation == probeGeneration else { return }
                 let msg = (error as? APIError)?.errorDescription ?? error.localizedDescription
                 linkHealthById[item.id] = .invalid(msg)
+            }
+        }
+    }
+
+    private func scheduleTransferMessageClear(after seconds: Double = 3.0) {
+        transferMessageTask?.cancel()
+        let current = transferMessage
+        transferMessageTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            if transferMessage == current {
+                transferMessage = nil
             }
         }
     }

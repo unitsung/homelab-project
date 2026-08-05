@@ -21,6 +21,7 @@ struct ArcaneDashboard: View {
     @State private var query = ""
     @State private var filter: ContainerFilter = .all
     @State private var bannerMessage: String?
+    @State private var bannerTask: Task<Void, Never>?
     @State private var confirmStopAll = false
     @State private var confirmStartAll = false
     @State private var confirmBatchUpdate = false
@@ -125,22 +126,29 @@ struct ArcaneDashboard: View {
                 dockerHostSection(info)
             }
 
+            // Keep feedback near the top so long container lists never hide it.
+            if let bannerMessage {
+                bannerView(bannerMessage)
+            }
+
             bulkActionsSection
             containerStatsSection
             filterBar
             containerListSection
-
-            if let bannerMessage {
-                Text(bannerMessage)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(AppTheme.surface.opacity(0.9), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            }
         }
         .navigationTitle(ServiceType.arcane.displayName)
+        .onChange(of: bannerMessage) { _, newValue in
+            bannerTask?.cancel()
+            guard let newValue else { return }
+            let isError = Self.bannerLooksLikeError(newValue)
+            bannerTask = Task { @MainActor in
+                try? await Task.sleep(nanoseconds: isError ? 4_000_000_000 : 2_800_000_000)
+                guard !Task.isCancelled else { return }
+                if bannerMessage == newValue {
+                    bannerMessage = nil
+                }
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(selectionMode ? localizer.t.done : localizer.t.actionEdit) {
@@ -1243,6 +1251,34 @@ struct ArcaneDashboard: View {
         case "paused": return AppTheme.paused
         default: return AppTheme.warning
         }
+    }
+
+    private func bannerView(_ text: String) -> some View {
+        let isError = Self.bannerLooksLikeError(text)
+        return HStack(spacing: 8) {
+            Image(systemName: isError ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                .foregroundStyle(isError ? AppTheme.danger : AppTheme.running)
+            Text(text)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(isError ? AppTheme.danger : AppTheme.running)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            (isError ? AppTheme.danger : AppTheme.running).opacity(0.12),
+            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+        )
+    }
+
+    private static func bannerLooksLikeError(_ text: String) -> Bool {
+        let lower = text.lowercased()
+        return lower.contains("fail")
+            || lower.contains("error")
+            || lower.contains("unavailable")
+            || text.contains("失败")
+            || text.contains("错误")
+            || text.contains("不可用")
     }
 }
 

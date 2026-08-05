@@ -1961,6 +1961,18 @@ struct Translations {
     let arcaneLogEmpty: String
     let arcaneLogLoading: String
     let arcaneLogPaused: String
+    let arcaneLogAutoScrollOn: String
+    let arcaneLogTimeoutHint: String
+    let arcaneLogFailedFormat: String
+    let arcaneProgressPullHint: String
+    let arcaneProgressWithErrors: String
+    let arcaneProgressComplete: String
+    let arcaneInfoImage: String
+    let arcaneInfoCreated: String
+    let arcaneInfoCmd: String
+    let arcaneInfoWorkdir: String
+    let arcaneInfoPorts: String
+    let arcaneInfoCompose: String
     let arcaneTerminalFullscreen: String
     let arcaneTerminalConnected: String
     let arcaneTerminalDisconnected: String

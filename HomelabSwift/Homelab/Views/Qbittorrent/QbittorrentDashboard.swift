@@ -827,28 +827,21 @@ struct QbittorrentDashboard: View {
         guard !selectedHashes.isEmpty, !isRunningTorrentAction else { return }
         isRunningTorrentAction = true
         defer { isRunningTorrentAction = false }
-        var ok = 0
-        var fail = 0
+        let hashes = Array(selectedHashes)
         do {
             let client = try requireClient()
-            for hash in selectedHashes {
-                do {
-                    if resume {
-                        try await client.resumeTorrent(hash: hash)
-                    } else {
-                        try await client.pauseTorrent(hash: hash)
-                    }
-                    ok += 1
-                } catch {
-                    fail += 1
-                }
+            // One multi-hash request (qB accepts pipe-separated hashes).
+            if resume {
+                try await client.resumeTorrents(hashes: hashes)
+            } else {
+                try await client.pauseTorrents(hashes: hashes)
             }
+            showActionBanner(String(format: localizer.t.qbBatchResultFormat, hashes.count, 0), isError: false)
+            HapticManager.success()
         } catch {
             showActionError(error)
             return
         }
-        showActionBanner(String(format: localizer.t.qbBatchResultFormat, ok, fail), isError: fail > 0)
-        if fail == 0 { HapticManager.success() } else { HapticManager.error() }
         await fetchData(silent: true, includeTorrents: true)
     }
 
@@ -857,26 +850,18 @@ struct QbittorrentDashboard: View {
         guard !selectedHashes.isEmpty, !isRunningTorrentAction else { return }
         isRunningTorrentAction = true
         defer { isRunningTorrentAction = false }
-        var ok = 0
-        var fail = 0
+        let hashes = Array(selectedHashes)
         do {
             let client = try requireClient()
-            for hash in selectedHashes {
-                do {
-                    try await client.deleteTorrent(hash: hash, deleteFiles: deleteFiles)
-                    ok += 1
-                } catch {
-                    fail += 1
-                }
-            }
+            try await client.deleteTorrents(hashes: hashes, deleteFiles: deleteFiles)
+            selectedHashes.removeAll()
+            isSelecting = false
+            showActionBanner(String(format: localizer.t.qbBatchResultFormat, hashes.count, 0), isError: false)
+            HapticManager.success()
         } catch {
             showActionError(error)
             return
         }
-        selectedHashes.removeAll()
-        isSelecting = false
-        showActionBanner(String(format: localizer.t.qbBatchResultFormat, ok, fail), isError: fail > 0)
-        if fail == 0 { HapticManager.success() } else { HapticManager.error() }
         await fetchData(silent: true, includeTorrents: true)
     }
 

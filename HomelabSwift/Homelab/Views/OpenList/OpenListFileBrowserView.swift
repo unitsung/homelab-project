@@ -42,6 +42,8 @@ struct OpenListFileBrowserView: View {
     @State private var isSearching = false
     /// True while a search request is in flight (distinct from “showing search results”).
     @State private var isSearchLoading = false
+    /// Bumps on each search so stale responses cannot overwrite newer results.
+    @State private var searchGeneration = 0
 
     @State private var isSelecting = false
     @State private var selectedIDs: Set<String> = []
@@ -159,6 +161,7 @@ struct OpenListFileBrowserView: View {
         .onSubmit(of: .search) { Task { await runSearch() } }
         .onChange(of: searchText) { _, v in
             if v.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                searchGeneration += 1
                 isSearching = false
                 isSearchLoading = false
                 searchResults = []
@@ -984,6 +987,15 @@ struct OpenListFileBrowserView: View {
             if !silent { state = .error(.notConfigured) }
             return
         }
+        // Avoid clobbering an in-flight folder change with a stale list response.
+        if isNavigating { return }
+
+        let pathAtStart = path
+        let hadContent: Bool = {
+            if case .loaded = state { return true }
+            return !items.isEmpty
+        }()
+
         // Keep chrome + previous list when already loaded (no skeleton flash on refresh).
         if !silent, case .loaded = state {
             // soft refresh
@@ -991,14 +1003,32 @@ struct OpenListFileBrowserView: View {
             state = .loading
         }
         do {
-            let result = try await client.list(path: path)
+            let result = try await client.list(path: pathAtStart)
+            guard pathAtStart == path, !isNavigating else { return }
             items = result.items
             canWrite = result.writable
             state = .loaded(())
         } catch let error as APIError {
-            if !silent { state = .error(error) }
+            guard pathAtStart == path, !isNavigating else { return }
+            // Prefer toast over full-page error so an already-browsable tree stays usable.
+            if hadContent {
+                if !silent {
+                    showToast(error.localizedDescription)
+                    state = .loaded(())
+                }
+            } else if !silent {
+                state = .error(error)
+            }
         } catch {
-            if !silent { state = .error(.networkError(error)) }
+            guard pathAtStart == path, !isNavigating else { return }
+            if hadContent {
+                if !silent {
+                    showToast(error.localizedDescription)
+                    state = .loaded(())
+                }
+            } else if !silent {
+                state = .error(.networkError(error))
+            }
         }
     }
 
@@ -1024,6 +1054,7 @@ struct OpenListFileBrowserView: View {
         navigateGeneration += 1
         let generation = navigateGeneration
 
+        searchGeneration += 1
         isSearching = false
         isSearchLoading = false
         searchText = ""
@@ -1061,7 +1092,9 @@ struct OpenListFileBrowserView: View {
                 isNavigating = false
                 folderNavDirection = folderNavDirection.reversed
             }
-            state = .error(error)
+            // Toast only — never flip ServiceDashboardLayout to full-page error mid-browse.
+            state = .loaded(())
+            showToast(error.localizedDescription)
         } catch {
             guard generation == navigateGeneration else { return }
             withAnimation(.easeInOut(duration: 0.25)) {
@@ -1071,7 +1104,8 @@ struct OpenListFileBrowserView: View {
                 isNavigating = false
                 folderNavDirection = folderNavDirection.reversed
             }
-            state = .error(.networkError(error))
+            state = .loaded(())
+            showToast(error.localizedDescription)
         }
     }
 
@@ -1085,17 +1119,26 @@ struct OpenListFileBrowserView: View {
     private func runSearch() async {
         let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty, let client else { return }
+        searchGeneration += 1
+        let generation = searchGeneration
         isSearching = true
         isSearchLoading = true
         searchResults = []
-        defer { isSearchLoading = false }
+        defer {
+            if generation == searchGeneration {
+                isSearchLoading = false
+            }
+        }
         do {
-            searchResults = try await client.search(keyword: q, path: path)
-            state = .loaded(())
-        } catch let error as APIError {
-            state = .error(error)
+            let found = try await client.search(keyword: q, path: path)
+            guard generation == searchGeneration else { return }
+            searchResults = found
+            if case .error = state { state = .loaded(()) }
         } catch {
-            state = .error(.networkError(error))
+            guard generation == searchGeneration else { return }
+            // Keep the browser on screen; surface the failure as a toast.
+            if case .error = state { state = .loaded(()) }
+            showToast((error as? APIError)?.localizedDescription ?? error.localizedDescription)
         }
     }
 

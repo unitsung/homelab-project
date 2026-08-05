@@ -81,6 +81,7 @@ final class ArcaneUpdateProgressSession: ObservableObject {
 struct ArcaneUpdateProgressSheet: View {
     @ObservedObject var session: ArcaneUpdateProgressSession
     @Environment(\.dismiss) private var dismiss
+    @Environment(Localizer.self) private var localizer
 
     var body: some View {
         NavigationStack {
@@ -130,7 +131,7 @@ struct ArcaneUpdateProgressSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(session.isRunning ? "Hide" : "Done") {
+                    Button(session.isRunning ? localizer.t.close : localizer.t.done) {
                         dismiss()
                     }
                 }
@@ -152,10 +153,14 @@ struct ArcaneUpdateProgressSheet: View {
                         .foregroundStyle(session.didFail ? AppTheme.danger : AppTheme.running)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(session.subtitle.isEmpty ? (session.isRunning ? "Running…" : "Finished") : session.subtitle)
+                    Text(session.subtitle.isEmpty
+                         ? (session.isRunning ? localizer.t.loading : localizer.t.done)
+                         : session.subtitle)
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
-                    Text(session.isRunning ? "Pull / recreate progress" : (session.didFail ? "Finished with errors" : "Update complete"))
+                    Text(session.isRunning
+                         ? localizer.t.arcaneProgressPullHint
+                         : (session.didFail ? localizer.t.arcaneProgressWithErrors : localizer.t.arcaneProgressComplete))
                         .font(.caption2)
                         .foregroundStyle(AppTheme.textMuted)
                 }

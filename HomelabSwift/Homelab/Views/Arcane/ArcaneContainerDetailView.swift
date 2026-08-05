@@ -321,13 +321,13 @@ struct ArcaneContainerDetailView: View {
             liveStatsCard
 
             infoRow("ID", String(detail.id.prefix(12)))
-            infoRow("Image", detail.image ?? "—")
-            infoRow("Created", detail.created ?? "—")
+            infoRow(localizer.t.arcaneInfoImage, detail.image ?? "—")
+            infoRow(localizer.t.arcaneInfoCreated, detail.created ?? "—")
             if let cmd = detail.config?.cmd, !cmd.isEmpty {
-                infoRow("Cmd", cmd.joined(separator: " "))
+                infoRow(localizer.t.arcaneInfoCmd, cmd.joined(separator: " "))
             }
             if let wd = detail.config?.workingDir, !wd.isEmpty {
-                infoRow("Workdir", wd)
+                infoRow(localizer.t.arcaneInfoWorkdir, wd)
             }
             if let ports = detail.ports, !ports.isEmpty {
                 let text = ports.map { p in
@@ -335,7 +335,7 @@ struct ArcaneContainerDetailView: View {
                     let priv = p.privatePort.map(String.init) ?? "-"
                     return "\(pub)->\(priv)/\(p.type ?? "tcp")"
                 }.joined(separator: ", ")
-                infoRow("Ports", text)
+                infoRow(localizer.t.arcaneInfoPorts, text)
             }
             if let mounts = detail.mounts, !mounts.isEmpty {
                 ForEach(mounts) { mount in
@@ -343,7 +343,7 @@ struct ArcaneContainerDetailView: View {
                 }
             }
             if let compose = detail.composeInfo {
-                infoRow("Compose", "\(compose.projectName ?? "") / \(compose.serviceName ?? "")")
+                infoRow(localizer.t.arcaneInfoCompose, "\(compose.projectName ?? "") / \(compose.serviceName ?? "")")
             }
         }
         .padding(14)
@@ -451,7 +451,7 @@ struct ArcaneContainerDetailView: View {
                         .font(.caption.weight(.semibold))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(logAutoScroll ? localizer.t.arcaneLogPaused : localizer.t.arcaneLogPaused)
+                .accessibilityLabel(logAutoScroll ? localizer.t.arcaneLogAutoScrollOn : localizer.t.arcaneLogPaused)
 
                 if !logs.isEmpty {
                     ShareLink(item: logs) {
@@ -816,7 +816,7 @@ struct ArcaneContainerDetailView: View {
                     guard self.isLoadingLogs, self.logsTask === loadingTask else { return }
                     self.isLoadingLogs = false
                     if self.logs.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        self.logs = "/* no log lines after 8s — check API key (containers:logs) or container output */\n"
+                        self.logs = "/* \(self.localizer.t.arcaneLogTimeoutHint) */\n"
                     }
                 }
 
@@ -824,7 +824,7 @@ struct ArcaneContainerDetailView: View {
             } catch {
                 await MainActor.run {
                     self.isLoadingLogs = false
-                    self.logs = "/* live logs failed: \(error.localizedDescription) */\n"
+                    self.logs = "/* \(String(format: self.localizer.t.arcaneLogFailedFormat, error.localizedDescription)) */\n"
                 }
             }
         }

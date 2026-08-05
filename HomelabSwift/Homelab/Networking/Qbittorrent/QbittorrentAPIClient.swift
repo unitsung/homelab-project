@@ -228,6 +228,20 @@ actor QbittorrentAPIClient {
         try await postTorrentControl(primaryPath: "/api/v2/torrents/resume", fallbackPath: "/api/v2/torrents/start", hashes: hash)
     }
 
+    /// Pause many torrents in one request (`hashes` pipe-separated as per qB API).
+    func pauseTorrents(hashes: [String]) async throws {
+        let joined = hashes.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }.joined(separator: "|")
+        guard !joined.isEmpty else { return }
+        try await postTorrentControl(primaryPath: "/api/v2/torrents/pause", fallbackPath: "/api/v2/torrents/stop", hashes: joined)
+    }
+
+    /// Resume many torrents in one request.
+    func resumeTorrents(hashes: [String]) async throws {
+        let joined = hashes.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }.joined(separator: "|")
+        guard !joined.isEmpty else { return }
+        try await postTorrentControl(primaryPath: "/api/v2/torrents/resume", fallbackPath: "/api/v2/torrents/start", hashes: joined)
+    }
+
     /// qB 4.x uses pause/resume; 5.x often exposes stop/start. Try primary then fallback on 404/405.
     private func postTorrentControl(primaryPath: String, fallbackPath: String, hashes: String) async throws {
         do {
@@ -297,6 +311,13 @@ actor QbittorrentAPIClient {
     }
 
     func deleteTorrent(hash: String, deleteFiles: Bool) async throws {
+        try await deleteTorrents(hashes: [hash], deleteFiles: deleteFiles)
+    }
+
+    /// Delete many torrents in one request (`hashes` pipe-separated).
+    func deleteTorrents(hashes: [String], deleteFiles: Bool) async throws {
+        let joined = hashes.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }.joined(separator: "|")
+        guard !joined.isEmpty else { return }
         try await requestVoidWithSessionRefresh {
             try await engine.requestVoid(
                 baseURL: baseURL,
@@ -304,7 +325,7 @@ actor QbittorrentAPIClient {
                 path: "/api/v2/torrents/delete",
                 method: "POST",
                 headers: formHeaders(),
-                body: formBody(["hashes": hash, "deleteFiles": deleteFiles ? "true" : "false"])
+                body: formBody(["hashes": joined, "deleteFiles": deleteFiles ? "true" : "false"])
             )
         }
     }
