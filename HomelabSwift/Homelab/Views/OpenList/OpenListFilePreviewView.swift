@@ -211,10 +211,10 @@ struct OpenListFilePreviewView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                 VStack(spacing: 12) {
+                    Spacer(minLength: 0)
                     if isLoading && streamURL == nil {
                         ProgressView().tint(.white)
                     } else {
-                        Spacer(minLength: 0)
                         Button(action: onPlayBuiltIn) {
                             Image(systemName: "play.circle.fill")
                                 .font(.system(size: 64))
@@ -225,24 +225,30 @@ struct OpenListFilePreviewView: View {
                         .buttonStyle(.plain)
                         .disabled(streamURL == nil && !isLoading)
                         .accessibilityLabel(localizer.t.filesPlay)
-
-                        Text(item.name)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .padding(.horizontal, 16)
-                            .shadow(radius: 2)
-
-                        if streamURL == nil, !isLoading {
-                            Text(localizer.t.filesNoPlayableURL)
-                                .font(.caption)
-                                .foregroundStyle(.white.opacity(0.75))
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal)
-                        }
-                        Spacer(minLength: 8)
                     }
+
+                    Text(item.name)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .padding(.horizontal, 16)
+                        .shadow(radius: 2)
+
+                    if OpenListMediaPlayerView.isBuiltInUnfriendlyExtension(item.fileExtension) {
+                        Text(localizer.t.filesPlayerUnsupportedFormatHint)
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.8))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    } else if streamURL == nil, !isLoading {
+                        Text(localizer.t.filesNoPlayableURL)
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.75))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    Spacer(minLength: 8)
                 }
                 .padding(.vertical, 12)
             }

@@ -111,12 +111,12 @@ struct HomeView: View {
     }
 
     /// Overview cards driven by `settingsStore.dashboardCardOrder` (not a hard-coded layout).
+    /// Each card is full-width on its own row (Beszel overview / Docker / qBittorrent).
     private var dashboardCards: some View {
-        let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
-        return LazyVGrid(columns: columns, spacing: 12) {
+        VStack(spacing: 12) {
             ForEach(settingsStore.dashboardCardOrder) { id in
                 dashboardCard(for: id)
-                    .gridCellColumns(id.spansFullWidth ? 2 : 1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }

@@ -686,7 +686,6 @@ struct OpenListFileBrowserView: View {
         .buttonStyle(.plain)
         .contextMenu { fileContextMenu(item) }
         .onLongPressGesture(minimumDuration: 0.45) {
-            HapticManager.medium()
             if !isSelecting { isSelecting = true }
             toggleSelect(item)
         }
@@ -910,10 +909,8 @@ struct OpenListFileBrowserView: View {
             showOfflineDownload = false
             offlineURLsText = ""
             showToast(localizer.t.filesOfflineDownloadStarted)
-            HapticManager.success()
         } catch {
             showToast((error as? APIError)?.localizedDescription ?? error.localizedDescription)
-            HapticManager.error()
         }
     }
 
@@ -1055,7 +1052,6 @@ struct OpenListFileBrowserView: View {
                 isNavigating = false
             }
             state = .loaded(())
-            HapticManager.light()
         } catch let error as APIError {
             guard generation == navigateGeneration else { return }
             withAnimation(.easeInOut(duration: 0.25)) {
@@ -1193,11 +1189,28 @@ struct OpenListFileBrowserView: View {
 
     @MainActor
     private func openBuiltInPlayer(_ item: FileItem) async {
+        // Pre-check extension before opening the player (avoid dead-end loading page for MKV/AVI…).
+        let ext = item.fileExtension.lowercased()
+        if OpenListMediaPlayerView.isBuiltInUnfriendlyExtension(ext) {
+            showToast(localizer.t.filesPlayerUnsupportedFormatHint)
+            playerPickerItem = item
+            showPlayerPicker = true
+            return
+        }
+
         do {
             let detail = try await ensureDetail(for: item)
             // Prefer OpenList /d stream for media (sign-auth). contentURL (/p) as fallback.
             guard let url = detail.playURL ?? detail.contentURL else {
                 showToast(localizer.t.filesNoPlayableURL)
+                return
+            }
+            // Also check URL path extension (some servers rewrite names).
+            let urlExt = url.pathExtension.lowercased()
+            if OpenListMediaPlayerView.isBuiltInUnfriendlyExtension(urlExt) {
+                showToast(localizer.t.filesPlayerUnsupportedFormatHint)
+                playerPickerItem = item
+                showPlayerPicker = true
                 return
             }
             var subtitleURL: URL?

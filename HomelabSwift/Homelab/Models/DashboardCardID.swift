@@ -8,13 +8,8 @@ enum DashboardCardID: String, CaseIterable, Codable, Identifiable, Hashable, Sen
 
     var id: String { rawValue }
 
-    /// Full-width hero vs half-width grid tiles.
-    var spansFullWidth: Bool {
-        switch self {
-        case .hero: return true
-        case .docker, .qbittorrent: return false
-        }
-    }
+    /// Home overview cards each occupy a full row (hero / Docker / qBittorrent).
+    var spansFullWidth: Bool { true }
 
     /// Default display order for the home metric/overview strip.
     static var defaultOrder: [DashboardCardID] { Array(allCases) }

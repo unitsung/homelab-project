@@ -72,6 +72,11 @@ struct OpenListMediaPlayerView: View {
         "mkv", "avi", "wmv", "flv", "rmvb", "rm", "asf", "divx", "xvid", "ogm", "mpg", "mpeg"
     ]
 
+    /// Shared pre-check so callers can avoid opening the built-in player for unsupported formats.
+    static func isBuiltInUnfriendlyExtension(_ ext: String) -> Bool {
+        avPlayerUnfriendlyExtensions.contains(ext.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())
+    }
+
     private static let observerQueue = DispatchQueue(
         label: "com.homelab.openlist.player.observer",
         qos: .userInitiated
@@ -106,7 +111,9 @@ struct OpenListMediaPlayerView: View {
                     errorBlock(errorText)
                 } else {
                     videoSurface
-                    sideGestureLayers(size: geo.size)
+                    if isReady {
+                        sideGestureLayers(size: geo.size)
+                    }
 
                     if useExternalSubtitles, !currentCueText.isEmpty {
                         VStack {
@@ -124,15 +131,15 @@ struct OpenListMediaPlayerView: View {
                         .allowsHitTesting(false)
                     }
 
-                    if showControls {
+                    // Always keep a dismiss control above gestures so loading is never a dead-end.
+                    if !isReady {
+                        loadingChrome
+                    } else if showControls {
                         controlsOverlay
                             .transition(.opacity)
                     }
                     if let sideHud {
                         sideHudBadge(sideHud)
-                    }
-                    if !isReady {
-                        ProgressView().tint(.white).scaleEffect(1.1)
                     }
                 }
             }
@@ -382,6 +389,52 @@ struct OpenListMediaPlayerView: View {
 
     // MARK: - Controls (VLC / Infuse layout)
 
+    /// Single loading surface: one spinner + always-tappable close (no second spinner in the scrubber).
+    private var loadingChrome: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 40, height: 40)
+                        .background(.white.opacity(0.16), in: Circle())
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(localizer.t.close)
+
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 12)
+            .padding(.bottom, 16)
+            .background(
+                LinearGradient(
+                    colors: [.black.opacity(0.7), .black.opacity(0.0)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+
+            Spacer()
+            ProgressView()
+                .tint(.white)
+                .scaleEffect(1.15)
+            Text(localizer.t.loading)
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(.white.opacity(0.75))
+                .padding(.top, 10)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
+    }
+
     private var controlsOverlay: some View {
         VStack(spacing: 0) {
             infuseTopBar
@@ -398,7 +451,9 @@ struct OpenListMediaPlayerView: View {
                 .buttonStyle(.plain)
             }
             Spacer()
-            infuseBottomBar
+            if isReady {
+                infuseBottomBar
+            }
         }
     }
 
@@ -455,8 +510,10 @@ struct OpenListMediaPlayerView: View {
                     )
                     .tint(.white)
                 } else {
-                    ProgressView()
-                        .tint(.white)
+                    // Placeholder track while duration is unknown — not a second loading spinner.
+                    Capsule()
+                        .fill(.white.opacity(0.25))
+                        .frame(height: 3)
                         .frame(maxWidth: .infinity)
                 }
 
