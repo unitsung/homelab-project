@@ -161,14 +161,15 @@ struct QbittorrentDashboard: View {
     }
     
     @MainActor
-    private func fetchData(silent: Bool, includeTorrents: Bool) async {
+    private func fetchData(silent: Bool, includeTorrents: Bool, force: Bool = false) async {
         guard servicesStore.instance(id: instanceId) != nil else {
             if !silent { state = .error(.notConfigured) }
             return
         }
         guard let client else { return }
-        if isFetching { return }
-        if silent {
+        // Timer polls and user actions can overlap; only coalesce silent polls.
+        if isFetching, !force { return }
+        if silent, !force {
             guard isViewVisible, servicesStore.reachability(for: instanceId) != false else { return }
         }
 
@@ -240,9 +241,9 @@ struct QbittorrentDashboard: View {
                 )
                 secondaryStatCard(
                     title: arr.altSpeedLabel,
-                    value: transferInfo.use_alt_speed_limits == true ? localizer.t.yes : localizer.t.no,
-                    icon: transferInfo.use_alt_speed_limits == true ? "tortoise.fill" : "gauge.with.needle",
-                    color: transferInfo.use_alt_speed_limits == true ? AppTheme.warning : AppTheme.running
+                    value: transferInfo.isAltSpeedLimitsEnabled ? localizer.t.yes : localizer.t.no,
+                    icon: transferInfo.isAltSpeedLimitsEnabled ? "tortoise.fill" : "gauge.with.needle",
+                    color: transferInfo.isAltSpeedLimitsEnabled ? AppTheme.warning : AppTheme.running
                 )
             }
 
@@ -517,29 +518,15 @@ struct QbittorrentDashboard: View {
                 .disabled(isRunningTorrentAction)
 
                 Button {
-                    Task {
-                        guard !isRunningTorrentAction else { return }
-                        isRunningTorrentAction = true
-                        defer { isRunningTorrentAction = false }
-                        do {
-                            HapticManager.medium()
-                            try await requireClient().toggleAlternativeSpeedLimits()
-                            actionMessage = arr.altLimitsToggled
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                                actionMessage = nil
-                            }
-                            await fetchData(silent: false, includeTorrents: true)
-                        } catch {
-                            showActionError(error)
-                        }
-                    }
+                    Task { await toggleAltSpeedLimits() }
                 } label: {
-                    Image(systemName: "speedometer")
+                    Image(systemName: transferInfo?.isAltSpeedLimitsEnabled == true ? "tortoise.fill" : "speedometer")
                 }
                 .buttonStyle(.glass)
-                .tint(AppTheme.info)
+                .tint(transferInfo?.isAltSpeedLimitsEnabled == true ? AppTheme.warning : AppTheme.info)
                 .controlSize(.small)
                 .disabled(isRunningTorrentAction)
+                .accessibilityLabel(arr.altSpeedLabel)
 
                 Button {
                     Task {
@@ -775,6 +762,38 @@ struct QbittorrentDashboard: View {
         }
         .padding(16)
         .glassCard()
+    }
+
+    @MainActor
+    private func toggleAltSpeedLimits() async {
+        guard !isRunningTorrentAction else { return }
+        isRunningTorrentAction = true
+        defer { isRunningTorrentAction = false }
+        do {
+            HapticManager.medium()
+            let wasOn = transferInfo?.isAltSpeedLimitsEnabled ?? false
+            try await requireClient().toggleAlternativeSpeedLimits()
+            // Optimistic UI — qB applies immediately; don't wait on a coalesced poll.
+            if let info = transferInfo {
+                transferInfo = info.withAltSpeedLimits(!wasOn)
+            }
+            showActionBanner(arr.altLimitsToggled, isError: false)
+            // Dedicated refresh (not gated by isFetching) so the top card always updates.
+            await refreshTransferInfo()
+        } catch {
+            showActionError(error)
+        }
+    }
+
+    /// Always pulls transfer stats (alt-speed, rates) even while a list poll is in flight.
+    @MainActor
+    private func refreshTransferInfo() async {
+        guard let client else { return }
+        do {
+            transferInfo = try await client.getTransferInfo()
+        } catch {
+            // Keep optimistic / last known values; reachability is handled by silent polls.
+        }
     }
 
     @MainActor
