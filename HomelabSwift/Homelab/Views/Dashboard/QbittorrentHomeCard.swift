@@ -43,6 +43,7 @@ struct QbittorrentHomeCard: View {
             }
             if hasInstance, fetchFailed {
                 statPlaceholder(localizer.t.statusUnreachable)
+                Spacer(minLength: 0)
             } else if hasInstance, totalTorrents > 0 {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     stat(localizer.t.homeQbitTorrents, "\(totalTorrents)")
@@ -50,23 +51,28 @@ struct QbittorrentHomeCard: View {
                     stat(localizer.t.homeQbitSeeding, "\(seedingCount)", accent: AppTheme.running)
                     stat(localizer.t.homeQbitPaused, "\(pausedCount)")
                 }
-                HStack(spacing: 12) {
-                    Text(String(format: localizer.t.homeQbitDownloadSpeed, Formatters.formatBytes(Double(downloadSpeed)) + "/s"))
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(AppTheme.info)
-                    Text(String(format: localizer.t.homeQbitUploadSpeed, Formatters.formatBytes(Double(uploadSpeed)) + "/s"))
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(AppTheme.running)
-                    Spacer(minLength: 0)
+                Spacer(minLength: 0)
+                // Two equal columns, each centered under the stats grid.
+                HStack(spacing: 8) {
+                    speedLabel(
+                        String(format: localizer.t.homeQbitDownloadSpeed, Formatters.formatBytes(Double(downloadSpeed)) + "/s"),
+                        color: AppTheme.info
+                    )
+                    speedLabel(
+                        String(format: localizer.t.homeQbitUploadSpeed, Formatters.formatBytes(Double(uploadSpeed)) + "/s"),
+                        color: AppTheme.running
+                    )
                 }
             } else if hasInstance {
                 statPlaceholder(localizer.t.homeQbitNoActive)
+                Spacer(minLength: 0)
             } else {
                 statPlaceholder(localizer.t.launcherNotConfigured)
+                Spacer(minLength: 0)
             }
         }
         .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .contentShape(Rectangle())
         .glassCard()
     }
@@ -77,6 +83,17 @@ struct QbittorrentHomeCard: View {
             Text(label).font(.caption2).foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)
+        .multilineTextAlignment(.center)
+    }
+
+    private func speedLabel(_ text: String, color: Color) -> some View {
+        Text(text)
+            .font(.caption2.weight(.semibold).monospacedDigit())
+            .foregroundStyle(color)
+            .multilineTextAlignment(.center)
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+            .frame(maxWidth: .infinity)
     }
 
     private func statPlaceholder(_ text: String) -> some View {

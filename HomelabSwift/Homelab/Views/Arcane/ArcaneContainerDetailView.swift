@@ -37,7 +37,6 @@ struct ArcaneContainerDetailView: View {
     @State private var statsUnavailable = false
 
     private let arcaneColor = ServiceType.arcane.colors.primary
-    private let quickCommands = ["ls -la", "pwd", "ps aux", "df -h", "top -bn1 | head", "env", "cat /etc/os-release"]
     private let shellOptions = ["/bin/sh", "/bin/bash", "/bin/ash", "/bin/zsh"]
     private let autoUpdateLabelKey = "com.getarcaneapp.arcane.updater"
     @Environment(\.openURL) private var openURL
@@ -603,6 +602,7 @@ struct ArcaneContainerDetailView: View {
                 }
             }
 
+            // SwiftTerm provides its own keyboard accessory shortcuts (Esc/Ctrl/arrows…).
             ArcaneSwiftTermView(session: terminalSession, fontSize: showFullscreenButton ? 12.5 : 14) { url in
                 openURL(url)
             }
@@ -612,41 +612,6 @@ struct ArcaneContainerDetailView: View {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .strokeBorder(Color.secondary.opacity(0.18), lineWidth: 1)
             )
-
-            // Soft function keys for common control sequences (SwiftTerm keyboard still handles typing).
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    termKey("Esc") { terminalSession.sendText("\u{1b}") }
-                    termKey("Tab") { terminalSession.sendText("\t") }
-                    termKey("Ctrl+C") { terminalSession.sendText("\u{0003}") }
-                    termKey("Ctrl+D") { terminalSession.sendText("\u{0004}") }
-                    termKey("Ctrl+L") { terminalSession.sendText("\u{000c}") }
-                    termKey("↑") { terminalSession.sendText("\u{1b}[A") }
-                    termKey("↓") { terminalSession.sendText("\u{1b}[B") }
-                    termKey("←") { terminalSession.sendText("\u{1b}[D") }
-                    termKey("→") { terminalSession.sendText("\u{1b}[C") }
-                    termKey("Home") { terminalSession.sendText("\u{1b}[H") }
-                    termKey("End") { terminalSession.sendText("\u{1b}[F") }
-                    termKey("Paste") { pasteFromClipboard() }
-                }
-            }
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    ForEach(quickCommands, id: \.self) { cmd in
-                        Button(cmd) {
-                            // Inject as if typed, then Enter — works with interactive shells / prompts.
-                            terminalSession.sendText(cmd + "\r")
-                        }
-                        .font(.caption2.weight(.semibold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
-                        .background(arcaneColor.opacity(0.12), in: Capsule())
-                        .buttonStyle(.plain)
-                        .disabled(!terminalSession.isConnected)
-                    }
-                }
-            }
 
             if let statusMessage = terminalSession.statusMessage {
                 Text(statusMessage)
@@ -658,16 +623,6 @@ struct ArcaneContainerDetailView: View {
                     .foregroundStyle(AppTheme.textMuted)
             }
         }
-    }
-
-    private func termKey(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(title, action: action)
-            .font(.caption2.weight(.bold).monospaced())
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .background(Color.secondary.opacity(0.15), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-            .buttonStyle(.plain)
-            .disabled(!terminalSession.isConnected && title != "Paste")
     }
 
     private func envTab(_ detail: ArcaneContainerDetails) -> some View {
@@ -1060,15 +1015,5 @@ struct ArcaneContainerDetailView: View {
         terminalSession.disconnect(notifyUI: false)
         terminalSession.clearScreen()
         await connectTerminalIfNeeded()
-    }
-
-    private func pasteFromClipboard() {
-        #if canImport(UIKit)
-        if let text = UIPasteboard.general.string, !text.isEmpty {
-            if terminalSession.isConnected {
-                terminalSession.sendText(text)
-            }
-        }
-        #endif
     }
 }

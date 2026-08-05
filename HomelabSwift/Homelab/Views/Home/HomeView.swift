@@ -121,10 +121,11 @@ struct HomeView: View {
                     dashboardCard(for: row[0])
                         .frame(maxWidth: .infinity, alignment: .leading)
                 default:
+                    // Stretch siblings so Docker / qBittorrent share the same card height.
                     HStack(alignment: .top, spacing: 12) {
                         ForEach(row) { id in
                             dashboardCard(for: id)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                         }
                     }
                 }
