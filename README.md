@@ -45,7 +45,6 @@ In my setup that includes things like:
 - **[OpenMediaVault](https://www.openmediavault.org/)** as the host
 - **[Arcane](https://github.com/getarcaneapp/arcane)** as the main Docker UI
 - **OpenList**, **CloudSaver**, and other tools I actually run
-- **English + 中文** UI (other locales were trimmed to keep maintenance light)
 
 Most dashboards and patterns still come from upstream. Active product work here is **iOS** (`HomelabSwift/`). The Android tree is kept for history; it is **not** developed in this fork—see [kinderdash](https://github.com/ChaosieKinder/kinderdash) if you need Android.
 

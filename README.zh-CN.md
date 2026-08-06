@@ -45,11 +45,10 @@
 - 主机：**[OpenMediaVault](https://www.openmediavault.org/)**
 - Docker：**[Arcane](https://github.com/getarcaneapp/arcane)** 为主
 - 以及 OpenList、CloudSaver 等实际在用的工具
-- 界面语言：**English / 中文**（其它语言已精简，减轻维护）
 
 服务面板与交互大多仍来自上游。本仓库**积极维护 iOS**（`HomelabSwift/`）。Android 树仅保留，不在此开发——需要 Android 可参考 [kinderdash](https://github.com/ChaosieKinder/kinderdash)。
 
-如果你也用得上，欢迎自取。只要我自己还在用，就会**继续维护**，优先级放在让**自己用着爽**的那部分（OMV、Arcane、自加模块、中英等）。不保证覆盖所有场景；对你有帮助就更好了。
+如果你也用得上，欢迎自取。只要我自己还在用，就会**继续维护**，优先级放在让**自己用着爽**的那部分（OMV、Arcane、自加模块等）。不保证覆盖所有场景；对你有帮助就更好了。
 
 应用内更新只针对本 fork 的 bundle（`com.unitsung.myhomelab`），不会影响上游用户的安装与更新通道。
 
