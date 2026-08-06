@@ -44,7 +44,7 @@ On my side that mostly means:
 
 - Host: **[OpenMediaVault](https://www.openmediavault.org/)**
 - Docker: **[Arcane](https://github.com/getarcaneapp/arcane)**
-- Plus **OpenList**, **CloudSaver**, and other tools I live with every day
+- Plus **[OpenList](https://github.com/OpenListTeam/OpenList)**, **[CloudSaver](https://github.com/jiangrui1994/CloudSaver)**, and other tools I live with every day
 - Home layout and workflows tuned the way I like them
 
 Almost everything else still comes from upstream. **iOS** (`HomelabSwift/`) is what I maintain. The Android tree is still in the repo for history, but I’m not developing it here—if you need Android, try [kinderdash](https://github.com/ChaosieKinder/kinderdash).

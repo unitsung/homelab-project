@@ -44,7 +44,7 @@
 
 - 主机：**[OpenMediaVault](https://www.openmediavault.org/)**
 - Docker：**[Arcane](https://github.com/getarcaneapp/arcane)**
-- 以及 **OpenList**、**CloudSaver** 等天天在用的工具
+- 以及 **[OpenList](https://github.com/OpenListTeam/OpenList)**、**[CloudSaver](https://github.com/jiangrui1994/CloudSaver)** 等天天在用的工具
 - 首页布局和操作习惯按自己的喜好调过
 
 其余大部分仍是上游的能力。我主要维护 **iOS**（`HomelabSwift/`）。Android 目录还在，但这里不继续开发；需要 Android 的话可以看 [kinderdash](https://github.com/ChaosieKinder/kinderdash)。
