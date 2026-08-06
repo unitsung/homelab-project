@@ -98,10 +98,7 @@ jobs:
       - name: Create CI signing config
         run: |
           mkdir -p Config
-          cat > Config/Signing.xcconfig <<'EOF'
-DEVELOPMENT_TEAM =
-PRODUCT_BUNDLE_IDENTIFIER = homelab.foreverhomelab
-EOF
+          printf 'DEVELOPMENT_TEAM =\nPRODUCT_BUNDLE_IDENTIFIER = homelab.foreverhomelab\n' > Config/Signing.xcconfig
 
       - name: List schemes
         run: xcodebuild -list -project Homelab.xcodeproj
