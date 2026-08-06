@@ -1,6 +1,6 @@
 {
-  "latest": "1.6.2",
-  "ios_url": "https://github.com/JohnnWi/homelab-project/releases/download/v1.6.2/Homelab.ipa",
-  "android_url": "https://github.com/JohnnWi/homelab-project/releases/download/v1.6.2/Homelab.apk",
-  "changelog": "Removed the crypto donation section from Settings on iOS and Android.\nCleaned up related donation strings and settings UI copy.\nIncluded minor settings maintenance for the 1.6.2 release."
+  "latest": "1.6.4",
+  "ios_url": "https://github.com/unitsung/homelab-project/releases/download/v1.6.4/Homelab.ipa",
+  "android_url": "https://github.com/unitsung/homelab-project/releases/tag/v1.6.4",
+  "changelog": "Homelab 1.6.4\n\n- Fix iOS compile failure on Xcode 26.6: replace unavailable AVAudioSession activate/deactivate completion-handler APIs with setActive(_:options:) in a detached task\n- Run iOS CI on both macos-26 (Xcode 26.6) and xcode-27 (Xcode 27 beta) runners\n- Update AltStore source will follow automatically\n\n> Note: IPA signed with a free Apple ID (development profile, expires 2026-08-12). Re-sign or refresh via SideStore/AltStore as needed."
 }

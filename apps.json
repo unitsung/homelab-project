@@ -27,6 +27,15 @@
       ],
       "versions": [
         {
+          "version": "1.6.4",
+          "buildVersion": "41",
+          "date": "2026-08-06",
+          "localizedDescription": "## Homelab 1.6.4\n\n- Fix iOS compile failure on Xcode 26.6: replace unavailable AVAudioSession activate/deactivate completion-handler APIs with setActive(_:options:) in a detached task\n- Run iOS CI on both macos-26 (Xcode 26.6) and xcode-27 (Xcode 27 beta) runners\n- Update AltStore source will follow automatically\n\n> Note: IPA signed with a free Apple ID (development profile, expires 2026-08-12). Re-sign or refresh via SideStore/AltStore as needed.",
+          "downloadURL": "https://github.com/unitsung/homelab-project/releases/download/v1.6.4/Homelab.ipa",
+          "size": 55304010,
+          "minOSVersion": "26.0"
+        },
+        {
           "version": "1.6.2",
           "buildVersion": "38",
           "date": "2026-05-06",
@@ -333,6 +342,16 @@
     }
   ],
   "news": [
+    {
+      "title": "v1.6.4 — - Fix iOS compile failure on Xcode 26.6: replace unavailable AVAudioSession activate/deactivate completion-handler APIs with setActive(_:options:) in a detached task",
+      "identifier": "release-1.6.4",
+      "caption": "- Fix iOS compile failure on Xcode 26.6: replace unavailable AVAudioSession activate/deactivate completion-handler APIs with setActive(_:options:) in a detached task - Run iOS CI on both macos-26 (Xcode 26.6) and xcode-27 (Xcode 27 beta) runners - Update AltStore source will follow automatically",
+      "date": "2026-08-06",
+      "tintColor": "#4A90D9",
+      "notify": true,
+      "url": "https://github.com/unitsung/homelab-project/releases/tag/v1.6.4",
+      "appID": "homelab.foreverhomelab"
+    },
     {
       "title": "v1.6.2 — Removed the crypto donation section from Settings on iOS and Android.",
       "identifier": "release-1.6.2",
