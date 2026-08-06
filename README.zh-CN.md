@@ -49,7 +49,7 @@
 
 其余大部分仍是上游的能力。我主要维护 **iOS**（`HomelabSwift/`）。Android 目录还在，但这里不继续开发；需要 Android 的话可以看 [kinderdash](https://github.com/ChaosieKinder/kinderdash)。
 
-你如果也用得上，尽管用。只要我自己还在用，就会接着维护；精力会优先放在让**自己用着爽**的那些路径上（OMV、Arcane、自加模块之类）。这不等于什么场景都会管到——对你也有帮助的话，再好不过。
+你如果也用得上，尽管用。我会**尽我所能**维护，但谈不上保证积极、及时；自己还在用时，会优先照顾让**自己用着爽**的那些路径（OMV、Arcane、自加模块之类）。对你也有帮助的话，再好不过。
 
 应用内更新只认本 fork 的 bundle（`com.unitsung.myhomelab`），不会去顶上游用户的安装和更新。
 

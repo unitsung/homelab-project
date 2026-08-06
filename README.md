@@ -49,7 +49,7 @@ On my side that mostly means:
 
 Almost everything else still comes from upstream. **iOS** (`HomelabSwift/`) is what I maintain. The Android tree is still in the repo for history, but I’m not developing it here—if you need Android, try [kinderdash](https://github.com/ChaosieKinder/kinderdash).
 
-You’re welcome to use this fork if it helps. I’ll keep it alive while I’m using it myself, and I’ll care most about the paths that make **my** stack feel right (OMV, Arcane, the modules I added, and so on). That isn’t a promise to cover every setup or every request—if it works for you too, I’m glad.
+You’re welcome to use this fork if it helps. I’ll do my best to keep it maintained while I use it myself, with attention on the paths that make **my** stack feel right (OMV, Arcane, the modules I added, and so on)—not a promise of constant or high-priority support. If it works for you too, I’m glad.
 
 In-app updates only apply to this fork’s bundle id (`com.unitsung.myhomelab`). They won’t hijack upstream installs.
 
