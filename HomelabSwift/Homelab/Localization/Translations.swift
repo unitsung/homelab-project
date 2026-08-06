@@ -1217,6 +1217,32 @@ struct Translations {
     let networkAccessLocal: String
     let networkAccessRemote: String
 
+    // Bulk host replace (settings)
+    let settingsBulkHost: String
+    let settingsBulkHostDesc: String
+    let settingsBulkHostHint: String
+    let settingsBulkHostPlaceholder: String
+    let settingsBulkHostNormalized: String
+    let settingsBulkHostInvalid: String
+    let settingsBulkHostScope: String
+    let settingsBulkHostPrimary: String
+    let settingsBulkHostFallback: String
+    let settingsBulkHostBoth: String
+    let settingsBulkHostPreview: String
+    let settingsBulkHostPreviewEmpty: String
+    let settingsBulkHostNoChanges: String
+    let settingsBulkHostApply: String
+    let settingsBulkHostApplying: String
+    let settingsBulkHostConfirmTitle: String
+    let settingsBulkHostConfirmBody: String
+    let settingsBulkHostApplied: String
+
+    // Player external subtitles
+    let filesPlayerSubtitleFromOpenList: String
+    let filesPlayerSubtitleFromFiles: String
+    let filesPlayerSubtitleLoadFailed: String
+    let filesPlayerSubtitlePickTitle: String
+
     // Bookmarks v2
     let categoryColor: String
     let bookmarkFavicon: String

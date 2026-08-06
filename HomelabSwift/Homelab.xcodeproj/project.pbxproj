@@ -84,6 +84,7 @@
 		63A39B89AC9B8F48B3BC3147 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF389260911EADF7079A97B /* APIClient.swift */; };
 		654B246C79458CB80AEC15D8 /* CategoryFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4834BF58C4F9B1399553F78 /* CategoryFormView.swift */; };
 		663F29038479453699652E94 /* AdGuardHomeQueryLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3E11D0571609D7927FCD5A /* AdGuardHomeQueryLogView.swift */; };
+		68862BC3194472BE9AA231ED /* BulkHostSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC4F9632D314732EA443BA76 /* BulkHostSettingsView.swift */; };
 		698E6B77D281367DA484C23B /* WakapiAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C444B827E878BDFFC5BA3C7C /* WakapiAPIClient.swift */; };
 		6B883FF0F9673181B59F8C83 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85D0D2A2905370C31F3A8ADE /* KeychainService.swift */; };
 		6DEEA589BD92BE70DF884F07 /* PangolinComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDB703E4CE642EF44D10991B /* PangolinComponents.swift */; };
@@ -92,6 +93,7 @@
 		703D6379BB37D3F83B0C21D5 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1604CF631BC4DC369A42A5 /* HomeView.swift */; };
 		703FA1281E0D360C5B7780C0 /* PterodactylAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C497A6F9411623A39F8CA5 /* PterodactylAPIClient.swift */; };
 		7095EBE669356384B3B42911 /* PangolinDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4881549A11CBCDEFA7DCFB72 /* PangolinDashboard.swift */; };
+		7356C173CEC5F46F5B4E6325 /* ServiceHostBulkReplacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F542BE15C64ADAD76875BB8B /* ServiceHostBulkReplacer.swift */; };
 		760733612460236D15FEC7F5 /* BeszelDetailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFCAD7944220A8EA3DDFC3A6 /* BeszelDetailComponents.swift */; };
 		7870DA23D2B10D1CCAC08453 /* BeszelDetailTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CFC214C2A851C7033ABE815 /* BeszelDetailTypes.swift */; };
 		78E77D0CAE314564E639192C /* OpenListFileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C73A4809D0F69DEB211DAC8 /* OpenListFileBrowserView.swift */; };
@@ -198,6 +200,7 @@
 		D581A8A08CC0CA3A5DB9F67D /* PangolinAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71FF913BD6672FB00EE4BCC /* PangolinAPIClient.swift */; };
 		D5CCCB3F42C2012F2522950F /* GenericAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34351F37F1A0778D6CFC90B3 /* GenericAPIClient.swift */; };
 		D5FED332EC23681140B7126D /* Translations+Chinese.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB54DA5C03EAA63787A66C19 /* Translations+Chinese.swift */; };
+		D64E782CD5EE85C15DD8C59D /* OpenListSubtitlePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3839F51C62392D62AC09F24C /* OpenListSubtitlePickerView.swift */; };
 		D76DF8769FE2AE2032847D05 /* FormattersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB311F83CBAAC39C90D50E6D /* FormattersTests.swift */; };
 		D813C7E4CB5C91CE7EE3D099 /* LinuxUpdateDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CD34CC8256D65F58DBD5383 /* LinuxUpdateDashboard.swift */; };
 		D84F9D353E2953087A1E5F7D /* ModelDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D7A0C04FD3A10D46F836A9 /* ModelDecodingTests.swift */; };
@@ -291,11 +294,12 @@
 		3565C63ADD375B1D9773CF8B /* BookmarkFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkFormView.swift; sourceTree = "<group>"; };
 		358401A62F1C37D65F438BFF /* CPUMonitorCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUMonitorCard.swift; sourceTree = "<group>"; };
 		35B72F50D3EE38BCCC908D0C /* ProxmoxGuestCloneSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxmoxGuestCloneSheet.swift; sourceTree = "<group>"; };
+		3839F51C62392D62AC09F24C /* OpenListSubtitlePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListSubtitlePickerView.swift; sourceTree = "<group>"; };
 		38A351665E7EFAF8D4A3A05A /* LidarrModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidarrModels.swift; sourceTree = "<group>"; };
 		38F7AE0005466E2FF260B000 /* Translations+English.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Translations+English.swift"; sourceTree = "<group>"; };
 		39AD858A4CEA15DE099AC986 /* BackupModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupModels.swift; sourceTree = "<group>"; };
 		39E0F42B15E76A284DE2BE04 /* DashboardRefreshCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardRefreshCoordinator.swift; sourceTree = "<group>"; };
-		3A088F5140A5297EA91E3821 /* Homelab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Homelab.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3A088F5140A5297EA91E3821 /* Homelab.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Homelab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A9F6388FB1B6AA57648FF16 /* DockmonModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockmonModels.swift; sourceTree = "<group>"; };
 		3AD1D644D530DE462BB79AA2 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		3B344770A37AF6E6CF0CCB9E /* PatchmonDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchmonDashboard.swift; sourceTree = "<group>"; };
@@ -418,6 +422,7 @@
 		BB334FC7E3B327B41891F806 /* DockmonDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockmonDashboard.swift; sourceTree = "<group>"; };
 		BB3E11D0571609D7927FCD5A /* AdGuardHomeQueryLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdGuardHomeQueryLogView.swift; sourceTree = "<group>"; };
 		BB7A6237B741BF62F16D9F8B /* OfflineBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineBanner.swift; sourceTree = "<group>"; };
+		BC4F9632D314732EA443BA76 /* BulkHostSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkHostSettingsView.swift; sourceTree = "<group>"; };
 		BD380A474687F6557F929135 /* CloudSaverModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSaverModelsTests.swift; sourceTree = "<group>"; };
 		BE0A64E52150CEEA94E249D7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		BEA7A42035DBFADEB256C578 /* PatchmonAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchmonAPIClient.swift; sourceTree = "<group>"; };
@@ -461,6 +466,7 @@
 		F3F586ABDFDC1DDF8B343EAE /* OpenListTasksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenListTasksView.swift; sourceTree = "<group>"; };
 		F3FB1BDA2DED27825F9D54D0 /* CraftyDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CraftyDashboard.swift; sourceTree = "<group>"; };
 		F4ED2EF6B8B525C2387A59EC /* HealthchecksCheckEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthchecksCheckEditor.swift; sourceTree = "<group>"; };
+		F542BE15C64ADAD76875BB8B /* ServiceHostBulkReplacer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceHostBulkReplacer.swift; sourceTree = "<group>"; };
 		F76B6FE397CB60885626195C /* AdGuardHomeRewritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdGuardHomeRewritesView.swift; sourceTree = "<group>"; };
 		F887B97554253C51BDFD167F /* EditCategoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditCategoryView.swift; sourceTree = "<group>"; };
 		F8CEBAE16B37003F92EE836C /* CloudSaverModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSaverModels.swift; sourceTree = "<group>"; };
@@ -499,6 +505,7 @@
 			isa = PBXGroup;
 			children = (
 				292913B0F73994A51217D87F /* BackupView.swift */,
+				BC4F9632D314732EA443BA76 /* BulkHostSettingsView.swift */,
 				98C831E84A42E73C9A480BE3 /* ConfiguredServicesView.swift */,
 				0DB66F8274714A001051F1BE /* SettingsView.swift */,
 			);
@@ -909,6 +916,7 @@
 				FC05F182C031C0A88BDD50E7 /* OpenListFolderPickerView.swift */,
 				54C802CDD7146425DFB46A83 /* OpenListMediaPlayerView.swift */,
 				77998B243D84678DF9701D39 /* OpenListPlayerPickerView.swift */,
+				3839F51C62392D62AC09F24C /* OpenListSubtitlePickerView.swift */,
 				F3F586ABDFDC1DDF8B343EAE /* OpenListTasksView.swift */,
 			);
 			path = OpenList;
@@ -1444,6 +1452,7 @@
 				B1EBFFF57A15B47F78E81D04 /* Formatters.swift */,
 				6EF6E7AF1CDC6676B7421A7B /* HapticManager.swift */,
 				A1BF1197F8BB03BE213E2995 /* Logger.swift */,
+				F542BE15C64ADAD76875BB8B /* ServiceHostBulkReplacer.swift */,
 				6AD5A40912505AFD774ED713 /* SyntaxHighlighter.swift */,
 			);
 			path = Utilities;
@@ -1585,6 +1594,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					F030701E1A7DE1C00D08FE68 = {
+						DevelopmentTeam = 5PY7FY4MQK;
+					};
+				};
 			};
 			buildConfigurationList = 53B06AFB20AFF82B11048BA4 /* Build configuration list for PBXProject "Homelab" */;
 			developmentRegion = en;
@@ -1660,6 +1674,7 @@
 				1FEB8EB133A5749EBE928E1C /* BookmarkFormView.swift in Sources */,
 				62EF5383568C38878FAB5623 /* BookmarkManager.swift in Sources */,
 				DF86CB1FB4E3E32A79142588 /* BookmarksView.swift in Sources */,
+				68862BC3194472BE9AA231ED /* BulkHostSettingsView.swift in Sources */,
 				8B56BC1BDF8BBAE7B704D108 /* CPUMonitorCard.swift in Sources */,
 				CC8DE4D3D830FF7F610EDF1B /* CalagopusAPIClient.swift in Sources */,
 				B5EC1AE9E8F74A570F189E3D /* CalagopusDashboard.swift in Sources */,
@@ -1754,6 +1769,7 @@
 				E3250F73873A533A372680B2 /* OpenListMediaPlayerView.swift in Sources */,
 				ABAE44F1D2E4CEFF4C4988B5 /* OpenListModels.swift in Sources */,
 				BC806A16D6DC05B2C7C492B9 /* OpenListPlayerPickerView.swift in Sources */,
+				D64E782CD5EE85C15DD8C59D /* OpenListSubtitlePickerView.swift in Sources */,
 				C44FCF92A73230C91EA23478 /* OpenListTasksView.swift in Sources */,
 				D581A8A08CC0CA3A5DB9F67D /* PangolinAPIClient.swift in Sources */,
 				6DEEA589BD92BE70DF884F07 /* PangolinComponents.swift in Sources */,
@@ -1807,6 +1823,7 @@
 				A49B105DC72148FF1A79E551 /* ServiceConnectionStatus.swift in Sources */,
 				8FC5C2BF6FC7CBC21BFF6696 /* ServiceDashboardLayout.swift in Sources */,
 				CE78DBCA639D954A7CCB26D3 /* ServiceErrorView.swift in Sources */,
+				7356C173CEC5F46F5B4E6325 /* ServiceHostBulkReplacer.swift in Sources */,
 				D3FEA9D2C02EFC910D98FEB9 /* ServiceIconView.swift in Sources */,
 				E5242DCA4ACD2835153FBB96 /* ServiceLoginView.swift in Sources */,
 				3C5E508ED29EAEE5107AABF8 /* ServiceTileGrid.swift in Sources */,
@@ -1872,7 +1889,13 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = C7F560D9B1083811461B4B44 /* Signing.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconDark AppIconClearLight AppIconClearDark AppIconTintedLight AppIconTintedDark";
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = (
+					AppIconDark,
+					AppIconClearLight,
+					AppIconClearDark,
+					AppIconTintedLight,
+					AppIconTintedDark,
+				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Homelab/Homelab.entitlements;
@@ -1908,7 +1931,13 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = C7F560D9B1083811461B4B44 /* Signing.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconDark AppIconClearLight AppIconClearDark AppIconTintedLight AppIconTintedDark";
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = (
+					AppIconDark,
+					AppIconClearLight,
+					AppIconClearDark,
+					AppIconTintedLight,
+					AppIconTintedDark,
+				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Homelab/Homelab.entitlements;

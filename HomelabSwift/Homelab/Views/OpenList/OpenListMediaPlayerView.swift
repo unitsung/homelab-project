@@ -1,6 +1,7 @@
 import AVFoundation
 import MediaPlayer
 import SwiftUI
+import UniformTypeIdentifiers
 import VLCKit
 #if canImport(UIKit)
 import UIKit
@@ -20,9 +21,14 @@ struct OpenListMediaPlayerView: View {
     let isAudio: Bool
     /// Optional external subtitle stream (OpenList sibling .srt/.vtt).
     var externalSubtitleURL: URL? = nil
+    /// When set, player can browse this OpenList instance for subtitles.
+    var openlistInstanceId: UUID? = nil
+    /// Starting folder for the OpenList subtitle picker (usually the video’s parent).
+    var openlistDirectoryPath: String? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(Localizer.self) private var localizer
+    @Environment(ServicesStore.self) private var servicesStore
 
     @StateObject private var engine = OpenListVLCEngine()
     @State private var showControls = true
@@ -40,8 +46,23 @@ struct OpenListMediaPlayerView: View {
     @State private var errorText: String?
     @State private var isScrubbing = false
     @State private var scrubFraction: Double = 0
+    @State private var activeExternalSubtitleURL: URL?
+    @State private var activeExternalSubtitleName: String?
+    @State private var showOpenListSubtitlePicker = false
+    @State private var showLocalSubtitleImporter = false
+    @State private var openlistClient: OpenListAPIClient?
+    @State private var subtitleToast: String?
 
     private let rateOptions: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0]
+    private static let subtitleUTTypes: [UTType] = {
+        var types: [UTType] = [.text, .plainText, .utf8PlainText]
+        for ext in ["srt", "vtt", "ass", "ssa", "sub"] {
+            if let t = UTType(filenameExtension: ext) {
+                types.append(t)
+            }
+        }
+        return types
+    }()
 
     /// Legacy pre-check used when the engine was AVPlayer-only.
     /// With VLCKit almost all common containers work — always return false.
@@ -111,6 +132,19 @@ struct OpenListMediaPlayerView: View {
                 if let sideHud {
                     sideHudBadge(sideHud)
                 }
+
+                if let subtitleToast {
+                    Text(subtitleToast)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(.black.opacity(0.7), in: Capsule())
+                        .padding(.bottom, 120)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                        .transition(.opacity)
+                        .allowsHitTesting(false)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -123,6 +157,9 @@ struct OpenListMediaPlayerView: View {
             // Follow device rotation by default (iPhone 17 Pro Dynamic Island friendly).
             lockedLandscape = nil
             applyOrientation(landscape: nil, animated: false)
+            if activeExternalSubtitleURL == nil {
+                activeExternalSubtitleURL = externalSubtitleURL
+            }
         }
         .onDisappear {
             engine.stop()
@@ -146,12 +183,60 @@ struct OpenListMediaPlayerView: View {
             guard !isScrubbing else { return }
             scrubFraction = progressFraction
         }
+        .sheet(isPresented: $showOpenListSubtitlePicker) {
+            if let openlistClient {
+                OpenListSubtitlePickerView(
+                    client: openlistClient,
+                    startPath: openlistDirectoryPath ?? "/",
+                    onPick: { url, name in
+                        loadExternalSubtitle(url: url, displayName: name)
+                    }
+                )
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+            } else {
+                NavigationStack {
+                    ContentUnavailableView(
+                        localizer.t.filesPlayerSubtitleLoadFailed,
+                        systemImage: "exclamationmark.triangle"
+                    )
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(localizer.t.close) { showOpenListSubtitlePicker = false }
+                        }
+                    }
+                }
+            }
+        }
+        .fileImporter(
+            isPresented: $showLocalSubtitleImporter,
+            allowedContentTypes: Self.subtitleUTTypes,
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                guard let picked = urls.first else { return }
+                importLocalSubtitle(from: picked)
+            case .failure:
+                flashSubtitleToast(localizer.t.filesPlayerSubtitleLoadFailed)
+            }
+        }
     }
 
     /// 0...1 playback progress when not scrubbing.
     private var progressFraction: Double {
         guard engine.duration > 0, engine.current.isFinite, engine.duration.isFinite else { return 0 }
         return min(max(engine.current / engine.duration, 0), 1)
+    }
+
+    private var subtitleMenuLabel: String {
+        if activeExternalSubtitleURL != nil {
+            return localizer.t.filesPlayerSubtitleExternal
+        }
+        if !engine.textTracks.isEmpty {
+            return localizer.t.filesPlayerSubtitleEmbedded
+        }
+        return localizer.t.filesPlayerSubtitleImport
     }
 
     // MARK: - Surfaces
@@ -379,11 +464,12 @@ struct OpenListMediaPlayerView: View {
                     toolIcon(nil, label: rateLabel(engine.rate), textOnly: true)
                 }
 
-                // Show when embedded tracks exist, or when we attached an external sibling.
-                if !engine.textTracks.isEmpty || externalSubtitleURL != nil {
+                // Subtitle menu: always for video so users can load external tracks mid-playback.
+                if !isAudio {
                     Menu {
                         Button {
                             engine.deselectSubtitles()
+                            scheduleHide()
                         } label: {
                             if engine.selectedTextTrackIndex == nil {
                                 Label(localizer.t.filesPlayerSubtitleOff, systemImage: "checkmark")
@@ -394,6 +480,7 @@ struct OpenListMediaPlayerView: View {
                         ForEach(Array(engine.textTracks.enumerated()), id: \.offset) { idx, name in
                             Button {
                                 engine.selectTextTrack(at: idx)
+                                scheduleHide()
                             } label: {
                                 if engine.selectedTextTrackIndex == idx {
                                     Label(name, systemImage: "checkmark")
@@ -402,13 +489,31 @@ struct OpenListMediaPlayerView: View {
                                 }
                             }
                         }
+                        if activeExternalSubtitleName != nil || activeExternalSubtitleURL != nil {
+                            Divider()
+                            Text(activeExternalSubtitleName ?? localizer.t.filesPlayerSubtitleExternal)
+                                .font(.caption)
+                        }
+                        Divider()
+                        if openlistInstanceId != nil {
+                            Button {
+                                showOpenListSubtitlePicker = true
+                                showControls = true
+                            } label: {
+                                Label(localizer.t.filesPlayerSubtitleFromOpenList, systemImage: "folder")
+                            }
+                        }
+                        Button {
+                            showLocalSubtitleImporter = true
+                            showControls = true
+                        } label: {
+                            Label(localizer.t.filesPlayerSubtitleFromFiles, systemImage: "doc.badge.plus")
+                        }
                     } label: {
                         toolIcon(
                             "captions.bubble",
-                            label: externalSubtitleURL != nil && engine.textTracks.isEmpty
-                                ? localizer.t.filesPlayerSubtitleExternal
-                                : localizer.t.filesPlayerSubtitleEmbedded,
-                            active: engine.selectedTextTrackIndex != nil
+                            label: subtitleMenuLabel,
+                            active: engine.selectedTextTrackIndex != nil || activeExternalSubtitleURL != nil
                         )
                     }
                 }
@@ -616,11 +721,60 @@ struct OpenListMediaPlayerView: View {
         volume = currentSystemVolume()
         systemVolumeWriter.onExternalChange = { volume = $0 }
         systemVolumeWriter.startObserving()
+        activeExternalSubtitleURL = externalSubtitleURL
+        if let externalSubtitleURL {
+            activeExternalSubtitleName = externalSubtitleURL.lastPathComponent
+        }
+
+        if let openlistInstanceId {
+            openlistClient = await servicesStore.openlistClient(instanceId: openlistInstanceId)
+        }
 
         await configureAudioSession()
         AppLogger.shared.info("VLC play url=\(url.absoluteString) audio=\(isAudio)", source: "OpenListPlayer")
 
         engine.play(url: url, externalSubtitleURL: externalSubtitleURL)
+    }
+
+    private func loadExternalSubtitle(url: URL, displayName: String?) {
+        activeExternalSubtitleURL = url
+        activeExternalSubtitleName = displayName ?? url.lastPathComponent
+        engine.attachExternalSubtitle(url)
+        flashSubtitleToast(activeExternalSubtitleName ?? localizer.t.filesPlayerSubtitleExternal)
+        showControls = true
+        scheduleHide()
+    }
+
+    private func importLocalSubtitle(from url: URL) {
+        let accessed = url.startAccessingSecurityScopedResource()
+        defer {
+            if accessed { url.stopAccessingSecurityScopedResource() }
+        }
+        do {
+            let ext = url.pathExtension.isEmpty ? "srt" : url.pathExtension
+            let dest = FileManager.default.temporaryDirectory
+                .appendingPathComponent("homelab-sub-\(UUID().uuidString).\(ext)")
+            if FileManager.default.fileExists(atPath: dest.path) {
+                try FileManager.default.removeItem(at: dest)
+            }
+            try FileManager.default.copyItem(at: url, to: dest)
+            loadExternalSubtitle(url: dest, displayName: url.lastPathComponent)
+        } catch {
+            AppLogger.shared.error("subtitle import: \(error.localizedDescription)", source: "OpenListPlayer")
+            flashSubtitleToast(localizer.t.filesPlayerSubtitleLoadFailed)
+        }
+    }
+
+    private func flashSubtitleToast(_ text: String) {
+        withAnimation(.easeInOut(duration: 0.15)) {
+            subtitleToast = text
+        }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            withAnimation(.easeOut(duration: 0.2)) {
+                if subtitleToast == text { subtitleToast = nil }
+            }
+        }
     }
 
     private func handleCenterTap() {
@@ -857,6 +1011,15 @@ final class OpenListVLCEngine: NSObject, ObservableObject, VLCMediaPlayerDelegat
         if let externalSubtitleURL {
             scheduleSubtitleAttach(externalSubtitleURL)
         }
+    }
+
+    /// Attach / replace an external subtitle mid-playback (OpenList URL or local file).
+    func attachExternalSubtitle(_ url: URL) {
+        pendingExternalSubtitleURL = url
+        didAttachSubtitle = false
+        player.deselectAllTextTracks()
+        selectedTextTrackIndex = nil
+        scheduleSubtitleAttach(url)
     }
 
     func stop() {

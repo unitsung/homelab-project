@@ -100,6 +100,7 @@ struct OpenListFileBrowserView: View {
         let title: String
         let isAudio: Bool
         var externalSubtitleURL: URL? = nil
+        var openlistDirectoryPath: String? = nil
     }
     @State private var builtInPlay: BuiltInPlaySession?
 
@@ -257,7 +258,9 @@ struct OpenListFileBrowserView: View {
                 url: session.url,
                 title: session.title,
                 isAudio: session.isAudio,
-                externalSubtitleURL: session.externalSubtitleURL
+                externalSubtitleURL: session.externalSubtitleURL,
+                openlistInstanceId: instanceId,
+                openlistDirectoryPath: session.openlistDirectoryPath
             )
         }
         .sheet(isPresented: $showShare) {
@@ -1266,7 +1269,8 @@ struct OpenListFileBrowserView: View {
                 url: url,
                 title: item.name,
                 isAudio: item.previewKind == .audio,
-                externalSubtitleURL: subtitleURL
+                externalSubtitleURL: subtitleURL,
+                openlistDirectoryPath: item.parentDirectory
             )
             // Dismiss preview sheet first — fullScreenCover over sheet often blanks / fails.
             activeItem = nil

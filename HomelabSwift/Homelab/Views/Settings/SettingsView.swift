@@ -184,48 +184,81 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 8) {
             sectionHeader(localizer.t.settingsServicesGroup)
 
-            NavigationLink {
-                AuthGatedConfiguredServicesView()
-            } label: {
-                HStack(spacing: 14) {
-                    settingsIcon("server.rack", color: Color(hex: "#3B82F6"))
+            VStack(spacing: 0) {
+                NavigationLink {
+                    AuthGatedConfiguredServicesView()
+                } label: {
+                    HStack(spacing: 14) {
+                        settingsIcon("server.rack", color: Color(hex: "#3B82F6"))
 
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(localizer.t.settingsConfiguredServices)
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(.primary)
-                        Text(localizer.t.settingsConfiguredServicesDesc)
-                            .font(.caption)
-                            .foregroundStyle(AppTheme.textSecondary)
-                            .lineLimit(2)
-                    }
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(localizer.t.settingsConfiguredServices)
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(.primary)
+                            Text(localizer.t.settingsConfiguredServicesDesc)
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.textSecondary)
+                                .lineLimit(2)
+                        }
 
-                    Spacer(minLength: 8)
+                        Spacer(minLength: 8)
 
-                    if connectedInstanceCount > 0 {
-                        Text("\(connectedInstanceCount)")
-                            .font(.subheadline.weight(.semibold).monospacedDigit())
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(AppTheme.accent.opacity(0.9), in: Capsule())
-                    }
+                        if connectedInstanceCount > 0 {
+                            Text("\(connectedInstanceCount)")
+                                .font(.subheadline.weight(.semibold).monospacedDigit())
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(AppTheme.accent.opacity(0.9), in: Capsule())
+                        }
 
-                    if settingsStore.isPinSet {
-                        Image(systemName: "lock.fill")
-                            .font(.caption2)
+                        if settingsStore.isPinSet {
+                            Image(systemName: "lock.fill")
+                                .font(.caption2)
+                                .foregroundStyle(AppTheme.textMuted)
+                        }
+
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.bold))
                             .foregroundStyle(AppTheme.textMuted)
                     }
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(AppTheme.textMuted)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 14)
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+
+                Divider()
+                    .padding(.leading, 58)
+
+                NavigationLink {
+                    BulkHostSettingsView()
+                } label: {
+                    HStack(spacing: 14) {
+                        settingsIcon("network", color: Color(hex: "#0EA5E9"))
+
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(localizer.t.settingsBulkHost)
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(.primary)
+                            Text(localizer.t.settingsBulkHostDesc)
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.textSecondary)
+                                .lineLimit(2)
+                        }
+
+                        Spacer(minLength: 8)
+
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(AppTheme.textMuted)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             .glassCard(cornerRadius: 16)
         }
     }

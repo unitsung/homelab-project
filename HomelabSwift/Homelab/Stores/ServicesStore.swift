@@ -641,6 +641,41 @@ final class ServicesStore {
         await configureClient(for: updated, refreshPiHoleAuth: false)
     }
 
+    /// Replace host on primary / fallback URLs for every configured instance.
+    /// - Returns: number of instances that changed.
+    @discardableResult
+    func applyHostReplace(newHost: String, scope: ServiceHostBulkReplacer.Scope) async -> Int {
+        guard let host = ServiceHostBulkReplacer.normalizeHostInput(newHost) else { return 0 }
+        let rows = ServiceHostBulkReplacer.preview(
+            instances: allInstances,
+            newHost: host,
+            scope: scope
+        )
+        guard !rows.isEmpty else { return 0 }
+
+        var changed = 0
+        for row in rows {
+            guard let current = instancesById[row.id] else { continue }
+            let nextURL = row.primaryChanged ? row.newPrimary : current.url
+            let nextFallback: String? = {
+                if row.fallbackChanged {
+                    return row.newFallback
+                }
+                return current.fallbackUrl
+            }()
+            let updated = normalizedInstance(
+                current.updating(url: nextURL, fallbackUrl: nextFallback)
+            )
+            instancesById[updated.id] = updated
+            await configureClient(for: updated, refreshPiHoleAuth: false)
+            reachabilityByInstanceId[updated.id] = nil
+            changed += 1
+        }
+        persistState()
+        Task { await checkAllReachability(force: true) }
+        return changed
+    }
+
     func portainerClient(instanceId: UUID) async -> PortainerAPIClient? {
         guard let instance = instancesById[instanceId], instance.type == .portainer else { return nil }
         return clientManager.portainerClient(id: instance.id)
