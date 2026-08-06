@@ -6,7 +6,7 @@
 [![Platform](https://img.shields.io/badge/Platform-iOS%2026%2B-lightgrey.svg)](HomelabSwift/)
 [![Upstream](https://img.shields.io/badge/upstream-JohnnWi%2Fhomelab--project-informational)](https://github.com/JohnnWi/homelab-project)
 
-A personal **iOS** fork of [**Homelab Dashboard**](https://github.com/JohnnWi/homelab-project) by [JohnnWi](https://github.com/JohnnWi).
+A personal **iOS** fork of [Homelab Dashboard](https://github.com/JohnnWi/homelab-project) by [JohnnWi](https://github.com/JohnnWi).
 
 <p align="center">
   <img src="media-docs/screenshots/home-overview.png" width="280" alt="Home overview" />
@@ -18,76 +18,77 @@ A personal **iOS** fork of [**Homelab Dashboard**](https://github.com/JohnnWi/ho
 
 ---
 
-## Credits & relationship to upstream
+## Upstream
 
-This project is a **fork**, not a clean-room rewrite.
+This is a **fork**, not a from-scratch rewrite.
 
 | | |
 | --- | --- |
-| **Upstream** | [JohnnWi/homelab-project](https://github.com/JohnnWi/homelab-project) (archived) |
-| **Original product** | Homelab Dashboard — native mobile client for self-hosted services |
-| **This repository** | [unitsung/homelab-project](https://github.com/unitsung/homelab-project) |
+| **Upstream** | [JohnnWi/homelab-project](https://github.com/JohnnWi/homelab-project) *(archived)* |
+| **Original project** | Homelab Dashboard — a native mobile client for self-hosted services |
+| **This repo** | [unitsung/homelab-project](https://github.com/unitsung/homelab-project) |
 
-**Thank you to JohnnWi and all upstream contributors.** You built the foundation: multi-service dashboards, multi-instance support, backups, biometric unlock, the overall app architecture, and years of polish. This fork exists *because* that work is excellent—I’m only adding the pieces that fit **my** NAS and daily workflow on top of it.
+**Thanks to JohnnWi and everyone who contributed upstream.** You shipped the hard part: a solid multi-service dashboard, multi-instance support, backups, unlock, architecture, and a lot of polish over time. This fork only exists because that foundation is so good—I’m layering on what *I* need for my own NAS, not trying to outshine the original.
 
-For the full original feature set, integration list (~34 services), screenshots, and historical docs, please read the [upstream README](https://github.com/JohnnWi/homelab-project). I don’t copy that catalog here so it won’t silently go stale.
+For the full original feature list, integrations, screenshots, and history, see the [upstream README](https://github.com/JohnnWi/homelab-project). I deliberately don’t mirror that catalog here; it would only go out of date.
 
 ---
 
 ## Why this fork
 
-I didn’t set out to replace Homelab Dashboard. The goal is straightforward:
+I wasn’t looking to replace Homelab Dashboard. I wanted something simpler:
 
-> Keep the upstream client, then **add modules I use on my own Homelab / NAS**, so managing the stack from my phone is more pleasant.
+> Keep the upstream app, then add the bits I actually use on **my** Homelab so phone-side management fits how I run things.
 
-In my setup that includes things like:
+On my side that mostly means:
 
-- **[OpenMediaVault](https://www.openmediavault.org/)** as the host
-- **[Arcane](https://github.com/getarcaneapp/arcane)** as the main Docker UI
-- **OpenList**, **CloudSaver**, and other tools I actually run
+- Host: **[OpenMediaVault](https://www.openmediavault.org/)**
+- Docker: **[Arcane](https://github.com/getarcaneapp/arcane)**
+- Plus **OpenList**, **CloudSaver**, and other tools I live with every day
+- Home layout and workflows tuned the way I like them
 
-Most dashboards and patterns still come from upstream. Active product work here is **iOS** (`HomelabSwift/`). The Android tree is kept for history; it is **not** developed in this fork—see [kinderdash](https://github.com/ChaosieKinder/kinderdash) if you need Android.
+Almost everything else still comes from upstream. **iOS** (`HomelabSwift/`) is what I maintain. The Android tree is still in the repo for history, but I’m not developing it here—if you need Android, try [kinderdash](https://github.com/ChaosieKinder/kinderdash).
 
-If you use this fork too, you’re welcome. I’ll keep maintaining it while I rely on it myself, with priority on the paths that make **my** Homelab feel good day to day. That may not cover every request or every environment—if it helps you as well, even better.
+You’re welcome to use this fork if it helps. I’ll keep it alive while I’m using it myself, and I’ll care most about the paths that make **my** stack feel right (OMV, Arcane, the modules I added, and so on). That isn’t a promise to cover every setup or every request—if it works for you too, I’m glad.
 
-In-app updates only target this fork’s bundle id (`com.unitsung.myhomelab`) and won’t push releases into upstream installs.
+In-app updates only apply to this fork’s bundle id (`com.unitsung.myhomelab`). They won’t hijack upstream installs.
 
 ---
 
-## Building (iOS)
+## Build (iOS)
 
 ```text
 HomelabSwift/Homelab.xcodeproj
 ```
 
 1. Open the project in a recent **Xcode** (this tree targets **iOS 26+**).
-2. Set your development team under signing.
-3. Build and run on a real device.
+2. Pick your development team for signing.
+3. Run on a real device.
 
-Sideloading (SideStore / AltStore Classic, etc.) is optional. Release IPA metadata in this repo is mainly for my own devices.
+Sideloading with SideStore or AltStore Classic is fine if that’s your workflow. The IPA / `apps.json` bits in this repo are mainly how I install on my own phones.
 
-CI on this repository runs **iOS compile checks only** (Android CI has been disabled).
+CI here only runs **iOS compile checks**. Android CI is off.
 
 ---
 
 ## License & copyright
 
-This fork is distributed under the **[Apache License 2.0](LICENSE)**—the same license as upstream.
+Same as upstream: **[Apache License 2.0](LICENSE)**.
 
-Please also read **[NOTICE](NOTICE)**, which records attribution for the original Homelab Dashboard and this continued distribution.
+Also see **[NOTICE](NOTICE)** for attribution of the original Homelab Dashboard and this continued work.
 
-In short (not legal advice; see the full license text):
+Practical summary (not legal advice—read the full license):
 
 1. Keep the Apache 2.0 `LICENSE` when you redistribute.
-2. Keep copyright / attribution notices (`NOTICE` and source headers where present).
-3. State that the software includes modifications (this fork does).
-4. You may add your own copyright for your own changes.
-5. Do not imply endorsement by the original authors.
+2. Keep copyright and attribution (`NOTICE`, and headers where they exist).
+3. Make clear that the software has been modified (this fork has).
+4. You can claim copyright on *your* changes.
+5. Don’t imply the original authors endorse your build.
 
 **Copyright**
 
 - Original Homelab Dashboard: JohnnWi / finalyxre and upstream contributors  
-  Upstream: https://github.com/JohnnWi/homelab-project  
-- Modifications in this repository: see [git history](https://github.com/unitsung/homelab-project/commits/main) and `NOTICE`
+  https://github.com/JohnnWi/homelab-project  
+- Changes in this repository: [commit history](https://github.com/unitsung/homelab-project/commits/main) and `NOTICE`
 
-Software is provided **as is**, without warranties of any kind. Use at your own risk.
+Provided **as is**, with no warranty. Use at your own risk.
