@@ -20,8 +20,10 @@
 
 | 部分 | 说明 |
 | --- | --- |
-| **iOS**（`HomelabSwift/`） | 主要维护：个人功能与修复 |
+| **iOS**（`HomelabSwift/`） | 持续维护 |
 | **Android**（`HomelabAndroid/`） | 仅保留，不在此积极开发。需要 Android 可参考 [kinderdash](https://github.com/ChaosieKinder/kinderdash) |
+
+如果你也用得上，欢迎自取。我会**积极维护**，但重点仍是我自己每天在用的那部分——本机 NAS / Homelab、Arcane、我加的模块、中英界面等，先保证**自己用着爽**。不保证覆盖所有场景或每条需求；对你有帮助就更好了。
 
 应用内更新只针对本 fork 的 bundle（`com.unitsung.myhomelab`），不会影响上游用户的安装与更新。
 

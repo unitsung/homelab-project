@@ -18,8 +18,10 @@ Most service dashboards and UI patterns still come from upstream. For the full o
 
 | Area | Status |
 | --- | --- |
-| **iOS** (`HomelabSwift/`) | Active — personal features and fixes |
+| **iOS** (`HomelabSwift/`) | Active |
 | **Android** (`HomelabAndroid/`) | Inherited; not actively developed here. For Android, see [kinderdash](https://github.com/ChaosieKinder/kinderdash) |
+
+If you find this fork useful, you’re welcome to use it. I’ll keep maintaining it as long as I use it myself—especially the pieces that make **my** Homelab feel good day to day (OMV, Arcane, the modules I added, Chinese/English UI, and so on). That doesn’t mean every request or every edge case will land; priority stays on the paths I actually run. If something helps you too, great.
 
 In-app updates are scoped to this fork’s bundle id (`com.unitsung.myhomelab`), so they don’t interfere with upstream installs.
 
