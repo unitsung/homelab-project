@@ -93,7 +93,9 @@ struct OpenListMediaPlayerView: View {
 
                 if engine.isReady {
                     GeometryReader { geo in
+                        // Leave the bottom chrome free so the scrubber isn't stolen by brightness/volume gestures.
                         sideGestureLayers(size: geo.size)
+                            .padding(.bottom, showControls ? 150 : 0)
                     }
                     .ignoresSafeArea()
                 }
@@ -103,6 +105,7 @@ struct OpenListMediaPlayerView: View {
                 } else if showControls {
                     controlsOverlay
                         .transition(.opacity)
+                        .zIndex(2)
                 }
 
                 if let sideHud {
@@ -134,6 +137,21 @@ struct OpenListMediaPlayerView: View {
             errorText = msg
             showExternalFallback = true
         }
+        .onChange(of: engine.current) { _, _ in
+            // Keep scrub thumb in sync while idle; never fight an active drag.
+            guard !isScrubbing else { return }
+            scrubFraction = progressFraction
+        }
+        .onChange(of: engine.duration) { _, _ in
+            guard !isScrubbing else { return }
+            scrubFraction = progressFraction
+        }
+    }
+
+    /// 0...1 playback progress when not scrubbing.
+    private var progressFraction: Double {
+        guard engine.duration > 0, engine.current.isFinite, engine.duration.isFinite else { return 0 }
+        return min(max(engine.current / engine.duration, 0), 1)
     }
 
     // MARK: - Surfaces
@@ -300,30 +318,41 @@ struct OpenListMediaPlayerView: View {
                     .frame(width: 48, alignment: .leading)
                 Slider(
                     value: Binding(
-                        get: {
-                            if isScrubbing { return scrubFraction }
-                            return engine.duration > 0 ? engine.current / engine.duration : 0
-                        },
-                        set: { scrubFraction = $0 }
+                        get: { isScrubbing ? scrubFraction : progressFraction },
+                        set: { newValue in
+                            // Mark scrubbing on first set so get/set never fight live `current`.
+                            if !isScrubbing {
+                                isScrubbing = true
+                            }
+                            scrubFraction = min(max(newValue, 0), 1)
+                        }
                     ),
                     in: 0...1
                 ) { editing in
                     if editing {
+                        // Seed only if this is a pure touch-down before any set.
+                        if !isScrubbing {
+                            scrubFraction = progressFraction
+                        }
                         isScrubbing = true
-                        scrubFraction = engine.duration > 0 ? engine.current / engine.duration : 0
+                        hideTask?.cancel()
                     } else {
+                        let target = scrubFraction
                         isScrubbing = false
-                        engine.seek(toFraction: scrubFraction)
+                        engine.seek(toFraction: target)
                         scheduleHide()
                     }
                 }
                 .tint(.white)
+                // Ensure the scrubber wins over any residual gesture layers underneath.
+                .contentShape(Rectangle())
                 Text(clock(engine.duration))
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.white.opacity(0.85))
                     .frame(width: 48, alignment: .trailing)
             }
             .padding(.horizontal, 14)
+            .contentShape(Rectangle())
 
             HStack(spacing: 0) {
                 toolButton("gobackward.10", label: "-10s") { engine.jump(by: -10) }
@@ -779,6 +808,9 @@ final class OpenListVLCEngine: NSObject, ObservableObject, VLCMediaPlayerDelegat
     private var pendingExternalSubtitleURL: URL?
     private var didAttachSubtitle = false
     private var subtitleRetryTask: Task<Void, Never>?
+    /// Suppresses time-tick overwrites while a scrub seek settles.
+    private var isSeeking = false
+    private var seekGeneration = 0
 
     override init() {
         // Network-friendly options for OpenList signed / remote streams.
@@ -830,6 +862,8 @@ final class OpenListVLCEngine: NSObject, ObservableObject, VLCMediaPlayerDelegat
     func stop() {
         subtitleRetryTask?.cancel()
         subtitleRetryTask = nil
+        seekGeneration += 1
+        isSeeking = false
         player.stop()
         player.drawable = nil
         isPlaying = false
@@ -850,14 +884,45 @@ final class OpenListVLCEngine: NSObject, ObservableObject, VLCMediaPlayerDelegat
     }
 
     func jump(by seconds: Double) {
-        player.jump(withOffset: Int32(seconds * 1000))
+        if duration > 0, duration.isFinite {
+            let target = min(max(current + seconds, 0), duration)
+            seek(toFraction: target / duration)
+            return
+        }
+        // Unknown duration: relative jump in milliseconds.
+        player.jump(withOffset: Int32((seconds * 1000).rounded()))
     }
 
+    /// Seek by normalized position (0...1). Prefer absolute time when duration is known —
+    /// `position` alone is flaky on some OpenList / HTTP progressive streams.
     func seek(toFraction fraction: Double) {
         let f = min(max(fraction, 0), 1)
+        seekGeneration += 1
+        let generation = seekGeneration
+        isSeeking = true
+
+        if duration > 0, duration.isFinite {
+            let msDouble = (duration * f * 1000.0).rounded()
+            let ms = Int32(clamping: Int(msDouble))
+            player.time = VLCTime(int: ms)
+            current = Double(ms) / 1000.0
+        }
+        // Always also set position — helps formats where time seeks are coarse / ignored.
         player.position = f
-        if duration > 0 {
+        if duration > 0, duration.isFinite {
             current = duration * f
+        }
+
+        // Ignore stale time callbacks for a short window after seek.
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 450_000_000)
+            guard let self, self.seekGeneration == generation else { return }
+            self.isSeeking = false
+            self.refreshDuration()
+            let ms = Double(self.player.time.intValue)
+            if ms.isFinite, ms >= 0 {
+                self.current = ms / 1000.0
+            }
         }
     }
 
@@ -959,9 +1024,12 @@ final class OpenListVLCEngine: NSObject, ObservableObject, VLCMediaPlayerDelegat
 
     nonisolated func mediaPlayerTimeChanged(_ aNotification: Notification) {
         Task { @MainActor in
-            let ms = Double(self.player.time.intValue)
-            if ms.isFinite, ms >= 0 {
-                self.current = ms / 1000.0
+            // Don't yank the playhead back while a user seek is in flight.
+            if !self.isSeeking {
+                let ms = Double(self.player.time.intValue)
+                if ms.isFinite, ms >= 0 {
+                    self.current = ms / 1000.0
+                }
             }
             self.refreshDuration()
             self.isPlaying = self.player.isPlaying
