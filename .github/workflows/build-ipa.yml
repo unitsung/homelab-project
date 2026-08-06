@@ -43,7 +43,7 @@ concurrency:
 jobs:
   build-ipa:
     name: Archive and export IPA
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 45
     defaults:
       run:
