@@ -867,43 +867,18 @@ struct OpenListMediaPlayerView: View {
     }
 
     private static func activateAudioSession() async throws {
-        if #available(iOS 27.0, *) {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                AVAudioSession.sharedInstance().activate(options: []) { activated, error in
-                    if let error {
-                        continuation.resume(throwing: error)
-                    } else if activated {
-                        continuation.resume()
-                    } else {
-                        continuation.resume(
-                            throwing: NSError(
-                                domain: "OpenListPlayer",
-                                code: -1,
-                                userInfo: [NSLocalizedDescriptionKey: "Audio session failed to activate"]
-                            )
-                        )
-                    }
-                }
-            }
-        } else {
-            try await Task.detached(priority: .userInitiated) {
-                try AVAudioSession.sharedInstance().setActive(true)
-            }.value
-        }
+        // setActive on a background task: the completion-handler activate(_:) API is
+        // unavailable on iOS, and main-thread setActive triggers session warnings.
+        try await Task.detached(priority: .userInitiated) {
+            try AVAudioSession.sharedInstance().setActive(true)
+        }.value
     }
 
     private static func deactivateAudioSession() async {
-        if #available(iOS 27.0, *) {
-            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-                AVAudioSession.sharedInstance().deactivate(options: .notifyOthersOnDeactivation) { _, _ in
-                    continuation.resume()
-                }
-            }
-        } else {
-            _ = try? await Task.detached(priority: .utility) {
-                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-            }.value
-        }
+        // Swallow errors to match previous behavior.
+        _ = try? await Task.detached(priority: .utility) {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }.value
     }
 
     private func applyOrientation(landscape: Bool?, animated: Bool) {

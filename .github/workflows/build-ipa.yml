@@ -42,8 +42,12 @@ concurrency:
 
 jobs:
   build-ipa:
-    name: Archive and export IPA
-    runs-on: macos-26
+    name: Archive and export IPA (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-26, xcode-27]
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     defaults:
       run:
