@@ -145,9 +145,8 @@ final class SettingsStore {
         static let networkAccessMode = NetworkAccessMode.userDefaultsKey
     }
 
-    /// In-app update feed from Info.plist only — **no** hard-coded phone-home URL.
-    /// Empty / missing `HomelabUpdateManifestURL` → never contacts a remote feed
-    /// (so other people building this source do not get your release prompts).
+    /// Update feed for **this fork only** (`com.unitsung.myhomelab`).
+    /// Upstream installs use another bundle id + JohnnWi feed and never apply these releases.
     private static let updateCheckInterval: TimeInterval = 15 * 60
 
     private static var updateFeedURL: URL? {
@@ -158,9 +157,13 @@ final class SettingsStore {
         UpdateFeedConfiguration.defaultPageURL(from: Bundle.main)
     }
 
-    /// Build-time: is a remote update manifest configured?
+    /// True when this binary is the fork build (bundle id gate) and a feed URL is set.
     var isRemoteUpdateConfigured: Bool {
         UpdateFeedConfiguration.isRemoteUpdateConfigured(in: Bundle.main)
+            && UpdateFeedConfiguration.isThisForkInstall(
+                runningBundleID: Bundle.main.bundleIdentifier,
+                info: Bundle.main
+            )
     }
 
     // MARK: - Init
@@ -372,19 +375,24 @@ final class SettingsStore {
     }
 
     var checkForUpdatesEnabled: Bool {
-        // Default OFF: personal project must not push updates to strangers by accident.
-        get { UserDefaults.standard.object(forKey: Keys.checkForUpdatesEnabled) as? Bool ?? false }
+        // Default ON for this-fork builds that ship a feed URL; still gated by bundle id.
+        get { UserDefaults.standard.object(forKey: Keys.checkForUpdatesEnabled) as? Bool ?? true }
         set { UserDefaults.standard.set(newValue, forKey: Keys.checkForUpdatesEnabled) }
     }
 
     func checkForUpdatesIfNeeded(force: Bool = false) async {
         guard force || checkForUpdatesEnabled else { return }
-        // No Info.plist manifest URL → never hit the network.
+
+        // Hard isolation: never apply this feed unless the running app is *this* fork.
+        // Upstream Homelab (different bundle id) cannot receive these updates.
+        let runningID = Bundle.main.bundleIdentifier
+        guard UpdateFeedConfiguration.isThisForkInstall(runningBundleID: runningID, info: Bundle.main) else {
+            clearAvailableUpdateState()
+            return
+        }
+
         guard let url = Self.updateFeedURL else {
-            availableUpdateVersion = nil
-            availableUpdateURL = nil
-            availableUpdateChangelog = nil
-            showUpdatePopup = false
+            clearAvailableUpdateState()
             return
         }
         if !force, let lastUpdateCheckAt, Date().timeIntervalSince(lastUpdateCheckAt) < Self.updateCheckInterval {
@@ -395,11 +403,26 @@ final class SettingsStore {
             let (data, response) = try await URLSession.shared.data(from: url)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { return }
             let feed = try JSONDecoder().decode(AppVersionFeed.self, from: data)
+            // Feed-level gate: ignore JSON that targets another app / upstream id.
+            guard UpdateFeedConfiguration.feedTargetsRunningApp(
+                feedBundleID: feed.bundleID,
+                runningBundleID: runningID
+            ) else {
+                clearAvailableUpdateState()
+                return
+            }
             lastUpdateCheckAt = Date()
             apply(feed: feed)
         } catch {
             // Keep existing state when update feed is temporarily unreachable.
         }
+    }
+
+    private func clearAvailableUpdateState() {
+        availableUpdateVersion = nil
+        availableUpdateURL = nil
+        availableUpdateChangelog = nil
+        showUpdatePopup = false
     }
 
     func dismissUpdateBanner() {
@@ -544,12 +567,15 @@ private struct AppVersionFeed: Decodable {
     let changelog: String?
     let iosURL: String?
     let androidURL: String?
+    /// When set, only apps with this bundle id may apply the feed (this fork: com.unitsung.myhomelab).
+    let bundleID: String?
 
     enum CodingKeys: String, CodingKey {
         case latest
         case changelog
         case iosURL = "ios_url"
         case androidURL = "android_url"
+        case bundleID = "bundle_id"
     }
 }
 

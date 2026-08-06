@@ -3,40 +3,76 @@ import XCTest
 
 final class UpdateFeedConfigurationTests: XCTestCase {
 
-    func testMissingKeysDisablesRemoteUpdates() {
-        let info = InfoDictionaryStub(values: [:])
-        XCTAssertNil(UpdateFeedConfiguration.manifestURL(from: info))
-        XCTAssertFalse(UpdateFeedConfiguration.isRemoteUpdateConfigured(in: info))
-        XCTAssertEqual(UpdateFeedConfiguration.defaultPageURL(from: info), "")
-    }
-
-    func testEmptyManifestURLDisablesUpdateCheck() {
+    func testEmptyManifestDisablesRemoteUpdates() {
         let info = InfoDictionaryStub(values: [
-            UpdateFeedConfiguration.manifestInfoKey: "   "
+            UpdateFeedConfiguration.manifestInfoKey: ""
         ])
         XCTAssertNil(UpdateFeedConfiguration.manifestURL(from: info))
         XCTAssertFalse(UpdateFeedConfiguration.isRemoteUpdateConfigured(in: info))
     }
 
-    func testExplicitManifestEnablesCheckWithoutPhoneHomeDefault() {
+    func testThisForkBundleIsAllowed() {
         let info = InfoDictionaryStub(values: [
-            UpdateFeedConfiguration.manifestInfoKey: "https://example.com/private/version.json",
-            UpdateFeedConfiguration.defaultPageInfoKey: "https://example.com/private/releases"
+            UpdateFeedConfiguration.manifestInfoKey: UpdateFeedConfiguration.thisForkManifestURLString,
+            UpdateFeedConfiguration.expectedBundleIDInfoKey: UpdateFeedConfiguration.thisForkBundleID
+        ])
+        XCTAssertTrue(
+            UpdateFeedConfiguration.isThisForkInstall(
+                runningBundleID: "com.unitsung.myhomelab",
+                info: info
+            )
+        )
+        XCTAssertFalse(
+            UpdateFeedConfiguration.isThisForkInstall(
+                runningBundleID: "homelab.foreverhomelab",
+                info: info
+            ),
+            "Upstream bundle id must never be treated as this fork"
+        )
+        XCTAssertFalse(
+            UpdateFeedConfiguration.isThisForkInstall(
+                runningBundleID: "com.homelab.homelab",
+                info: info
+            )
+        )
+    }
+
+    func testFeedBundleIDMustMatchRunningApp() {
+        XCTAssertTrue(
+            UpdateFeedConfiguration.feedTargetsRunningApp(
+                feedBundleID: "com.unitsung.myhomelab",
+                runningBundleID: "com.unitsung.myhomelab"
+            )
+        )
+        XCTAssertFalse(
+            UpdateFeedConfiguration.feedTargetsRunningApp(
+                feedBundleID: "com.unitsung.myhomelab",
+                runningBundleID: "homelab.foreverhomelab"
+            ),
+            "Upstream install must ignore this fork's feed even if it downloads the JSON"
+        )
+        // Missing feed field still needs the local isThisForkInstall gate.
+        XCTAssertTrue(
+            UpdateFeedConfiguration.feedTargetsRunningApp(
+                feedBundleID: nil,
+                runningBundleID: "com.unitsung.myhomelab"
+            )
+        )
+    }
+
+    func testConfiguredManifestURLForThisFork() {
+        let info = InfoDictionaryStub(values: [
+            UpdateFeedConfiguration.manifestInfoKey: UpdateFeedConfiguration.thisForkManifestURLString,
+            UpdateFeedConfiguration.defaultPageInfoKey: UpdateFeedConfiguration.thisForkDefaultPageURLString
         ])
         XCTAssertEqual(
             UpdateFeedConfiguration.manifestURL(from: info)?.absoluteString,
-            "https://example.com/private/version.json"
+            UpdateFeedConfiguration.thisForkManifestURLString
         )
-        XCTAssertEqual(
-            UpdateFeedConfiguration.defaultPageURL(from: info),
-            "https://example.com/private/releases"
-        )
-        XCTAssertTrue(UpdateFeedConfiguration.isRemoteUpdateConfigured(in: info))
-        // Must never fall back to a hard-coded public repo.
         XCTAssertFalse(
             UpdateFeedConfiguration.manifestURL(from: info)?
                 .absoluteString
-                .contains("unitsung/homelab-project") == true
+                .contains("JohnnWi") == true
         )
     }
 }

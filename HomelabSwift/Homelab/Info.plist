@@ -57,16 +57,16 @@
 	<key>CFBundleVersion</key>
 	<string>40</string>
 	<!--
-	  In-app update feed — DISABLED by default so public builds do not phone home
-	  or push updates to strangers. For your own device only, set e.g.:
-	    HomelabUpdateManifestURL = https://raw.githubusercontent.com/unitsung/homelab-project/main/app-version.json
-	    HomelabUpdateDefaultURL  = https://github.com/unitsung/homelab-project/releases
-	  Leave both empty (as shipped) for no remote update checks.
+	  Updates for THIS fork only (bundle com.unitsung.myhomelab).
+	  Upstream JohnnWi builds use a different bundle id and a different hard-coded feed;
+	  they never read this file. Clear HomelabUpdateManifestURL to disable remote checks.
 	-->
 	<key>HomelabUpdateManifestURL</key>
-	<string></string>
+	<string>https://raw.githubusercontent.com/unitsung/homelab-project/main/app-version.json</string>
 	<key>HomelabUpdateDefaultURL</key>
-	<string></string>
+	<string>https://github.com/unitsung/homelab-project/releases</string>
+	<key>HomelabUpdateExpectedBundleID</key>
+	<string>com.unitsung.myhomelab</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>tailscale</string>
