@@ -30,7 +30,7 @@
           "version": "1.6.4",
           "buildVersion": "41",
           "date": "2026-08-06",
-          "localizedDescription": "## Homelab 1.6.4\n\n- Fix iOS compile failure on Xcode 26.6: replace unavailable AVAudioSession activate/deactivate completion-handler APIs with setActive(_:options:) in a detached task\n- Run iOS CI on both macos-26 (Xcode 26.6) and xcode-27 (Xcode 27 beta) runners\n- Update AltStore source will follow automatically\n\n> Note: IPA signed with a free Apple ID (development profile, expires 2026-08-12). Re-sign or refresh via SideStore/AltStore as needed.",
+          "localizedDescription": "## 新增功能\n\n- **全新首页仪表盘**：系统健康（CPU/内存/磁盘温度）、Docker 容器、qBittorrent 卡片，10 秒自动刷新\n- **CloudSaver 影视模块**：海报搜索、一键转存、看完即触发插件/运行、JWT 过期自动重登\n- **OpenList 播放器升级为开源 VLCKit**：支持 MKV/AVI 等多格式、离线缓存与画中画\n- **Arcane 交互式终端**（开源 SwiftTerm）+ 容器镜像/统计、日志查看\n- **qBittorrent 详情增强**：Tracker 与限速管理\n- **一键切换局域网/远程网络访问模式**；设置中批量替换主机地址；外挂字幕\n- Liquid Glass 视觉打磨（OpenList/Arcane/qB/CloudSaver）\n\n## 其他\n\n- 修复 Xcode 26.6 编译失败问题\n- iOS CI 同时跑 Xcode 26.6 与 Xcode 27 beta 双工具链\n\n> 注意：IPA 使用免费 Apple ID 签名（development profile，2026-08-12 到期），到期后请通过 SideStore/AltStore 刷新。",
           "downloadURL": "https://github.com/unitsung/homelab-project/releases/download/v1.6.4/Homelab.ipa",
           "size": 55304010,
           "minOSVersion": "26.0"
@@ -343,9 +343,9 @@
   ],
   "news": [
     {
-      "title": "v1.6.4 — - Fix iOS compile failure on Xcode 26.6: replace unavailable AVAudioSession activate/deactivate completion-handler APIs with setActive(_:options:) in a detached task",
+      "title": "v1.6.4 — - **全新首页仪表盘**：系统健康（CPU/内存/磁盘温度）、Docker 容器、qBittorrent 卡片，10 秒自动刷新",
       "identifier": "release-1.6.4",
-      "caption": "- Fix iOS compile failure on Xcode 26.6: replace unavailable AVAudioSession activate/deactivate completion-handler APIs with setActive(_:options:) in a detached task - Run iOS CI on both macos-26 (Xcode 26.6) and xcode-27 (Xcode 27 beta) runners - Update AltStore source will follow automatically",
+      "caption": "- **全新首页仪表盘**：系统健康（CPU/内存/磁盘温度）、Docker 容器、qBittorrent 卡片，10 秒自动刷新 - **CloudSaver 影视模块**：海报搜索、一键转存、看完即触发插件/运行、JWT 过期自动重登 - **OpenList 播放器升级为开源 VLCKit**：支持 MKV/AVI 等多格式、离线缓存与画中画",
       "date": "2026-08-06",
       "tintColor": "#4A90D9",
       "notify": true,
