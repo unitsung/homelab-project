@@ -99,9 +99,12 @@ jobs:
         run: |
           mkdir -p Config
           cat > Config/Signing.xcconfig <<'EOF'
-          DEVELOPMENT_TEAM =
-          PRODUCT_BUNDLE_IDENTIFIER = homelab.foreverhomelab
-          EOF
+DEVELOPMENT_TEAM =
+PRODUCT_BUNDLE_IDENTIFIER = homelab.foreverhomelab
+EOF
+
+      - name: List schemes
+        run: xcodebuild -list -project Homelab.xcodeproj
 
       - name: Compile iOS app without signing
         run: |
