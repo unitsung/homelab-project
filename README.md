@@ -1,353 +1,166 @@
-# A message from the developer
-Hi everyone, thanks for these past few months—it’s been great. However, for a variety of strictly personal reasons, I can no longer continue developing the app as my life is changing. I’ve contacted Apple several times to figure out what’s wrong, since there are no error messages, but they’ve never responded (I’ll try to find a solution). That said, this repo will remain active in archive mode.
-
-
-
-# 🏠 Homelab Dashboard
+# Homelab (personal fork)
 
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg?logo=swift)](https://swift.org)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-purple.svg?logo=kotlin)](https://kotlinlang.org)
 [![Platform](https://img.shields.io/badge/Platform-iOS%2026%2B-blue.svg)](https://developer.apple.com/ios/)
-[![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B-green.svg)](https://developer.android.com)
-[![Made with SwiftUI](https://img.shields.io/badge/Made%20with-SwiftUI-blue.svg?logo=swift)](https://developer.apple.com/xcode/swiftui/)
-[![Made with Jetpack Compose](https://img.shields.io/badge/Made%20with-Jetpack%20Compose-green.svg?logo=jetpackcompose)](https://developer.android.com/jetpack/compose)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-Homelab Dashboard is a fully native mobile app for monitoring and managing a self-hosted homelab from one place. The project ships two dedicated apps, one for iOS and one for Android, designed around the same product idea while respecting each platform's native UI patterns.
+Personal iOS client for **my own** homelab. Not a product, not a distribution, not seeking users.
 
-> **Disclaimer:** Personal / hobby project. Provided as-is with no guarantees. Use at your own risk.
+This repository is published mainly because GitHub forks cannot be made private. It is shaped around what I actually run day to day — not around supporting every setup on the internet.
 
-> **Fork note:** Continues the archived [JohnnWi/homelab-project](https://github.com/JohnnWi/homelab-project) under Apache License 2.0. See [`NOTICE`](NOTICE).
-
-<table align="center">
-  <tr>
-    <th>iOS Dashboard</th>
-    <th>Android Dashboard</th>
-  </tr>
-  <tr>
-    <td align="center"><img src="media-docs/foto-ios/Dashboard.png" width="230" /></td>
-    <td align="center"><img src="media-docs/foto-android/Dashboard.jpg" width="230" /></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="media-docs/foto-ios/Dashboard.png" width="240" alt="Overview dashboard" />
+</p>
 
 ---
 
-## 🚀 Highlights
+## Disclaimer
 
-- **34 integrated service dashboards** across infrastructure, networking, media automation, observability, and developer tooling.
-- **One app, many instances**: add multiple instances of the same service and switch between them without friction.
-- **Fully native on both platforms**: SwiftUI on iOS, Jetpack Compose on Android.
-- **Practical daily-use features**: encrypted backup and restore, biometric unlock, multilingual UI, alternate icons, and fast in-app update prompts.
-- **Utilities beyond services**: built-in bookmarks plus quick Tailscale launch support for remote access workflows.
+**Read this before cloning, building, or installing anything.**
 
----
+- Built **only for my own phones**, for personal convenience.
+- Changes follow **my** stack, taste, and schedule. There is **no** compatibility promise, migration promise, or roadmap for anyone else.
+- **No support.** Please do **not** open issues or pull requests expecting triage — I will not treat this as a community project.
+- **No App Store.** Sideload / self-compile only. Builds may be free-Apple-ID signed and expire; refresh yourself.
+- **It will break.** I change things whenever I want. Use at your own risk. No responsibility for data loss, broken installs, security incidents, or any damages.
+- If something here is useful, **fork it and make it yours** — that is what I did with upstream.
 
-## 🧩 Integrated Services
-
-### Core Infrastructure
-
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/portainer.png" width="18" style="vertical-align:middle"> **Portainer**: container overview, quick actions, resource usage.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/proxmox.png" width="18" style="vertical-align:middle"> **Proxmox VE**: nodes, guests, storage, networking, backups, and cluster operations.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/truenas-core.png" width="18" style="vertical-align:middle"> <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/truenas-scale.png" width="18" style="vertical-align:middle"> **TrueNAS Scale / Core**: storage, pools, disks, shares, services, and system alerts.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/uptime-kuma.png" width="18" style="vertical-align:middle"> **Uptime Kuma**: monitor status, uptime visibility, and incident tracking.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/dockhand.png" width="18" style="vertical-align:middle"> **Dockhand**: native container management dashboard.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/dockmon.png" width="18" style="vertical-align:middle"> **DockMon**: Docker host and container monitoring with logs, restart, and update actions.
-- <img src="HomelabSwift/Homelab/Assets.xcassets/service-komodo.imageset/komodo.png" width="18" style="vertical-align:middle"> **Komodo**: resource, deployment, stack, and server monitoring.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/beszel.png" width="18" style="vertical-align:middle"> **Beszel**: server monitoring across nodes.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/linux-update-dashboard.png" width="18" style="vertical-align:middle"> **Linux Update**: pending package updates across hosts.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/crafty-controller.png" width="18" style="vertical-align:middle"> **Crafty Controller**: game server management dashboard.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/pterodactyl.png" width="18" style="vertical-align:middle"> **Pterodactyl**: game server management panel with power controls, resource stats, and live status visibility.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/calagopus.png" width="18" style="vertical-align:middle"> **Calagopus**: next-generation game server management panel with power controls, uptime, and resource stats.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/gitea.png" width="18" style="vertical-align:middle"> **Gitea / Forgejo**: repositories, activity, and source browsing.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/pangolin.png" width="18" style="vertical-align:middle"> **Pangolin / Newt**: tunnel and peer visibility.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/healthchecks.png" width="18" style="vertical-align:middle"> **Healthchecks**: uptime checks and health status.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/patchmon.png" width="18" style="vertical-align:middle"> **PatchMon**: software update visibility across your stack.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/wakapi.png" width="18" style="vertical-align:middle"> **Wakapi**: coding activity and time tracking stats.
-
-### Networking & DNS
-
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/pi-hole.png" width="18" style="vertical-align:middle"> **Pi-hole**: queries, blocked domains, toggles, timers.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/adguard-home.png" width="18" style="vertical-align:middle"> **AdGuard Home**: filters, rewrites, blocked services, query activity.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/ubiquiti-unifi.png" width="18" style="vertical-align:middle"> **Ubiquiti Network**: gateways, switches, access points, clients, and site visibility.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/technitium.png" width="18" style="vertical-align:middle"> **Technitium DNS**: DNS metrics and health.
-- <img src="HomelabSwift/Homelab/Assets.xcassets/service-maltrail.imageset/icon.png" width="18" style="vertical-align:middle"> **Maltrail**: threat detections, daily findings, and event visibility.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/nginx-proxy-manager.png" width="18" style="vertical-align:middle"> **Nginx Proxy Manager / NPMplus**: proxy hosts, streams, redirects, certificates, access lists.
-
-### Media & Observability
-
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/plex.png" width="18" style="vertical-align:middle"> **Plex**: libraries, sessions, recently added media.
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/jellystat.png" width="18" style="vertical-align:middle"> **Jellystat**: Jellyfin activity, streams, usage insights.
-
-### Servarr Stack
-
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/sonarr.png" width="18" style="vertical-align:middle"> **Sonarr**
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/radarr.png" width="18" style="vertical-align:middle"> **Radarr**
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/lidarr.png" width="18" style="vertical-align:middle"> **Lidarr**
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/prowlarr.png" width="18" style="vertical-align:middle"> **Prowlarr**
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/qbittorrent.png" width="18" style="vertical-align:middle"> **qBittorrent**
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/jellyseerr.png" width="18" style="vertical-align:middle"> **Jellyseerr**
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/bazarr.png" width="18" style="vertical-align:middle"> **Bazarr**
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/gluetun.png" width="18" style="vertical-align:middle"> **Gluetun**
-- <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/flaresolverr.png" width="18" style="vertical-align:middle"> **FlareSolverr**
-
-The full Servarr stack is available as a unified media automation dashboard, so downloads, health, requests, VPN status, and indexer state can be checked from one place.
+This software is provided **as-is**, with **no warranties** of any kind.
 
 ---
 
-## 🍎 iOS App
+## Why this fork exists
 
-The iOS version is built with **Swift 6** and **SwiftUI** for **iOS 26+**. The interface uses a polished glass-heavy visual language, native navigation, and system integrations such as alternate icons, biometric unlock, and document-based backup import/export.
+Upstream ([JohnnWi/homelab-project](https://github.com/JohnnWi/homelab-project), archived) is a solid dual-platform Homelab dashboard. I forked it to keep an **iOS** app that matches **my** machine:
 
-<table align="center">
-  <tr>
-    <th>Dashboard</th>
-    <th>Servarr</th>
-    <th>Bookmarks</th>
-  </tr>
-  <tr>
-    <td align="center"><img src="media-docs/foto-ios/Dashboard.png" width="180" /></td>
-    <td align="center"><img src="media-docs/foto-ios/Servarr.png" width="180" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9201.PNG" width="180" /></td>
-  </tr>
-</table>
+| My setup | How this fork leans |
+| --- | --- |
+| Host OS | **[OpenMediaVault](https://www.openmediavault.org/)** |
+| Docker UI | **[Arcane](https://github.com/getarcaneapp/arcane)** (primary container manager for me — not Portainer-first) |
+| Media / files | **OpenList**, **CloudSaver**, players and external apps I actually use (incl. China-oriented habits) |
+| Language | **English + 中文** only. Other locales were dropped on purpose — too much surface to maintain |
+| Platform focus | **Swift / iOS only** for active work |
 
-<table align="center">
-  <tr>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9187.PNG" width="120" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9193.PNG" width="120" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9190.PNG" width="120" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9199.PNG" width="120" /></td>
-    <td align="center"><img src="media-docs/foto-ios/plex.PNG" width="120" /></td>
-  </tr>
-  <tr>
-    <td align="center"><sub>Portainer</sub></td>
-    <td align="center"><sub>Beszel</sub></td>
-    <td align="center"><sub>Nginx Proxy</sub></td>
-    <td align="center"><sub>Pi-hole</sub></td>
-    <td align="center"><sub>Plex</sub></td>
-  </tr>
-</table>
+Most service dashboards, UI patterns, and integrations still come from **upstream**. I did not re-document the full “34 integrations” catalog here; it would only drift. For the original product intent and the wide service list, see upstream.
 
-<details>
-<summary><b>📸 View all iOS screenshots</b></summary>
-<br>
+### What I tend to touch
 
-**Portainer**
-<table>
-  <tr>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9187.PNG" width="180" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9188.PNG" width="180" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9189.PNG" width="180" /></td>
-  </tr>
-</table>
+- iOS / `HomelabSwift/` bugfixes and features I need
+- Home overview, Arcane, OpenList / CloudSaver, qBittorrent details, LAN vs remote access, Chinese strings
+- Occasional packaging (IPA source metadata) when I ship a build for myself
 
-**Nginx Proxy Manager / NPMplus**
-<table>
-  <tr>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9190.PNG" width="180" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9191.PNG" width="180" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9192.PNG" width="180" /></td>
-  </tr>
-</table>
+### What I do not maintain
 
-**Beszel**
-<table>
-  <tr>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9193.PNG" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9194.PNG" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9195.PNG" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9196.PNG" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9197.PNG" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9198.PNG" width="145" /></td>
-  </tr>
-</table>
-
-**Pi-hole · AdGuard Home · Healthchecks**
-<table>
-  <tr>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9199.PNG" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9218.PNG" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9219.PNG" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9238.PNG" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9239.PNG" width="145" /></td>
-  </tr>
-</table>
-
-**Gitea / Forgejo · PatchMon · Jellystat · Plex**
-<table>
-  <tr>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9200.jpg" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9269.PNG" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-ios/IMG_9275.PNG" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-ios/plex.PNG" width="145" /></td>
-  </tr>
-</table>
-
-</details>
+- **Android** product work — tree may still exist under `HomelabAndroid/`, but I am **not** actively developing or supporting it
+- Full multi-language coverage (IT / FR / ES / DE, etc.)
+- Guarantees that your OMV / Docker / player stack will match mine
 
 ---
 
-## 🤖 Android App
+## Android
 
-The Android version is built with **Kotlin** and **Jetpack Compose** for **Android 8.0+**. It uses a modern Material 3 style, dynamic color where available, expressive cards, and native Android architecture patterns.
+**I do not maintain Android here.**
 
-<table align="center">
-  <tr>
-    <th>Dashboard</th>
-    <th>Servarr</th>
-    <th>Bookmarks</th>
-  </tr>
-  <tr>
-    <td align="center"><img src="media-docs/foto-android/Dashboard.jpg" width="180" /></td>
-    <td align="center"><img src="media-docs/foto-android/Servarr.jpg" width="180" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_19_2026-03-16_20-24-21.jpg" width="180" /></td>
-  </tr>
-</table>
+If you want an actively developed Android Homelab-style client, look at other developers’ work, for example:
 
-<table align="center">
-  <tr>
-    <td align="center"><img src="media-docs/foto-android/photo_1_2026-03-16_20-24-21.jpg" width="120" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_4_2026-03-16_20-24-21.jpg" width="120" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_13_2026-03-16_20-24-21.jpg" width="120" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_16_2026-03-16_20-24-21.jpg" width="120" /></td>
-    <td align="center"><img src="media-docs/foto-android/plex.jpg" width="120" /></td>
-  </tr>
-  <tr>
-    <td align="center"><sub>Portainer</sub></td>
-    <td align="center"><sub>Beszel</sub></td>
-    <td align="center"><sub>Nginx Proxy</sub></td>
-    <td align="center"><sub>Pi-hole</sub></td>
-    <td align="center"><sub>Plex</sub></td>
-  </tr>
-</table>
+- [ChaosieKinder/kinderdash](https://github.com/ChaosieKinder/kinderdash)
 
-<details>
-<summary><b>📸 View all Android screenshots</b></summary>
-<br>
-
-**Portainer**
-<table>
-  <tr>
-    <td align="center"><img src="media-docs/foto-android/photo_1_2026-03-16_20-24-21.jpg" width="180" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_2_2026-03-16_20-24-21.jpg" width="180" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_3_2026-03-16_20-24-21.jpg" width="180" /></td>
-  </tr>
-</table>
-
-**Beszel**
-<table>
-  <tr>
-    <td align="center"><img src="media-docs/foto-android/photo_4_2026-03-16_20-24-21.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_5_2026-03-16_20-24-21.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_6_2026-03-16_20-24-21.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_7_2026-03-16_20-24-21.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_8_2026-03-16_20-24-21.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_9_2026-03-16_20-24-21.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_10_2026-03-16_20-24-21.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_11_2026-03-16_20-24-21.jpg" width="110" /></td>
-  </tr>
-</table>
-
-**Nginx Proxy Manager / NPMplus · Pi-hole**
-<table>
-  <tr>
-    <td align="center"><img src="media-docs/foto-android/photo_13_2026-03-16_20-24-21.jpg" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_14_2026-03-16_20-24-21.jpg" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_16_2026-03-16_20-24-21.jpg" width="145" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_17_2026-03-16_20-24-21.jpg" width="145" /></td>
-  </tr>
-</table>
-
-**AdGuard Home · Healthchecks · PatchMon · Jellystat · Plex**
-<table>
-  <tr>
-    <td align="center"><img src="media-docs/foto-android/adguard1.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/adguard2.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/healthcheck1.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/healthcheck2.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_1_2026-03-21_01-00-34.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_2_2026-03-21_01-00-34.jpg" width="110" /></td>
-    <td align="center"><img src="media-docs/foto-android/plex.jpg" width="110" /></td>
-  </tr>
-</table>
-
-**Bookmarks**
-<table>
-  <tr>
-    <td align="center"><img src="media-docs/foto-android/photo_18_2026-03-16_20-24-21.jpg" width="180" /></td>
-    <td align="center"><img src="media-docs/foto-android/photo_19_2026-03-16_20-24-21.jpg" width="180" /></td>
-  </tr>
-</table>
-
-</details>
+Anything under `HomelabAndroid/` in this repo is **inherited / leftover**. Build it yourself if you must; **no guarantees**, no screenshots, no support.
 
 ---
 
-## 📲 Install via AltStore / SideStore
+## Language
 
-You can install the iOS app directly on your iPhone without Xcode using **AltStore** or **SideStore**.
+In-app language is **English** and **中文** (Settings → Language).
 
-1. Copy the source URL:
-   ```
-   https://raw.githubusercontent.com/JohnnWi/homelab-project/main/apps.json
-   ```
-2. Open **AltStore** or **SideStore** on your device.
-3. Go to **Sources** → **Add Source** and paste the URL above.
-4. Find **Homelab** in the source and tap **Install**.
-
-The app can then be refreshed and updated from the same source.
-
-> **Note:** SideStore can re-sign the app automatically without needing a Mac every 7 days.
+I intentionally removed the rest of the translation matrix. Maintaining many locales is more work than I want for a personal app. If you need another language, fork and add it yourself — I am unlikely to expand the set.
 
 ---
 
-## 🛠️ Getting Started
+## Screenshots (few)
 
-### Contributing
+Most UI is still upstream-looking. Only a couple of iOS shots so you know what “my” build roughly looks like:
 
-Want to fix a bug or add a feature? See **[`CONTRIBUTING.md`](CONTRIBUTING.md)** for branch naming, PR target (`main`), and local build checks. Maintainer / agent workflow details are in [`AGENTS.md`](AGENTS.md).
+| Overview | Example service |
+| --- | --- |
+| <img src="media-docs/foto-ios/Dashboard.png" width="180" /> | <img src="media-docs/foto-ios/Servarr.png" width="180" /> |
 
-### Repository Layout
-
-- `HomelabSwift/`: native iOS app built with SwiftUI.
-- `HomelabAndroid/`: native Android app built with Kotlin and Jetpack Compose.
-- `docs/`: public privacy and support pages served through GitHub Pages.
-- `apps.json` and `app-version.json`: update metadata used by the AltStore / SideStore source and in-app update banner.
-
-### Build for iOS
-
-1. Open `HomelabSwift/Homelab.xcodeproj` in Xcode 26+.
-2. Select your development team under **Signing & Capabilities**.
-3. Build and run on a real device or simulator.
-
-### Build for Android
-
-1. Import `HomelabAndroid` into Android Studio.
-2. Let Gradle sync and resolve dependencies.
-3. Run on a connected device or emulator.
+No Android gallery. For richer screenshots and the classic dual-platform pitch, see [upstream](https://github.com/JohnnWi/homelab-project).
 
 ---
 
-## 🧭 Support
+## Security notes (iOS / Swift)
 
-This repository is a **maintained fork** of the original Homelab Dashboard by [JohnnWi](https://github.com/JohnnWi/homelab-project) (archived).
+These matter because the app stores **API tokens, passwords, and session secrets** for your services.
 
-- **This fork:** [github.com/unitsung/homelab-project](https://github.com/unitsung/homelab-project)
-- **Issues:** [github.com/unitsung/homelab-project/issues](https://github.com/unitsung/homelab-project/issues)
-- **Contributing:** [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- **Upstream (archived):** [github.com/JohnnWi/homelab-project](https://github.com/JohnnWi/homelab-project)
+| Topic | Behavior in this fork |
+| --- | --- |
+| **Where secrets live** | Service instances + app PIN are stored in the **iOS Keychain** (`KeychainService`), not UserDefaults / files. |
+| **Keychain accessibility** | `AfterFirstUnlockThisDeviceOnly`, **not** iCloud Keychain sync. Secrets are intended to stay on **this device** and are excluded from ordinary backup / device-transfer paths that honor `ThisDeviceOnly`. Existing items are re-saved once on upgrade. |
+| **UserDefaults** | Preferences only (theme, language, card order, update-banner dismiss state, etc.) — not credentials. |
+| **Export backup** | Optional encrypted `.homelab` backup (password + AES-GCM). That is explicit export; protect the password. |
+| **In-app update check** | Reads `HomelabUpdateManifestURL` / `HomelabUpdateDefaultURL` from **Info.plist**. Defaults to **this** repo (`unitsung/homelab-project`), **not** archived upstream `JohnnWi`. Set the manifest URL to an **empty string** to disable network update checks entirely. Toggle also exists in Settings when enabled. |
+| **ATS** | Cleartext / arbitrary loads allowed for local homelab HTTP — expected for LAN services; still use HTTPS where you can. |
+
+I do **not** claim formal security certification. This is “good enough for my phone on my LAN,” not a compliance product.
 
 ---
 
-## 📄 License & attribution
+## Build (self-compile)
+
+There is **no** supported binary distribution for the general public. If you use this code, **compile it yourself**.
+
+### iOS (what I actually work on)
+
+1. Open `HomelabSwift/Homelab.xcodeproj` in a recent Xcode (targets **iOS 26+** in this tree).
+2. Set your own development team / signing.
+3. Build for a real device.
+
+Optional install path I use for my devices: **AltStore Classic / SideStore** with this repo’s source URL (when I publish an IPA for myself):
+
+```
+https://raw.githubusercontent.com/unitsung/homelab-project/main/apps.json
+```
+
+Signing, expiry, and refresh are **your** problem. Free Apple ID profiles expire; I do not provide commercial signing.
+
+To silence update checks in a private build, clear `HomelabUpdateManifestURL` in `HomelabSwift/Homelab/Info.plist`.
+
+### Android (not supported)
+
+Open `HomelabAndroid/` in Android Studio, JDK 21, `./gradlew assembleDebug` — or better, use a maintained Android project such as [kinderdash](https://github.com/ChaosieKinder/kinderdash).
+
+---
+
+## Repository layout
+
+| Path | Role |
+| --- | --- |
+| `HomelabSwift/` | **Active** — iOS app (SwiftUI) |
+| `HomelabAndroid/` | Inherited / unmaintained here |
+| `apps.json` / `app-version.json` | Optional sideload / in-app update metadata for **my** releases |
+| `docs/` | Static pages (privacy / support leftovers) |
+| `AGENTS.md` | Notes for automated agents working in this repo |
+
+---
+
+## Maintenance expectation
+
+Personal bandwidth is limited.
+
+- Fixes and features prioritize **Swift / iOS** and **my OMV + Arcane** workflow.
+- Releases are irregular, when I need them.
+- Documentation here stays short on purpose.
+- Do not expect replies, roadmaps, or issue triage.
+
+If you need the original app “as the author intended,” use [upstream](https://github.com/JohnnWi/homelab-project) (archived) and its full documentation.
+
+---
+
+## License & attribution
 
 Licensed under the **Apache License 2.0** — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
 
-Apache 2.0 allows you to fork, modify, and redistribute (including commercially), provided you:
+Original Homelab Dashboard work remains credited to **JohnnWi** and contributors. This fork’s modifications are visible in git history (personal iOS focus, Chinese + English only, Arcane / OpenList / CloudSaver oriented changes, packaging for my devices, etc.).
 
-1. Keep the license text (`LICENSE`)
-2. Keep attribution / copyright notices (`NOTICE`)
-3. Note that the software includes modifications (this fork)
-
-Original Homelab Dashboard copyright remains with the original authors; this fork adds maintenance and new features under the same license.
-
-See [LICENSE](LICENSE) for the full text.
+Fork, modify, and redistribute under Apache 2.0 if you want — keep license, notices, and note that the software has been modified.

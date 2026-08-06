@@ -145,10 +145,19 @@ final class SettingsStore {
         static let networkAccessMode = NetworkAccessMode.userDefaultsKey
     }
 
-    // Point updates at this fork (upstream JohnnWi/homelab-project is archived).
-    private static let updateFeedURL = URL(string: "https://raw.githubusercontent.com/unitsung/homelab-project/main/app-version.json")
-    private static let defaultUpdatePage = "https://github.com/unitsung/homelab-project/releases"
+    /// In-app update feed. Read from Info.plist so private forks can retarget or disable.
+    /// - `HomelabUpdateManifestURL`: raw JSON feed URL. Empty / missing-as-empty → no network check.
+    /// - `HomelabUpdateDefaultURL`: fallback page when the feed omits `ios_url`.
+    /// This fork defaults to unitsung (not archived upstream JohnnWi).
     private static let updateCheckInterval: TimeInterval = 15 * 60
+
+    private static var updateFeedURL: URL? {
+        UpdateFeedConfiguration.manifestURL(from: Bundle.main)
+    }
+
+    private static var defaultUpdatePage: String {
+        UpdateFeedConfiguration.defaultPageURL(from: Bundle.main)
+    }
 
     // MARK: - Init
 
@@ -365,10 +374,17 @@ final class SettingsStore {
 
     func checkForUpdatesIfNeeded(force: Bool = false) async {
         guard force || checkForUpdatesEnabled else { return }
+        // Empty HomelabUpdateManifestURL disables remote checks (private / offline builds).
+        guard let url = Self.updateFeedURL else {
+            availableUpdateVersion = nil
+            availableUpdateURL = nil
+            availableUpdateChangelog = nil
+            showUpdatePopup = false
+            return
+        }
         if !force, let lastUpdateCheckAt, Date().timeIntervalSince(lastUpdateCheckAt) < Self.updateCheckInterval {
             return
         }
-        guard let url = Self.updateFeedURL else { return }
 
         do {
             let (data, response) = try await URLSession.shared.data(from: url)

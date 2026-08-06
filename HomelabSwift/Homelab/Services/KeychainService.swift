@@ -6,6 +6,8 @@ enum KeychainService {
     private static let legacyConnectionsAccount = "homelab_user"
     private static let serviceStateV2Account = "homelab_service_state_v2"
     private static let pinAccount = "homelab_pin"
+    /// One-shot rewrite so older items (WhenUnlocked, backup-eligible) pick up ThisDeviceOnly.
+    private static let accessibilityMigrationFlag = "homelab_keychain_this_device_only_v1"
     nonisolated(unsafe) static var backend: any KeychainBackend = SecurityKeychainBackend()
 
     static func saveServiceState(_ state: ServiceStateV2) {
@@ -16,6 +18,7 @@ enum KeychainService {
     static func loadServiceState() -> ServiceStateV2 {
         if let data = backend.load(service: service, account: serviceStateV2Account),
            let state = try? JSONDecoder().decode(ServiceStateV2.self, from: data) {
+            reprotectStoredSecretsIfNeeded(state: state)
             return state
         }
 
@@ -37,6 +40,7 @@ enum KeychainService {
            (try? JSONDecoder().decode(ServiceStateV2.self, from: saved)) != nil {
             backend.delete(service: service, account: legacyConnectionsAccount)
         }
+        UserDefaults.standard.set(true, forKey: accessibilityMigrationFlag)
         return migratedState
     }
 
@@ -64,6 +68,16 @@ enum KeychainService {
         backend.delete(service: service, account: pinAccount)
     }
 
+    /// Re-save service blob + PIN once so Keychain items use ThisDeviceOnly (excluded from backup / D2D).
+    private static func reprotectStoredSecretsIfNeeded(state: ServiceStateV2) {
+        guard !UserDefaults.standard.bool(forKey: accessibilityMigrationFlag) else { return }
+        saveServiceState(state)
+        if let pin = loadPin() {
+            savePin(pin)
+        }
+        UserDefaults.standard.set(true, forKey: accessibilityMigrationFlag)
+    }
+
     private static func loadLegacyConnections() -> [ServiceType: ServiceConnection] {
         guard let data = backend.load(service: service, account: legacyConnectionsAccount),
               let connections = try? JSONDecoder().decode([ServiceType: ServiceConnection].self, from: data)
@@ -81,16 +95,20 @@ protocol KeychainBackend: Sendable {
 
 struct SecurityKeychainBackend: KeychainBackend {
     func save(data: Data, service: String, account: String) {
-        let query: [String: Any] = [
+        // Do not constrain delete/load queries by accessibility — that can miss older items.
+        delete(service: service, account: account)
+
+        // Device-local (ThisDeviceOnly): excluded from ordinary backup / D2D.
+        // AfterFirstUnlock: still available for network work after the first unlock of the boot.
+        // synchronizable=false: do not push secrets into iCloud Keychain.
+        let addQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+            kSecAttrSynchronizable as String: false,
+            kSecValueData as String: data
         ]
-        SecItemDelete(query as CFDictionary)
-
-        var addQuery = query
-        addQuery[kSecValueData as String] = data
         SecItemAdd(addQuery as CFDictionary, nil)
     }
 
@@ -99,7 +117,6 @@ struct SecurityKeychainBackend: KeychainBackend {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
@@ -114,8 +131,7 @@ struct SecurityKeychainBackend: KeychainBackend {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked
+            kSecAttrAccount as String: account
         ]
         SecItemDelete(query as CFDictionary)
     }
