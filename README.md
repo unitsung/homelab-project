@@ -6,6 +6,14 @@ A personal fork of the excellent [JohnnWi/homelab-project](https://github.com/Jo
 
 Huge thanks to **[JohnnWi](https://github.com/JohnnWi)** and every contributor. Upstream already ships a solid native Homelab dashboard—multi-service support, multi-instance setup, backups, unlock, and more. This fork stands on that work; without it, none of the extras below would exist.
 
+<p align="center">
+  <img src="media-docs/screenshots/home-overview.png" width="280" alt="Home overview" />
+  &nbsp;
+  <img src="media-docs/screenshots/arcane.png" width="280" alt="Arcane" />
+</p>
+
+<p align="center"><sub>Home overview · Arcane (Docker)</sub></p>
+
 ## Why this fork
 
 I didn’t set out to rebuild the app from scratch. The goal is simple: **keep the upstream foundation**, then add modules and services I use every day on **my own NAS / Homelab**, so day-to-day management is easier on my phone.

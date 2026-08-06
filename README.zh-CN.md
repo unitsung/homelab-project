@@ -6,6 +6,14 @@
 
 非常感谢原作者 **[JohnnWi](https://github.com/JohnnWi)** 以及所有贡献者。上游已经把原生 Homelab 仪表盘做得相当完整——多服务、多实例、备份与解锁等能力都已具备。本仓库是在这份成果上继续添加功能；没有上游，就没有后面的这些改动。
 
+<p align="center">
+  <img src="media-docs/screenshots/home-overview.png" width="280" alt="首页概览" />
+  &nbsp;
+  <img src="media-docs/screenshots/arcane.png" width="280" alt="Arcane" />
+</p>
+
+<p align="center"><sub>首页概览 · Arcane（Docker）</sub></p>
+
 ## 为什么 fork
 
 并不是要从头再造一款 App。
