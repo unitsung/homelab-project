@@ -83,8 +83,12 @@ jobs:
         run: ./gradlew :app:compileDebugKotlin --console=plain
 
   ios-compile:
-    name: iOS compile
-    runs-on: xcode-27
+    name: iOS compile (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-26, xcode-27]
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
     defaults:
       run:
