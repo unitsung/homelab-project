@@ -506,30 +506,33 @@ struct SettingsView: View {
                         url: "https://github.com/unitsung/homelab-project"
                     )
 
-                    Divider().padding(.leading, 58)
+                    // Only show when a build-time update feed is configured (personal opt-in).
+                    if settingsStore.isRemoteUpdateConfigured {
+                        Divider().padding(.leading, 58)
 
-                    Button {
-                        HapticManager.light()
-                        Task { await settingsStore.checkForUpdatesIfNeeded(force: true) }
-                    } label: {
-                        HStack(spacing: 14) {
-                            settingsIcon("arrow.triangle.2.circlepath", color: Color(hex: "#0EA5E9"))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(localizer.t.settingsCheckForUpdatesNow)
-                                    .font(.body.weight(.medium))
-                                    .foregroundStyle(.primary)
-                                Text(localizer.t.settingsCheckForUpdatesDesc)
-                                    .font(.caption)
-                                    .foregroundStyle(AppTheme.textSecondary)
-                                    .lineLimit(2)
+                        Button {
+                            HapticManager.light()
+                            Task { await settingsStore.checkForUpdatesIfNeeded(force: true) }
+                        } label: {
+                            HStack(spacing: 14) {
+                                settingsIcon("arrow.triangle.2.circlepath", color: Color(hex: "#0EA5E9"))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(localizer.t.settingsCheckForUpdatesNow)
+                                        .font(.body.weight(.medium))
+                                        .foregroundStyle(.primary)
+                                    Text(localizer.t.settingsCheckForUpdatesDesc)
+                                        .font(.caption)
+                                        .foregroundStyle(AppTheme.textSecondary)
+                                        .lineLimit(2)
+                                }
+                                Spacer()
                             }
-                            Spacer()
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .contentShape(Rectangle())
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 12)
-                        .contentShape(Rectangle())
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .glassCard(cornerRadius: 16)

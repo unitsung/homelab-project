@@ -3,18 +3,11 @@ import XCTest
 
 final class UpdateFeedConfigurationTests: XCTestCase {
 
-    func testBuiltInDefaultsWhenKeysMissing() {
+    func testMissingKeysDisablesRemoteUpdates() {
         let info = InfoDictionaryStub(values: [:])
-        let url = UpdateFeedConfiguration.manifestURL(from: info)
-        XCTAssertEqual(
-            url?.absoluteString,
-            UpdateFeedConfiguration.builtInManifestURLString
-        )
-        XCTAssertEqual(
-            UpdateFeedConfiguration.defaultPageURL(from: info),
-            UpdateFeedConfiguration.builtInDefaultPageURLString
-        )
-        XCTAssertFalse(url?.absoluteString.contains("JohnnWi") == true)
+        XCTAssertNil(UpdateFeedConfiguration.manifestURL(from: info))
+        XCTAssertFalse(UpdateFeedConfiguration.isRemoteUpdateConfigured(in: info))
+        XCTAssertEqual(UpdateFeedConfiguration.defaultPageURL(from: info), "")
     }
 
     func testEmptyManifestURLDisablesUpdateCheck() {
@@ -22,20 +15,28 @@ final class UpdateFeedConfigurationTests: XCTestCase {
             UpdateFeedConfiguration.manifestInfoKey: "   "
         ])
         XCTAssertNil(UpdateFeedConfiguration.manifestURL(from: info))
+        XCTAssertFalse(UpdateFeedConfiguration.isRemoteUpdateConfigured(in: info))
     }
 
-    func testCustomManifestAndDefaultPage() {
+    func testExplicitManifestEnablesCheckWithoutPhoneHomeDefault() {
         let info = InfoDictionaryStub(values: [
-            UpdateFeedConfiguration.manifestInfoKey: "https://example.com/version.json",
-            UpdateFeedConfiguration.defaultPageInfoKey: "https://example.com/releases"
+            UpdateFeedConfiguration.manifestInfoKey: "https://example.com/private/version.json",
+            UpdateFeedConfiguration.defaultPageInfoKey: "https://example.com/private/releases"
         ])
         XCTAssertEqual(
             UpdateFeedConfiguration.manifestURL(from: info)?.absoluteString,
-            "https://example.com/version.json"
+            "https://example.com/private/version.json"
         )
         XCTAssertEqual(
             UpdateFeedConfiguration.defaultPageURL(from: info),
-            "https://example.com/releases"
+            "https://example.com/private/releases"
+        )
+        XCTAssertTrue(UpdateFeedConfiguration.isRemoteUpdateConfigured(in: info))
+        // Must never fall back to a hard-coded public repo.
+        XCTAssertFalse(
+            UpdateFeedConfiguration.manifestURL(from: info)?
+                .absoluteString
+                .contains("unitsung/homelab-project") == true
         )
     }
 }

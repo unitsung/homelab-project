@@ -145,10 +145,9 @@ final class SettingsStore {
         static let networkAccessMode = NetworkAccessMode.userDefaultsKey
     }
 
-    /// In-app update feed. Read from Info.plist so private forks can retarget or disable.
-    /// - `HomelabUpdateManifestURL`: raw JSON feed URL. Empty / missing-as-empty → no network check.
-    /// - `HomelabUpdateDefaultURL`: fallback page when the feed omits `ios_url`.
-    /// This fork defaults to unitsung (not archived upstream JohnnWi).
+    /// In-app update feed from Info.plist only — **no** hard-coded phone-home URL.
+    /// Empty / missing `HomelabUpdateManifestURL` → never contacts a remote feed
+    /// (so other people building this source do not get your release prompts).
     private static let updateCheckInterval: TimeInterval = 15 * 60
 
     private static var updateFeedURL: URL? {
@@ -157,6 +156,11 @@ final class SettingsStore {
 
     private static var defaultUpdatePage: String {
         UpdateFeedConfiguration.defaultPageURL(from: Bundle.main)
+    }
+
+    /// Build-time: is a remote update manifest configured?
+    var isRemoteUpdateConfigured: Bool {
+        UpdateFeedConfiguration.isRemoteUpdateConfigured(in: Bundle.main)
     }
 
     // MARK: - Init
@@ -368,13 +372,14 @@ final class SettingsStore {
     }
 
     var checkForUpdatesEnabled: Bool {
-        get { UserDefaults.standard.object(forKey: Keys.checkForUpdatesEnabled) as? Bool ?? true }
+        // Default OFF: personal project must not push updates to strangers by accident.
+        get { UserDefaults.standard.object(forKey: Keys.checkForUpdatesEnabled) as? Bool ?? false }
         set { UserDefaults.standard.set(newValue, forKey: Keys.checkForUpdatesEnabled) }
     }
 
     func checkForUpdatesIfNeeded(force: Bool = false) async {
         guard force || checkForUpdatesEnabled else { return }
-        // Empty HomelabUpdateManifestURL disables remote checks (private / offline builds).
+        // No Info.plist manifest URL → never hit the network.
         guard let url = Self.updateFeedURL else {
             availableUpdateVersion = nil
             availableUpdateURL = nil
@@ -430,7 +435,13 @@ final class SettingsStore {
         }
 
         availableUpdateVersion = latest
-        availableUpdateURL = feed.iosURL ?? Self.defaultUpdatePage
+        let page = feed.iosURL?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let page, !page.isEmpty {
+            availableUpdateURL = page
+        } else {
+            let fallback = Self.defaultUpdatePage
+            availableUpdateURL = fallback.isEmpty ? nil : fallback
+        }
         availableUpdateChangelog = feed.changelog
 
         if dismissedUpdateVersion != latest {
@@ -465,7 +476,8 @@ final class SettingsStore {
         }
 
         if availableUpdateURL?.isEmpty != false {
-            availableUpdateURL = Self.defaultUpdatePage
+            let fallback = Self.defaultUpdatePage
+            availableUpdateURL = fallback.isEmpty ? nil : fallback
         }
 
         // Restore popup state from cache

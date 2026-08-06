@@ -99,7 +99,7 @@ These matter because the app stores **API tokens, passwords, and session secrets
 | **Keychain accessibility** | `AfterFirstUnlockThisDeviceOnly`, **not** iCloud Keychain sync. Secrets are intended to stay on **this device** and are excluded from ordinary backup / device-transfer paths that honor `ThisDeviceOnly`. Existing items are re-saved once on upgrade. |
 | **UserDefaults** | Preferences only (theme, language, card order, update-banner dismiss state, etc.) — not credentials. |
 | **Export backup** | Optional encrypted `.homelab` backup (password + AES-GCM). That is explicit export; protect the password. |
-| **In-app update check** | Reads `HomelabUpdateManifestURL` / `HomelabUpdateDefaultURL` from **Info.plist**. Defaults to **this** repo (`unitsung/homelab-project`), **not** archived upstream `JohnnWi`. Set the manifest URL to an **empty string** to disable network update checks entirely. Toggle also exists in Settings when enabled. |
+| **In-app update check** | **Off by default.** No hard-coded phone-home URL. Remote checks only run if **you** set a non-empty `HomelabUpdateManifestURL` in Info.plist **and** enable the Settings toggle. Public source builds will **not** pull updates from this repo or notify strangers. |
 | **ATS** | Cleartext / arbitrary loads allowed for local homelab HTTP — expected for LAN services; still use HTTPS where you can. |
 
 I do **not** claim formal security certification. This is “good enough for my phone on my LAN,” not a compliance product.
@@ -124,7 +124,7 @@ https://raw.githubusercontent.com/unitsung/homelab-project/main/apps.json
 
 Signing, expiry, and refresh are **your** problem. Free Apple ID profiles expire; I do not provide commercial signing.
 
-To silence update checks in a private build, clear `HomelabUpdateManifestURL` in `HomelabSwift/Homelab/Info.plist`.
+**Updates for yourself only:** leave `HomelabUpdateManifestURL` empty in the committed tree (as shipped). On a private machine, fill it with your own feed if you want in-app prompts — do not commit that if you do not want others building the same values. Note: a public GitHub Release + public `apps.json` can still be used by anyone who adds the AltStore source URL; free-ID IPAs usually only install on *your* devices, but the source is not private.
 
 ### Android (not supported)
 

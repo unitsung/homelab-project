@@ -56,11 +56,17 @@
 	<string>1.6.3</string>
 	<key>CFBundleVersion</key>
 	<string>40</string>
-	<!-- In-app update feed. Set HomelabUpdateManifestURL to empty string to disable network checks. -->
+	<!--
+	  In-app update feed — DISABLED by default so public builds do not phone home
+	  or push updates to strangers. For your own device only, set e.g.:
+	    HomelabUpdateManifestURL = https://raw.githubusercontent.com/unitsung/homelab-project/main/app-version.json
+	    HomelabUpdateDefaultURL  = https://github.com/unitsung/homelab-project/releases
+	  Leave both empty (as shipped) for no remote update checks.
+	-->
 	<key>HomelabUpdateManifestURL</key>
-	<string>https://raw.githubusercontent.com/unitsung/homelab-project/main/app-version.json</string>
+	<string></string>
 	<key>HomelabUpdateDefaultURL</key>
-	<string>https://github.com/unitsung/homelab-project/releases</string>
+	<string></string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>tailscale</string>
