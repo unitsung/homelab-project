@@ -352,9 +352,9 @@
   ],
   "news": [
     {
-      "title": "v1.6.3 — Forked from an open-source Homelab client with the following additions:",
+      "title": "v1.6.3 — Forked from an open-source Homelab client with the following additions (incl. Chinese support)",
       "identifier": "release-1.6.3",
-      "caption": "Forked from an open-source Homelab client with the following additions: - **New Home Dashboard** — redesigned with system health, Docker container, and qBittorrent cards, auto-refreshing every 10 seconds - **OpenList support** — manage and play files from [OpenList](https://github.com/OpenListTeam/OpenList) (an open-source, multi-storage file list program), with playback powered by VLCKit supporting MKV/AVI and many more formats, offline caching, Picture-in-Picture, and external subtitles",
+      "caption": "Forked from an open-source Homelab client with the following additions: - **New Home Dashboard** — redesigned with system health, Docker container, and qBittorrent cards, auto-refreshing every 10 seconds - **OpenList support** — manage and play files from [OpenList](https://github.com/OpenListTeam/OpenList) (an open-source, multi-storage file list program), with playback powered by VLCKit supporting MKV/AVI and many more formats, offline caching, Picture-in-Picture, and external subtitles. Includes Chinese language support.",
       "date": "2026-08-06",
       "tintColor": "#4A90D9",
       "notify": true,
