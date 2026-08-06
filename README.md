@@ -1,49 +1,38 @@
 # Homelab · unitsung
 
-自用 iOS Homelab 客户端。基于 [JohnnWi/homelab-project](https://github.com/JohnnWi/homelab-project) 继续改。
+[English](README.md) · [中文](README.zh-CN.md)
 
-**感谢原作者 [JohnnWi](https://github.com/JohnnWi) 以及所有贡献者。** 上游把整套 Homelab 仪表盘从 0 做到可用——原生双端、多服务、多实例、备份与解锁等骨架都已经搭好。没有这份基础，就没有现在这个 fork。仓库仍按 [Apache License 2.0](LICENSE) 使用与致谢，详见 [NOTICE](NOTICE)。
+A personal fork of the excellent [JohnnWi/homelab-project](https://github.com/JohnnWi/homelab-project) Homelab client, focused on **iOS**.
 
-## 我为什么 fork
+Huge thanks to **[JohnnWi](https://github.com/JohnnWi)** and every contributor. Upstream already ships a solid native Homelab dashboard—multi-service support, multi-instance setup, backups, unlock, and more. This fork stands on that work; without it, none of the extras below would exist.
 
-不是要另起炉灶做一个「新产品」。
+## Why this fork
 
-**初衷很简单：** 在上游已经做好的 Homelab 客户端上，加上**我自己本机 NAS 需要用的模块**，方便日常管理，把**我常开的那些应用**补进手机里。上游已经覆盖得很广；我只在自己真正会碰到的地方往上叠。
+I didn’t set out to rebuild the app from scratch. The goal is simple: **keep the upstream foundation**, then add modules and services I use every day on **my own NAS / Homelab**, so day-to-day management is easier on my phone.
 
-我的环境大致是：
+In practice that means things like my **[OpenMediaVault](https://www.openmediavault.org/)** host, **[Arcane](https://github.com/getarcaneapp/arcane)** for Docker, **OpenList**, **CloudSaver**, and other tools I actually run—plus **English and 中文** UI (other locales were dropped to keep maintenance light).
 
-| | |
+Most service dashboards and UI patterns still come from upstream. For the full original integration list, screenshots, and docs, please see [upstream](https://github.com/JohnnWi/homelab-project)—I don’t duplicate that catalog here so it doesn’t drift.
+
+## What’s maintained
+
+| Area | Status |
 | --- | --- |
-| 主机 | [OpenMediaVault](https://www.openmediavault.org/) |
-| Docker | [Arcane](https://github.com/getarcaneapp/arcane) 为主 |
-| 手机端 | 只维护 **iOS**（`HomelabSwift/`） |
-| 语言 | **English / 中文**（其它语言已去掉，懒得维护） |
-| 其它 | OpenList、CloudSaver、以及我实际在用的播放/工具 |
+| **iOS** (`HomelabSwift/`) | Active — personal features and fixes |
+| **Android** (`HomelabAndroid/`) | Inherited; not actively developed here. For Android, see [kinderdash](https://github.com/ChaosieKinder/kinderdash) |
 
-服务面板与交互大多仍来自上游。完整集成列表、截图和「原版」说明请直接看 [upstream](https://github.com/JohnnWi/homelab-project)，这里不整份抄一遍，避免和代码脱节。
+In-app updates are scoped to this fork’s bundle id (`com.unitsung.myhomelab`), so they don’t interfere with upstream installs.
 
-## 维护范围
+## Building
 
-- **会动：** Swift / iOS，围绕本机 OMV + 常用服务做小步补充与修缮。
-- **不动：** `HomelabAndroid/` 仅保留，不做功能、不保证能编。需要 Android 可看 [kinderdash](https://github.com/ChaosieKinder/kinderdash)。
-- **不接：** issue / PR 当工单用。有用就自己 fork 改。
+Open `HomelabSwift/Homelab.xcodeproj` in Xcode, set your signing team, and run on a real device (this tree targets **iOS 26+**).
 
-代码放在 GitHub 上，主要是因为 fork 没法设成私有。**不是产品，不为公开分发拉用户。** 会按我自己的节奏改，不保证兼容别人的环境。
+Sideloading (e.g. SideStore / AltStore Classic) is optional and left to you. Repository `apps.json` / release assets are mainly for my own installs.
 
-更新只认本仓库安装（bundle `com.unitsung.myhomelab`），不会去动上游用户的安装与更新通道。
+## License
 
-## 编译
+Licensed under the [Apache License 2.0](LICENSE). See [NOTICE](NOTICE).
 
-```text
-HomelabSwift/Homelab.xcodeproj  →  Xcode，真机，iOS 26+
-```
+Original Homelab Dashboard copyright remains with JohnnWi and upstream contributors. This repository redistributes under the same license with modifications recorded in git history.
 
-签名、过期刷新、是否用 SideStore / AltStore，都是自己的事。仓库里的 `apps.json` / release 是给我自己装包用的。
-
-## 许可与免责
-
-[Apache License 2.0](LICENSE) · [NOTICE](NOTICE)
-
-原作者与贡献者归 JohnnWi 等上游。本仓库在相同许可下修改与分发；改动见 git history。
-
-按现状提供，无任何保证。用坏了、丢数据、装不上，自行承担。
+Provided as-is, without warranty of any kind. Use at your own risk.
