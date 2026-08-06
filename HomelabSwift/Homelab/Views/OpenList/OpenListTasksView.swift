@@ -46,13 +46,17 @@ struct OpenListTasksView: View {
                     }
                 }
                 .pickerStyle(.menu)
+                .tint(serviceColor)
+                .foregroundStyle(serviceColor)
 
                 Picker(localizer.t.filesTaskPhaseLabel, selection: $phase) {
                     Text(localizer.t.filesTasksUndone).tag(OpenListTaskPhase.undone)
                     Text(localizer.t.filesTasksDone).tag(OpenListTaskPhase.done)
                 }
                 .pickerStyle(.segmented)
+                .tint(serviceColor)
             }
+            .tint(serviceColor)
 
             // Action chip bar — same operations as OpenList web.
             Section {

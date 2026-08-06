@@ -56,70 +56,74 @@ struct OpenListMediaPlayerView: View {
     }
 
     var body: some View {
-        GeometryReader { geo in
-            let topInset = max(geo.safeAreaInsets.top, 8)
-            let bottomInset = max(geo.safeAreaInsets.bottom, 10)
-            ZStack {
-                Color.black.ignoresSafeArea()
+        // Video goes edge-to-edge; chrome stays inside the safe area.
+        // Do NOT put GeometryReader + .ignoresSafeArea() on the whole stack —
+        // that zeroes safeAreaInsets and parks the close button under the island.
+        ZStack {
+            Color.black.ignoresSafeArea()
 
-                OpenListHostScreenReader { screen in
-                    if hostScreen !== screen {
-                        hostScreen = screen
-                        brightness = Double(screen.brightness)
-                    }
+            OpenListHostScreenReader { screen in
+                if hostScreen !== screen {
+                    hostScreen = screen
+                    brightness = Double(screen.brightness)
                 }
-                .frame(width: 0, height: 0)
+            }
+            .frame(width: 0, height: 0)
 
-                // Must stay in hierarchy for system volume writes (notch-safe, off-screen).
+            // Must stay in hierarchy for system volume writes (parked off-screen).
+            GeometryReader { geo in
                 OpenListSystemVolumeView(writer: systemVolumeWriter)
                     .frame(width: 40, height: 40)
-                    .offset(x: -geo.size.width, y: -geo.size.height)
+                    .position(x: -geo.size.width, y: -geo.size.height)
                     .opacity(0.02)
                     .allowsHitTesting(false)
+            }
+            .allowsHitTesting(false)
 
-                if let errorText {
-                    errorBlock(errorText)
-                        .padding(.top, topInset)
-                        .padding(.bottom, bottomInset)
+            if let errorText {
+                errorBlock(errorText)
+                    .padding(.horizontal, 8)
+            } else {
+                if isAudio {
+                    audioBackdrop
                 } else {
-                    if isAudio {
-                        audioBackdrop
-                    } else {
-                        OpenListVLCVideoView(player: engine.player)
-                            .ignoresSafeArea()
-                    }
+                    OpenListVLCVideoView(player: engine.player)
+                        .ignoresSafeArea()
+                }
 
-                    if engine.isReady {
+                if engine.isReady {
+                    GeometryReader { geo in
                         sideGestureLayers(size: geo.size)
                     }
+                    .ignoresSafeArea()
+                }
 
-                    if !engine.isReady {
-                        loadingChrome
-                            .padding(.top, topInset)
-                            .padding(.bottom, bottomInset)
-                    } else if showControls {
-                        controlsOverlay(topInset: topInset, bottomInset: bottomInset)
-                            .transition(.opacity)
-                    }
+                if !engine.isReady {
+                    loadingChrome
+                } else if showControls {
+                    controlsOverlay
+                        .transition(.opacity)
+                }
 
-                    if let sideHud {
-                        sideHudBadge(sideHud)
-                    }
+                if let sideHud {
+                    sideHudBadge(sideHud)
                 }
             }
         }
-        .ignoresSafeArea()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black)
         .statusBarHidden(false)
         .persistentSystemOverlays(.hidden)
+        .animation(.easeInOut(duration: 0.32), value: lockedLandscape)
         .task { await start() }
         .onAppear {
             // Follow device rotation by default (iPhone 17 Pro Dynamic Island friendly).
             lockedLandscape = nil
-            applyOrientation(landscape: nil)
+            applyOrientation(landscape: nil, animated: false)
         }
         .onDisappear {
             engine.stop()
-            applyOrientation(landscape: nil)
+            applyOrientation(landscape: nil, animated: false)
             Task { await Self.deactivateAudioSession() }
         }
         .onChange(of: engine.isPlaying) { _, playing in
@@ -219,10 +223,9 @@ struct OpenListMediaPlayerView: View {
         .contentShape(Rectangle())
     }
 
-    private func controlsOverlay(topInset: CGFloat, bottomInset: CGFloat) -> some View {
+    private var controlsOverlay: some View {
         VStack(spacing: 0) {
             topBar
-                .padding(.top, topInset)
             Spacer()
             if !engine.isPlaying {
                 Button { engine.togglePlay() } label: {
@@ -236,8 +239,8 @@ struct OpenListMediaPlayerView: View {
             }
             Spacer()
             bottomBar
-                .padding(.bottom, bottomInset)
         }
+        // Gradient may bleed into unsafe areas; chrome itself stays in the safe area.
         .background(
             LinearGradient(
                 colors: [.black.opacity(0.55), .clear, .clear, .black.opacity(0.7)],
@@ -283,7 +286,7 @@ struct OpenListMediaPlayerView: View {
             }
         }
         .padding(.horizontal, 14)
-        .padding(.top, 8)
+        .padding(.top, 6)
         .padding(.bottom, 8)
     }
 
@@ -347,22 +350,37 @@ struct OpenListMediaPlayerView: View {
                     toolIcon(nil, label: rateLabel(engine.rate), textOnly: true)
                 }
 
-                if !engine.textTracks.isEmpty {
+                // Show when embedded tracks exist, or when we attached an external sibling.
+                if !engine.textTracks.isEmpty || externalSubtitleURL != nil {
                     Menu {
                         Button {
                             engine.deselectSubtitles()
                         } label: {
-                            Text(localizer.t.filesPlayerSubtitleOff)
+                            if engine.selectedTextTrackIndex == nil {
+                                Label(localizer.t.filesPlayerSubtitleOff, systemImage: "checkmark")
+                            } else {
+                                Text(localizer.t.filesPlayerSubtitleOff)
+                            }
                         }
                         ForEach(Array(engine.textTracks.enumerated()), id: \.offset) { idx, name in
                             Button {
                                 engine.selectTextTrack(at: idx)
                             } label: {
-                                Text(name)
+                                if engine.selectedTextTrackIndex == idx {
+                                    Label(name, systemImage: "checkmark")
+                                } else {
+                                    Text(name)
+                                }
                             }
                         }
                     } label: {
-                        toolIcon("captions.bubble", label: localizer.t.filesPlayerSubtitleEmbedded)
+                        toolIcon(
+                            "captions.bubble",
+                            label: externalSubtitleURL != nil && engine.textTracks.isEmpty
+                                ? localizer.t.filesPlayerSubtitleExternal
+                                : localizer.t.filesPlayerSubtitleEmbedded,
+                            active: engine.selectedTextTrackIndex != nil
+                        )
                     }
                 }
 
@@ -372,7 +390,11 @@ struct OpenListMediaPlayerView: View {
                             Button {
                                 engine.selectAudioTrack(at: idx)
                             } label: {
-                                Text(name)
+                                if engine.selectedAudioTrackIndex == idx {
+                                    Label(name, systemImage: "checkmark")
+                                } else {
+                                    Text(name)
+                                }
                             }
                         }
                     } label: {
@@ -382,14 +404,16 @@ struct OpenListMediaPlayerView: View {
 
                 Button {
                     // Cycle: follow device → lock landscape → lock portrait → follow.
-                    if lockedLandscape == nil {
-                        lockedLandscape = true
-                    } else if lockedLandscape == true {
-                        lockedLandscape = false
-                    } else {
-                        lockedLandscape = nil
+                    withAnimation(.easeInOut(duration: 0.32)) {
+                        if lockedLandscape == nil {
+                            lockedLandscape = true
+                        } else if lockedLandscape == true {
+                            lockedLandscape = false
+                        } else {
+                            lockedLandscape = nil
+                        }
                     }
-                    applyOrientation(landscape: lockedLandscape)
+                    applyOrientation(landscape: lockedLandscape, animated: true)
                     scheduleHide()
                 } label: {
                     toolIcon(
@@ -645,9 +669,14 @@ struct OpenListMediaPlayerView: View {
     }
 
     private func configureAudioSession() async {
+        let mode: AVAudioSession.Mode = isAudio ? .default : .moviePlayback
         do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: isAudio ? .default : .moviePlayback, options: [])
+            // setCategory/setActive on the main thread while a session is active
+            // triggers SessionCore UI-unresponsiveness warnings — always hop off-main.
+            try await Task.detached(priority: .userInitiated) {
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(.playback, mode: mode, options: [])
+            }.value
             try await Self.activateAudioSession()
         } catch {
             AppLogger.shared.error("audio session: \(error.localizedDescription)", source: "OpenListPlayer")
@@ -655,10 +684,9 @@ struct OpenListMediaPlayerView: View {
     }
 
     private static func activateAudioSession() async throws {
-        let session = AVAudioSession.sharedInstance()
         if #available(iOS 27.0, *) {
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                session.activate(options: []) { activated, error in
+                AVAudioSession.sharedInstance().activate(options: []) { activated, error in
                     if let error {
                         continuation.resume(throwing: error)
                     } else if activated {
@@ -682,10 +710,9 @@ struct OpenListMediaPlayerView: View {
     }
 
     private static func deactivateAudioSession() async {
-        let session = AVAudioSession.sharedInstance()
         if #available(iOS 27.0, *) {
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-                session.deactivate(options: .notifyOthersOnDeactivation) { _, _ in
+                AVAudioSession.sharedInstance().deactivate(options: .notifyOthersOnDeactivation) { _, _ in
                     continuation.resume()
                 }
             }
@@ -696,7 +723,7 @@ struct OpenListMediaPlayerView: View {
         }
     }
 
-    private func applyOrientation(landscape: Bool?) {
+    private func applyOrientation(landscape: Bool?, animated: Bool) {
         #if canImport(UIKit)
         let mask: UIInterfaceOrientationMask
         if landscape == true {
@@ -707,10 +734,24 @@ struct OpenListMediaPlayerView: View {
             mask = [.portrait, .landscapeLeft, .landscapeRight, .portraitUpsideDown]
         }
         OpenListOrientationLock.mask = mask
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            if #available(iOS 16.0, *) {
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+        if #available(iOS 16.0, *) {
+            let apply = {
                 scene.requestGeometryUpdate(.iOS(interfaceOrientations: mask)) { _ in }
                 scene.windows.forEach { $0.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations() }
+            }
+            if animated {
+                // Coordinate layout with the system rotation animation.
+                UIView.animate(
+                    withDuration: 0.35,
+                    delay: 0,
+                    options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]
+                ) {
+                    apply()
+                    scene.windows.forEach { $0.layoutIfNeeded() }
+                }
+            } else {
+                apply()
             }
         }
         #endif
@@ -730,9 +771,14 @@ final class OpenListVLCEngine: NSObject, ObservableObject, VLCMediaPlayerDelegat
     @Published private(set) var rate: Float = 1.0
     @Published private(set) var textTracks: [String] = []
     @Published private(set) var audioTracks: [String] = []
+    /// nil = off / none selected.
+    @Published private(set) var selectedTextTrackIndex: Int?
+    @Published private(set) var selectedAudioTrackIndex: Int?
     @Published var failedMessage: String?
 
+    private var pendingExternalSubtitleURL: URL?
     private var didAttachSubtitle = false
+    private var subtitleRetryTask: Task<Void, Never>?
 
     override init() {
         // Network-friendly options for OpenList signed / remote streams.
@@ -741,7 +787,10 @@ final class OpenListVLCEngine: NSObject, ObservableObject, VLCMediaPlayerDelegat
             "--file-caching=1500",
             "--live-caching=1500",
             "--http-reconnect",
-            "--avcodec-hw=any"
+            "--avcodec-hw=any",
+            "--sub-autodetect-file",
+            // Prefer readable default scale; users can still toggle tracks.
+            "--freetype-rel-fontsize=16"
         ])
         super.init()
         player.delegate = self
@@ -755,34 +804,38 @@ final class OpenListVLCEngine: NSObject, ObservableObject, VLCMediaPlayerDelegat
         isPlaying = false
         current = 0
         duration = 0
+        selectedTextTrackIndex = nil
+        selectedAudioTrackIndex = nil
         didAttachSubtitle = false
+        pendingExternalSubtitleURL = externalSubtitleURL
+        subtitleRetryTask?.cancel()
 
         let media = VLCMedia(url: url)
         // Prefer software fallback path when hardware decode fails on odd streams.
         media?.addOption(":http-user-agent=Homelab/iOS")
+        // Help common Chinese/UTF-8 SRT encodings; VLC falls back if mismatched.
+        media?.addOption(":subsdec-encoding=UTF-8")
+        if let externalSubtitleURL {
+            // Best-effort pre-bind so the slave is ready when demux starts.
+            media?.addOption(":sub-file=\(externalSubtitleURL.absoluteString)")
+        }
         player.media = media
         player.play()
 
         if let externalSubtitleURL {
-            // Attach after play starts so the input exists.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
-                guard let self, !self.didAttachSubtitle else { return }
-                self.didAttachSubtitle = true
-                _ = self.player.addPlaybackSlave(
-                    externalSubtitleURL,
-                    type: .subtitle,
-                    enforce: true
-                )
-                self.refreshTracks()
-            }
+            scheduleSubtitleAttach(externalSubtitleURL)
         }
     }
 
     func stop() {
+        subtitleRetryTask?.cancel()
+        subtitleRetryTask = nil
         player.stop()
         player.drawable = nil
         isPlaying = false
         isReady = false
+        pendingExternalSubtitleURL = nil
+        didAttachSubtitle = false
     }
 
     func togglePlay() {
@@ -814,20 +867,62 @@ final class OpenListVLCEngine: NSObject, ObservableObject, VLCMediaPlayerDelegat
     }
 
     func selectTextTrack(at index: Int) {
-        player.selectTrack(at: index, type: .text)
+        let tracks = player.textTracks
+        guard tracks.indices.contains(index) else { return }
+        // Prefer exclusive selection via track object (more reliable than index alone).
+        tracks[index].isSelectedExclusively = true
+        selectedTextTrackIndex = index
+        refreshTracks()
     }
 
     func deselectSubtitles() {
         player.deselectAllTextTracks()
+        selectedTextTrackIndex = nil
+        refreshTracks()
     }
 
     func selectAudioTrack(at index: Int) {
-        player.selectTrack(at: index, type: .audio)
+        let tracks = player.audioTracks
+        guard tracks.indices.contains(index) else { return }
+        tracks[index].isSelectedExclusively = true
+        selectedAudioTrackIndex = index
+        refreshTracks()
+    }
+
+    private func scheduleSubtitleAttach(_ url: URL) {
+        subtitleRetryTask?.cancel()
+        subtitleRetryTask = Task { @MainActor [weak self] in
+            // Input must exist before addPlaybackSlave succeeds; retry a few times.
+            for delayMs in [400, 900, 1600, 2800] as [UInt64] {
+                try? await Task.sleep(nanoseconds: delayMs * 1_000_000)
+                guard let self, !Task.isCancelled else { return }
+                if self.didAttachSubtitle, !self.player.textTracks.isEmpty {
+                    self.refreshTracks()
+                    return
+                }
+                let result = self.player.addPlaybackSlave(url, type: .subtitle, enforce: true)
+                if result == 0 {
+                    self.didAttachSubtitle = true
+                    // Give VLC a beat to register the track, then select it.
+                    try? await Task.sleep(nanoseconds: 250_000_000)
+                    self.refreshTracks()
+                    if let last = self.player.textTracks.indices.last {
+                        self.selectTextTrack(at: last)
+                    }
+                    return
+                }
+            }
+            self?.refreshTracks()
+        }
     }
 
     private func refreshTracks() {
-        textTracks = player.textTracks.map { trackDisplayName($0) }
-        audioTracks = player.audioTracks.map { trackDisplayName($0) }
+        let texts = player.textTracks
+        let audios = player.audioTracks
+        textTracks = texts.map { trackDisplayName($0) }
+        audioTracks = audios.map { trackDisplayName($0) }
+        selectedTextTrackIndex = texts.firstIndex(where: \.isSelected)
+        selectedAudioTrackIndex = audios.firstIndex(where: \.isSelected)
     }
 
     private func trackDisplayName(_ track: VLCMediaPlayer.Track) -> String {
@@ -893,6 +988,23 @@ final class OpenListVLCEngine: NSObject, ObservableObject, VLCMediaPlayerDelegat
     }
 
     nonisolated func mediaPlayerTrackAdded(_ trackId: String, trackType: VLCMedia.TrackType) {
+        Task { @MainActor in
+            self.refreshTracks()
+            // Auto-pick external text track once it appears.
+            if trackType == .text,
+               self.pendingExternalSubtitleURL != nil,
+               self.selectedTextTrackIndex == nil,
+               let last = self.player.textTracks.indices.last {
+                self.selectTextTrack(at: last)
+            }
+        }
+    }
+
+    nonisolated func mediaPlayerTrackSelected(
+        _ trackType: VLCMedia.TrackType,
+        selectedId: String,
+        unselectedId: String
+    ) {
         Task { @MainActor in
             self.refreshTracks()
         }

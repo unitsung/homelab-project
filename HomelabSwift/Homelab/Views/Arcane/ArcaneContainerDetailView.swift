@@ -512,16 +512,26 @@ struct ArcaneContainerDetailView: View {
     private var terminalFullscreenView: some View {
         NavigationStack {
             terminalChrome(minHeight: 480, showFullscreenButton: false)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                // Respect Dynamic Island / home indicator (iPhone 17 Pro etc.).
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
+                // Stay inside safe area (Dynamic Island / home indicator / landscape notch).
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .background(AppTheme.background)
                 .navigationTitle(localizer.t.arcaneTabExec)
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbarBackground(AppTheme.background, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button(localizer.t.close) { showTerminalFullscreen = false }
+                        Button {
+                            showTerminalFullscreen = false
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .symbolRenderingMode(.hierarchical)
+                                .font(.title3)
+                                .foregroundStyle(.secondary)
+                        }
+                        .accessibilityLabel(localizer.t.close)
                     }
                 }
                 .task {

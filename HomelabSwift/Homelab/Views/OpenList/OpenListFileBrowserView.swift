@@ -473,6 +473,8 @@ struct OpenListFileBrowserView: View {
             }
             .pickerStyle(.menu)
             .labelsHidden()
+            .tint(serviceColor)
+            .foregroundStyle(serviceColor)
             Spacer()
             Picker(localizer.t.filesViewList, selection: $viewMode) {
                 Image(systemName: "list.bullet").tag(OpenListViewMode.list)
@@ -480,8 +482,10 @@ struct OpenListFileBrowserView: View {
             }
             .pickerStyle(.segmented)
             .frame(maxWidth: 120)
+            .tint(serviceColor)
             .accessibilityLabel(viewMode == .list ? localizer.t.filesViewList : localizer.t.filesViewGrid)
         }
+        .tint(serviceColor)
         .padding(.vertical, 2)
     }
 
@@ -490,6 +494,7 @@ struct OpenListFileBrowserView: View {
             HStack(spacing: 10) {
                 Text(String(format: localizer.t.filesSelectedCount, selectedIDs.count))
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppTheme.textSecondary)
                 Button(localizer.t.filesDownload) {
                     Task { await downloadItems(selectedItems) }
                 }
@@ -500,16 +505,19 @@ struct OpenListFileBrowserView: View {
                     pathPickMode = .copy(selectedItems)
                 }
                 .buttonStyle(.glass)
+                .tint(serviceColor)
                 .disabled(selectedIDs.isEmpty || !canWrite)
                 Button(localizer.t.filesMove) {
                     pathPickMode = .move(selectedItems)
                 }
                 .buttonStyle(.glass)
+                .tint(serviceColor)
                 .disabled(selectedIDs.isEmpty || !canWrite)
                 Button(localizer.t.filesCopyLink) {
                     Task { await copyLinks(for: selectedItems) }
                 }
                 .buttonStyle(.glass)
+                .tint(serviceColor)
                 .disabled(selectedItems.filter { !$0.isDirectory }.isEmpty)
                 Button(role: .destructive) {
                     pendingDelete = selectedItems
@@ -522,6 +530,7 @@ struct OpenListFileBrowserView: View {
                 .disabled(selectedIDs.isEmpty)
             }
             .font(.subheadline.weight(.semibold))
+            .foregroundStyle(serviceColor)
             .padding(.vertical, 4)
         }
     }
@@ -1275,19 +1284,23 @@ struct OpenListFileBrowserView: View {
         let stem = (item.name as NSString).deletingPathExtension
         let parent = item.parentDirectory
         guard let listing = try? await client.list(path: parent) else { return nil }
+        let subtitleExts: Set<String> = ["srt", "vtt", "ass", "ssa", "sub"]
         let candidates = listing.items.filter { sub in
             guard !sub.isDirectory else { return false }
             let ext = sub.fileExtension
-            guard ext == "srt" || ext == "vtt" else { return false }
+            guard subtitleExts.contains(ext) else { return false }
             let subStem = (sub.name as NSString).deletingPathExtension
             return subStem == stem || sub.name.hasPrefix(stem)
         }
-        // Prefer exact stem match, then any prefix match; srt before vtt
+        // Prefer exact stem match, then any prefix match; srt/ass before vtt
+        let preferredOrder = ["srt", "ass", "ssa", "vtt", "sub"]
         let sorted = candidates.sorted { a, b in
             let aExact = (a.name as NSString).deletingPathExtension == stem
             let bExact = (b.name as NSString).deletingPathExtension == stem
             if aExact != bExact { return aExact && !bExact }
-            if a.fileExtension != b.fileExtension { return a.fileExtension == "srt" }
+            let aRank = preferredOrder.firstIndex(of: a.fileExtension) ?? 99
+            let bRank = preferredOrder.firstIndex(of: b.fileExtension) ?? 99
+            if aRank != bRank { return aRank < bRank }
             return a.name < b.name
         }
         guard let best = sorted.first else { return nil }
