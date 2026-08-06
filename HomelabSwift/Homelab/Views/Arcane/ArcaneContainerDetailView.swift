@@ -510,34 +510,59 @@ struct ArcaneContainerDetailView: View {
     }
 
     private var terminalFullscreenView: some View {
-        NavigationStack {
-            terminalChrome(minHeight: 480, showFullscreenButton: false)
-                .padding(.horizontal, 12)
-                .padding(.bottom, 8)
-                // Stay inside safe area (Dynamic Island / home indicator / landscape notch).
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .background(AppTheme.background)
-                .navigationTitle(localizer.t.arcaneTabExec)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.visible, for: .navigationBar)
-                .toolbarBackground(AppTheme.background, for: .navigationBar)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            showTerminalFullscreen = false
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .symbolRenderingMode(.hierarchical)
-                                .font(.title3)
-                                .foregroundStyle(.secondary)
-                        }
-                        .accessibilityLabel(localizer.t.close)
-                    }
-                }
-                .task {
-                    await connectTerminalIfNeeded()
-                }
+        // Do not use NavigationStack toolbar in fullScreenCover — on notched iPhones the
+        // close control can sit under the Dynamic Island. Pin an explicit header with
+        // safeAreaInset so the system always reserves top/bottom insets.
+        terminalChrome(minHeight: 200, showFullscreenButton: false)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(AppTheme.background)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                terminalFullscreenHeader
+            }
+            .background(AppTheme.background.ignoresSafeArea(edges: .bottom))
+            .task {
+                await connectTerminalIfNeeded()
+            }
+    }
+
+    private var terminalFullscreenHeader: some View {
+        HStack(spacing: 12) {
+            Button {
+                showTerminalFullscreen = false
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .symbolRenderingMode(.hierarchical)
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(localizer.t.close)
+
+            Text(localizer.t.arcaneTabExec)
+                .font(.headline)
+                .lineLimit(1)
+
+            Spacer(minLength: 0)
+
+            Circle()
+                .fill(terminalSession.isConnected ? AppTheme.running : AppTheme.stopped)
+                .frame(width: 8, height: 8)
+            Text(terminalSession.isConnected
+                 ? localizer.t.arcaneTerminalConnected
+                 : localizer.t.arcaneTerminalDisconnected)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(AppTheme.textMuted)
+                .lineLimit(1)
         }
+        .padding(.horizontal, 12)
+        .padding(.top, 4)
+        .padding(.bottom, 10)
+        .frame(maxWidth: .infinity)
+        .background(AppTheme.background)
     }
 
     /// Interactive terminal powered by open-source SwiftTerm (xterm/VT100).
