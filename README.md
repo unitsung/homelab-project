@@ -6,7 +6,7 @@
 [![Platform](https://img.shields.io/badge/Platform-iOS%2026%2B-lightgrey.svg)](HomelabSwift/)
 [![Upstream](https://img.shields.io/badge/upstream-JohnnWi%2Fhomelab--project-informational)](https://github.com/JohnnWi/homelab-project)
 
-A personal **iOS** fork of [Homelab Dashboard](https://github.com/JohnnWi/homelab-project) by [JohnnWi](https://github.com/JohnnWi).
+An iOS-focused fork of [JohnnWi](https://github.com/JohnnWi)’s open-source [Homelab Dashboard](https://github.com/JohnnWi/homelab-project), shaped around my own Homelab.
 
 <p align="center">
   <img src="media-docs/screenshots/home-overview.png" width="280" alt="Home overview" />

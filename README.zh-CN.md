@@ -6,7 +6,7 @@
 [![Platform](https://img.shields.io/badge/Platform-iOS%2026%2B-lightgrey.svg)](HomelabSwift/)
 [![Upstream](https://img.shields.io/badge/upstream-JohnnWi%2Fhomelab--project-informational)](https://github.com/JohnnWi/homelab-project)
 
-基于 [JohnnWi](https://github.com/JohnnWi) 的 [Homelab Dashboard](https://github.com/JohnnWi/homelab-project) 的个人 **iOS** fork。
+[JohnnWi](https://github.com/JohnnWi) 开源的 [Homelab Dashboard](https://github.com/JohnnWi/homelab-project) 的 **iOS** fork，按我自己的 Homelab 使用场景维护。
 
 <p align="center">
   <img src="media-docs/screenshots/home-overview.png" width="280" alt="首页概览" />
