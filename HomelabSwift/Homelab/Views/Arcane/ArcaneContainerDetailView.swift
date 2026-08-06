@@ -16,6 +16,8 @@ struct ArcaneContainerDetailView: View {
     @State private var resolvedContainerId: String
     @State private var detail: ArcaneContainerDetails?
     @State private var logs: String = ""
+    @State private var logFilter = ""
+    @State private var logAutoScroll = true
     @State private var isLoadingLogs = false
     @State private var isLoading = true
     @State private var isActing = false
@@ -23,23 +25,21 @@ struct ArcaneContainerDetailView: View {
     @State private var activeTab: Tab = .info
     @State private var actionError: String?
     @State private var showDeleteConfirm = false
-    @State private var commandInput = ""
-    @State private var terminalBuffer: String = ""
-    @State private var terminalTask: URLSessionWebSocketTask?
-    @State private var terminalSession: URLSession?
-    @State private var isTerminalConnected = false
-    @State private var commandHistory: [String] = []
-    @State private var historyIndex: Int = -1
+    @StateObject private var terminalSession = ArcaneTerminalSession()
+    @State private var selectedShell = "/bin/sh"
     @State private var updateSession: ArcaneUpdateProgressSession?
     @State private var showUpdateProgress = false
+    @State private var showTerminalFullscreen = false
     @State private var logsTask: URLSessionWebSocketTask?
     @State private var logsSession: URLSession?
     @State private var autoUpdateEnabled = false
-    @FocusState private var isCommandFocused: Bool
+    @State private var liveStats: ArcaneContainerStats?
+    @State private var statsUnavailable = false
 
     private let arcaneColor = ServiceType.arcane.colors.primary
-    private let quickCommands = ["ls -la", "pwd", "ps aux", "df -h", "top -bn1 | head", "env", "cat /etc/os-release"]
+    private let shellOptions = ["/bin/sh", "/bin/bash", "/bin/ash", "/bin/zsh"]
     private let autoUpdateLabelKey = "com.getarcaneapp.arcane.updater"
+    @Environment(\.openURL) private var openURL
 
     init(instanceId: UUID, environmentId: String, containerId: String) {
         self.instanceId = instanceId
@@ -52,12 +52,12 @@ struct ArcaneContainerDetailView: View {
         case info, logs, exec, env
         var id: String { rawValue }
 
-        var title: String {
+        func title(using tr: Translations) -> String {
             switch self {
-            case .info: return "Info"
-            case .logs: return "Logs"
-            case .exec: return "Exec"
-            case .env: return "Env"
+            case .info: return tr.arcaneTabInfo
+            case .logs: return tr.arcaneTabLogs
+            case .exec: return tr.arcaneTabExec
+            case .env: return tr.arcaneTabEnv
             }
         }
     }
@@ -108,7 +108,7 @@ struct ArcaneContainerDetailView: View {
             }
         }
         .background(AppTheme.background)
-        .navigationTitle(detail?.displayName.isEmpty == false ? detail!.displayName : "Container")
+        .navigationTitle(detail?.displayName.isEmpty == false ? detail!.displayName : localizer.t.arcaneContainersTitle)
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await refresh() }
         .task { await refresh() }
@@ -118,13 +118,14 @@ struct ArcaneContainerDetailView: View {
                 Task { await loadLogs(follow: true) }
             }
             if tab == .exec {
-                connectTerminalIfNeeded()
+                Task { await connectTerminalIfNeeded() }
             } else {
                 // Keep terminal session alive only on Exec tab to save battery.
+                terminalSession.disconnect()
             }
         }
         .onDisappear {
-            disconnectTerminal()
+            terminalSession.disconnect()
             stopLiveLogs()
         }
         .alert(localizer.t.error, isPresented: Binding(
@@ -135,18 +136,21 @@ struct ArcaneContainerDetailView: View {
         } message: {
             Text(actionError ?? "")
         }
-        .confirmationDialog(localizer.t.delete, isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+        .alert(localizer.t.delete, isPresented: $showDeleteConfirm) {
             Button(localizer.t.delete, role: .destructive) {
                 Task { await deleteContainer() }
             }
             Button(localizer.t.cancel, role: .cancel) {}
         } message: {
-            Text("Force remove this container?")
+            Text(localizer.t.arcaneForceRemove)
         }
         .sheet(isPresented: $showUpdateProgress) {
             if let updateSession {
                 ArcaneUpdateProgressSheet(session: updateSession)
             }
+        }
+        .fullScreenCover(isPresented: $showTerminalFullscreen) {
+            terminalFullscreenView
         }
     }
 
@@ -174,13 +178,13 @@ struct ArcaneContainerDetailView: View {
                 .foregroundStyle(AppTheme.textMuted)
                 .lineLimit(2)
             if let started = detail.state?.startedAt, !started.isEmpty {
-                Text("Started: \(started)")
+                Text(String(format: localizer.t.arcaneStartedAt, started))
                     .font(.caption2)
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineLimit(1)
             }
             if let health = detail.state?.health?.status {
-                Text("Health: \(health)")
+                Text(String(format: localizer.t.arcaneHealthLabel, health))
                     .font(.caption2)
                     .foregroundStyle(AppTheme.textSecondary)
             }
@@ -191,9 +195,9 @@ struct ArcaneContainerDetailView: View {
                 }
             )) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Auto-update")
+                    Text(localizer.t.arcaneAutoUpdate)
                         .font(.subheadline.weight(.semibold))
-                    Text("PUT …/containers/{id}/auto-update")
+                    Text(localizer.t.arcaneAutoUpdateHint)
                         .font(.caption2)
                         .foregroundStyle(AppTheme.textMuted)
                 }
@@ -210,32 +214,32 @@ struct ArcaneContainerDetailView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     if isRunning {
-                        actionButton("Stop", icon: "stop.fill", color: AppTheme.stopped) {
+                        actionButton(localizer.t.actionStop, icon: "stop.fill", color: AppTheme.stopped) {
                             Task { await runAction(.stop) }
                         }
-                        actionButton("Restart", icon: "arrow.clockwise", color: AppTheme.warning) {
+                        actionButton(localizer.t.actionRestart, icon: "arrow.clockwise", color: AppTheme.warning) {
                             Task { await runAction(.restart) }
                         }
-                        actionButton("Pause", icon: "pause.fill", color: AppTheme.info) {
+                        actionButton(localizer.t.actionPause, icon: "pause.fill", color: AppTheme.info) {
                             Task { await runAction(.pause) }
                         }
-                        actionButton("Kill", icon: "xmark.octagon.fill", color: AppTheme.danger) {
+                        actionButton(localizer.t.arcaneKill, icon: "xmark.octagon.fill", color: AppTheme.danger) {
                             Task { await runAction(.kill) }
                         }
                     } else {
-                        actionButton("Start", icon: "play.fill", color: AppTheme.running) {
+                        actionButton(localizer.t.actionStart, icon: "play.fill", color: AppTheme.running) {
                             Task { await runAction(.start) }
                         }
                         if detail?.state?.status?.lowercased() == "paused" {
-                            actionButton("Unpause", icon: "play.pause.fill", color: AppTheme.running) {
+                            actionButton(localizer.t.arcaneUnpause, icon: "play.pause.fill", color: AppTheme.running) {
                                 Task { await runAction(.unpause) }
                             }
                         }
                     }
-                    actionButton("Update", icon: "arrow.down.circle", color: arcaneColor) {
+                    actionButton(localizer.t.arcaneUpdate, icon: "arrow.down.circle", color: arcaneColor) {
                         Task { await updateContainer() }
                     }
-                    actionButton("Redeploy", icon: "arrow.triangle.2.circlepath", color: AppTheme.warning) {
+                    actionButton(localizer.t.arcaneRedeploy, icon: "arrow.triangle.2.circlepath", color: AppTheme.warning) {
                         Task { await redeployContainer() }
                     }
                     actionButton(localizer.t.delete, icon: "trash", color: AppTheme.danger) {
@@ -264,34 +268,27 @@ struct ArcaneContainerDetailView: View {
         } label: {
             Label(title, systemImage: icon)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(color)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .background(color.opacity(0.12), in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.glass)
+        .tint(color)
     }
 
     // MARK: - Tabs
 
     private var tabBar: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 8) {
             ForEach(Tab.allCases) { tab in
                 Button {
                     HapticManager.light()
                     activeTab = tab
                 } label: {
-                    Text(tab.title)
+                    Text(tab.title(using: localizer.translations))
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(activeTab == tab ? arcaneColor : AppTheme.textSecondary)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(activeTab == tab ? arcaneColor.opacity(0.12) : Color.clear)
                 }
-                .buttonStyle(.plain)
+                .glassChipStyle(selected: activeTab == tab, tint: arcaneColor)
             }
         }
-        .glassCard(cornerRadius: 14)
     }
 
     @ViewBuilder
@@ -310,14 +307,16 @@ struct ArcaneContainerDetailView: View {
 
     private func infoTab(_ detail: ArcaneContainerDetails) -> some View {
         VStack(alignment: .leading, spacing: 12) {
+            liveStatsCard
+
             infoRow("ID", String(detail.id.prefix(12)))
-            infoRow("Image", detail.image ?? "—")
-            infoRow("Created", detail.created ?? "—")
+            infoRow(localizer.t.arcaneInfoImage, detail.image ?? "—")
+            infoRow(localizer.t.arcaneInfoCreated, detail.created ?? "—")
             if let cmd = detail.config?.cmd, !cmd.isEmpty {
-                infoRow("Cmd", cmd.joined(separator: " "))
+                infoRow(localizer.t.arcaneInfoCmd, cmd.joined(separator: " "))
             }
             if let wd = detail.config?.workingDir, !wd.isEmpty {
-                infoRow("Workdir", wd)
+                infoRow(localizer.t.arcaneInfoWorkdir, wd)
             }
             if let ports = detail.ports, !ports.isEmpty {
                 let text = ports.map { p in
@@ -325,7 +324,7 @@ struct ArcaneContainerDetailView: View {
                     let priv = p.privatePort.map(String.init) ?? "-"
                     return "\(pub)->\(priv)/\(p.type ?? "tcp")"
                 }.joined(separator: ", ")
-                infoRow("Ports", text)
+                infoRow(localizer.t.arcaneInfoPorts, text)
             }
             if let mounts = detail.mounts, !mounts.isEmpty {
                 ForEach(mounts) { mount in
@@ -333,11 +332,95 @@ struct ArcaneContainerDetailView: View {
                 }
             }
             if let compose = detail.composeInfo {
-                infoRow("Compose", "\(compose.projectName ?? "") / \(compose.serviceName ?? "")")
+                infoRow(localizer.t.arcaneInfoCompose, "\(compose.projectName ?? "") / \(compose.serviceName ?? "")")
             }
         }
         .padding(14)
         .glassCard()
+        .task(id: "\(resolvedContainerId)-\(isRunning)") {
+            await pollLiveStats()
+        }
+    }
+
+    @ViewBuilder
+    private var liveStatsCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(localizer.t.arcaneStatsTitle)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppTheme.textMuted)
+            if statsUnavailable {
+                Text(localizer.t.arcaneStatsUnavailable)
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textSecondary)
+            } else if let liveStats {
+                HStack(spacing: 12) {
+                    if let cpu = liveStats.cpuPercent {
+                        statPill(localizer.t.arcaneStatsCPU, String(format: "%.1f%%", cpu), AppTheme.info)
+                    }
+                    if let mem = liveStats.memoryUsage {
+                        let memText: String = {
+                            if let pct = liveStats.memoryPercent {
+                                return "\(Formatters.formatBytes(Double(mem))) (\(String(format: "%.0f%%", pct)))"
+                            }
+                            return Formatters.formatBytes(Double(mem))
+                        }()
+                        statPill(localizer.t.arcaneStatsMemory, memText, AppTheme.running)
+                    }
+                }
+            } else if isRunning {
+                ProgressView().controlSize(.small)
+            } else {
+                Text(localizer.t.noData)
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard(cornerRadius: 10, tint: arcaneColor.opacity(0.08))
+    }
+
+    private func statPill(_ title: String, _ value: String, _ color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(AppTheme.textMuted)
+            Text(value)
+                .font(.caption.weight(.bold).monospacedDigit())
+                .foregroundStyle(color)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .glassCard(cornerRadius: 8, tint: color.opacity(0.14))
+    }
+
+    @MainActor
+    private func pollLiveStats() async {
+        guard isRunning else {
+            liveStats = nil
+            statsUnavailable = false
+            return
+        }
+        while !Task.isCancelled {
+            guard let client = await servicesStore.arcaneClient(instanceId: instanceId) else { return }
+            do {
+                liveStats = try await client.getContainerStats(id: resolvedContainerId, environmentId: environmentId)
+                statsUnavailable = false
+            } catch {
+                // Endpoint may not exist on older Arcane builds.
+                if liveStats == nil { statsUnavailable = true }
+            }
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+        }
+    }
+
+    private var filteredLogs: String {
+        let q = logFilter.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return logs }
+        return logs
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .filter { $0.localizedCaseInsensitiveContains(q) }
+            .joined(separator: "\n")
     }
 
     private var logsTab: some View {
@@ -351,18 +434,56 @@ struct ArcaneContainerDetailView: View {
                 }
                 Spacer()
                 Button {
+                    logAutoScroll.toggle()
+                } label: {
+                    Image(systemName: logAutoScroll ? "arrow.down.to.line" : "pause.circle")
+                        .font(.caption.weight(.semibold))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(logAutoScroll ? localizer.t.arcaneLogAutoScrollOn : localizer.t.arcaneLogPaused)
+
+                if !logs.isEmpty {
+                    ShareLink(item: logs) {
+                        Label(localizer.t.arcaneLogExport, systemImage: "square.and.arrow.up")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Button {
                     Task { await loadLogs(follow: true) }
                 } label: {
-                    Label("Refresh", systemImage: "arrow.clockwise")
+                    Label(localizer.t.refresh, systemImage: "arrow.clockwise")
                         .font(.caption.weight(.semibold))
                 }
                 .buttonStyle(.plain)
             }
+
+            HStack(spacing: 8) {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .foregroundStyle(AppTheme.textMuted)
+                TextField(localizer.t.arcaneLogFilter, text: $logFilter)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .font(.caption)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .glassCard(cornerRadius: 8, tint: arcaneColor.opacity(0.08))
+
             ScrollViewReader { proxy in
                 ScrollView {
-                    Text(logs.isEmpty ? (isLoadingLogs ? "Loading logs…" : "No log output yet.") : logs)
+                    let display: String = {
+                        if filteredLogs.isEmpty {
+                            if isLoadingLogs { return localizer.t.arcaneLogLoading }
+                            if logs.isEmpty { return localizer.t.arcaneLogEmpty }
+                            return localizer.t.noData
+                        }
+                        return filteredLogs
+                    }()
+                    Text(display)
                         .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(logs.isEmpty ? AppTheme.textMuted : Color(white: 0.9))
+                        .foregroundStyle(filteredLogs.isEmpty ? AppTheme.textMuted : Color(white: 0.9))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
                         .id("log-bottom")
@@ -371,6 +492,7 @@ struct ArcaneContainerDetailView: View {
                 .padding(10)
                 .background(Color.black.opacity(0.9), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .onChange(of: logs.count) { _, _ in
+                    guard logAutoScroll else { return }
                     withAnimation { proxy.scrollTo("log-bottom", anchor: .bottom) }
                 }
             }
@@ -381,111 +503,156 @@ struct ArcaneContainerDetailView: View {
     }
 
     private var execTab: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Exec")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(AppTheme.textMuted)
-                Spacer()
-                Circle()
-                    .fill(isTerminalConnected ? AppTheme.running : AppTheme.stopped)
-                    .frame(width: 8, height: 8)
-                Text(isTerminalConnected ? "Connected" : "Disconnected")
-                    .font(.caption2)
-                    .foregroundStyle(AppTheme.textMuted)
-                Button(isTerminalConnected ? "Disconnect" : "Connect") {
-                    if isTerminalConnected {
-                        disconnectTerminal()
-                    } else {
-                        connectTerminalIfNeeded()
-                    }
-                }
-                .font(.caption.weight(.semibold))
-                Button("Clear") {
-                    terminalBuffer = ""
-                }
-                .font(.caption.weight(.semibold))
-            }
-
-            ScrollViewReader { proxy in
-                ScrollView {
-                    Text(terminalBuffer.isEmpty ? "$ connecting…\n" : terminalBuffer)
-                        .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(Color.green.opacity(0.92))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .textSelection(.enabled)
-                        .id("term-bottom")
-                }
-                .frame(maxWidth: .infinity, minHeight: 220, maxHeight: .infinity)
-                .padding(10)
-                .background(Color.black.opacity(0.92), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .onChange(of: terminalBuffer.count) { _, _ in
-                    proxy.scrollTo("term-bottom", anchor: .bottom)
-                }
-                .onTapGesture { isCommandFocused = true }
-            }
-
-            // Virtual special keys (Arcane/xterm style control sequences)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    termKey("Esc") { sendRaw("\u{1b}") }
-                    termKey("Tab") { sendRaw("\t") }
-                    termKey("Ctrl+C") { sendRaw("\u{0003}") }
-                    termKey("Ctrl+D") { sendRaw("\u{0004}") }
-                    termKey("Ctrl+L") { sendRaw("\u{000c}") }
-                    termKey("↑") { historyUp() }
-                    termKey("↓") { historyDown() }
-                    termKey("←") { sendRaw("\u{1b}[D") }
-                    termKey("→") { sendRaw("\u{1b}[C") }
-                    termKey("Home") { sendRaw("\u{1b}[H") }
-                    termKey("End") { sendRaw("\u{1b}[F") }
-                    termKey("Paste") { pasteFromClipboard() }
-                }
-            }
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    ForEach(quickCommands, id: \.self) { cmd in
-                        Button(cmd) {
-                            commandInput = cmd
-                            sendCommand()
-                        }
-                        .font(.caption2.weight(.semibold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
-                        .background(arcaneColor.opacity(0.12), in: Capsule())
-                        .buttonStyle(.plain)
-                        .disabled(!isTerminalConnected)
-                    }
-                }
-            }
-
-            HStack(spacing: 8) {
-                TextField("type command…", text: $commandInput)
-                    .textInputAutocapitalization(.never)
-                    .disableAutocorrection(true)
-                    .font(.system(.body, design: .monospaced))
-                    .focused($isCommandFocused)
-                    .onSubmit { sendCommand() }
-                Button("Send") { sendCommand() }
-                    .buttonStyle(.borderedProminent)
-                    .tint(arcaneColor)
-                    .disabled(!isTerminalConnected || commandInput.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-        }
-        .padding(14)
-        .frame(maxHeight: .infinity)
-        .glassCard()
+        terminalChrome(minHeight: 220, showFullscreenButton: true)
+            .padding(14)
+            .frame(maxHeight: .infinity)
+            .glassCard()
     }
 
-    private func termKey(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(title, action: action)
-            .font(.caption2.weight(.bold).monospaced())
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .background(Color.secondary.opacity(0.15), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+    private var terminalFullscreenView: some View {
+        // Do not use NavigationStack toolbar in fullScreenCover — on notched iPhones the
+        // close control can sit under the Dynamic Island. Pin an explicit header with
+        // safeAreaInset so the system always reserves top/bottom insets.
+        terminalChrome(minHeight: 200, showFullscreenButton: false)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(AppTheme.background)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                terminalFullscreenHeader
+            }
+            .background(AppTheme.background.ignoresSafeArea(edges: .bottom))
+            .task {
+                await connectTerminalIfNeeded()
+            }
+    }
+
+    private var terminalFullscreenHeader: some View {
+        HStack(spacing: 12) {
+            Button {
+                showTerminalFullscreen = false
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .symbolRenderingMode(.hierarchical)
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
             .buttonStyle(.plain)
-            .disabled(!isTerminalConnected && title != "Paste")
+            .accessibilityLabel(localizer.t.close)
+
+            Text(localizer.t.arcaneTabExec)
+                .font(.headline)
+                .lineLimit(1)
+
+            Spacer(minLength: 0)
+
+            Circle()
+                .fill(terminalSession.isConnected ? AppTheme.running : AppTheme.stopped)
+                .frame(width: 8, height: 8)
+            Text(terminalSession.isConnected
+                 ? localizer.t.arcaneTerminalConnected
+                 : localizer.t.arcaneTerminalDisconnected)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(AppTheme.textMuted)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 4)
+        .padding(.bottom, 10)
+        .frame(maxWidth: .infinity)
+        .background(AppTheme.background)
+    }
+
+    /// Interactive terminal powered by open-source SwiftTerm (xterm/VT100).
+    /// Type directly in the terminal — no line-buffered TextField.
+    private func terminalChrome(minHeight: CGFloat, showFullscreenButton: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text(localizer.t.arcaneTabExec)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AppTheme.textMuted)
+                Spacer(minLength: 0)
+                Circle()
+                    .fill(terminalSession.isConnected ? AppTheme.running : AppTheme.stopped)
+                    .frame(width: 8, height: 8)
+                Text(terminalSession.isConnected
+                     ? localizer.t.arcaneTerminalConnected
+                     : localizer.t.arcaneTerminalDisconnected)
+                    .font(.caption2)
+                    .foregroundStyle(AppTheme.textMuted)
+                    .lineLimit(1)
+
+                Menu {
+                    ForEach(shellOptions, id: \.self) { shell in
+                        Button {
+                            selectedShell = shell
+                            Task { await reconnectTerminal() }
+                        } label: {
+                            if selectedShell == shell {
+                                Label(shell, systemImage: "checkmark")
+                            } else {
+                                Text(shell)
+                            }
+                        }
+                    }
+                } label: {
+                    Text((selectedShell as NSString).lastPathComponent)
+                        .font(.caption2.weight(.semibold))
+                }
+                .buttonStyle(.glass)
+                .controlSize(.small)
+
+                Button(terminalSession.isConnected
+                       ? localizer.t.arcaneTerminalDisconnect
+                       : localizer.t.arcaneTerminalConnect) {
+                    if terminalSession.isConnected {
+                        terminalSession.disconnect()
+                    } else {
+                        Task { await connectTerminalIfNeeded() }
+                    }
+                }
+                .font(.caption.weight(.semibold))
+
+                Button(localizer.t.arcaneClear) {
+                    terminalSession.clearScreen()
+                }
+                .font(.caption.weight(.semibold))
+
+                if showFullscreenButton {
+                    Button {
+                        showTerminalFullscreen = true
+                    } label: {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(localizer.t.arcaneTerminalFullscreen)
+                }
+            }
+
+            // SwiftTerm provides its own keyboard accessory shortcuts (Esc/Ctrl/arrows…).
+            ArcaneSwiftTermView(session: terminalSession, fontSize: showFullscreenButton ? 12.5 : 14) { url in
+                openURL(url)
+            }
+            .frame(maxWidth: .infinity, minHeight: minHeight, maxHeight: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Color.secondary.opacity(0.18), lineWidth: 1)
+            )
+
+            if let statusMessage = terminalSession.statusMessage {
+                Text(statusMessage)
+                    .font(.caption2)
+                    .foregroundStyle(AppTheme.danger)
+            } else {
+                Text(localizer.t.arcaneTerminalInteractiveHint)
+                    .font(.caption2)
+                    .foregroundStyle(AppTheme.textMuted)
+            }
+        }
     }
 
     private func envTab(_ detail: ArcaneContainerDetails) -> some View {
@@ -653,7 +820,7 @@ struct ArcaneContainerDetailView: View {
                     guard self.isLoadingLogs, self.logsTask === loadingTask else { return }
                     self.isLoadingLogs = false
                     if self.logs.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        self.logs = "/* no log lines after 8s — check API key (containers:logs) or container output */\n"
+                        self.logs = "/* \(self.localizer.t.arcaneLogTimeoutHint) */\n"
                     }
                 }
 
@@ -661,7 +828,7 @@ struct ArcaneContainerDetailView: View {
             } catch {
                 await MainActor.run {
                     self.isLoadingLogs = false
-                    self.logs = "/* live logs failed: \(error.localizedDescription) */\n"
+                    self.logs = "/* \(String(format: self.localizer.t.arcaneLogFailedFormat, error.localizedDescription)) */\n"
                 }
             }
         }
@@ -856,144 +1023,27 @@ struct ArcaneContainerDetailView: View {
         }
     }
 
-    // MARK: - Terminal WebSocket (raw PTY bytes — matches Arcane xterm client)
+    // MARK: - Terminal (SwiftTerm + Arcane WebSocket PTY)
 
-    private func connectTerminalIfNeeded() {
-        guard !isTerminalConnected else { return }
-        Task {
-            guard let client = await servicesStore.arcaneClient(instanceId: instanceId) else { return }
-            do {
-                // Prefer bash when available; Arcane default is /bin/sh.
-                let url = try await client.terminalWebSocketURL(
-                    containerId: resolvedContainerId,
-                    environmentId: environmentId,
-                    shell: "/bin/sh"
-                )
-                var request = URLRequest(url: url)
-                for (k, v) in await client.currentAuthHeaders() {
-                    request.setValue(v, forHTTPHeaderField: k)
-                }
-                let session = URLSession(configuration: .default, delegate: InsecureTrustDelegate(), delegateQueue: nil)
-                let task = session.webSocketTask(with: request)
-                await MainActor.run {
-                    terminalSession = session
-                    terminalTask = task
-                    isTerminalConnected = true
-                    if !terminalBuffer.isEmpty { terminalBuffer += "\n" }
-                    terminalBuffer += "[connected] \(url.path)\r\n"
-                }
-                task.resume()
-                await receiveTerminalLoop(task)
-            } catch {
-                await MainActor.run {
-                    terminalBuffer += "\r\n[error] \(error.localizedDescription)\r\n"
-                    isTerminalConnected = false
-                }
-            }
+    @MainActor
+    private func connectTerminalIfNeeded() async {
+        guard !terminalSession.isConnected else { return }
+        guard let client = await servicesStore.arcaneClient(instanceId: instanceId) else {
+            terminalSession.feedLocal("\r\n\u{1b}[31m[error] \(localizer.t.arcaneClientUnavailable)\u{1b}[0m\r\n")
+            return
         }
+        await terminalSession.connect(
+            client: client,
+            containerId: resolvedContainerId,
+            environmentId: environmentId,
+            shell: selectedShell
+        )
     }
 
     @MainActor
-    private func receiveTerminalLoop(_ task: URLSessionWebSocketTask) async {
-        while terminalTask === task {
-            do {
-                let message = try await task.receive()
-                // Arcane exec stream is binary PTY output (see pipeExecOutputInternal).
-                let text: String
-                switch message {
-                case .string(let s):
-                    text = s
-                case .data(let d):
-                    text = String(data: d, encoding: .utf8)
-                        ?? String(decoding: d, as: UTF8.self)
-                @unknown default:
-                    text = ""
-                }
-                guard !text.isEmpty else { continue }
-                // Strip ANSI/CSI so color codes don't show as `[1;32m…` garbage.
-                let cleaned = ArcaneTextSanitizer.stripANSI(text)
-                terminalBuffer += cleaned
-                if terminalBuffer.count > 100_000 {
-                    terminalBuffer = String(terminalBuffer.suffix(70_000))
-                }
-            } catch {
-                if terminalTask === task {
-                    isTerminalConnected = false
-                    terminalBuffer += "\r\n[disconnected] \(error.localizedDescription)\r\n"
-                    terminalTask = nil
-                    terminalSession?.invalidateAndCancel()
-                    terminalSession = nil
-                }
-                break
-            }
-        }
-    }
-
-    private func sendRaw(_ payload: String) {
-        guard isTerminalConnected, let task = terminalTask else { return }
-        // Send as binary to mirror browser WebSocket + xterm onData.
-        guard let data = payload.data(using: .utf8) else { return }
-        Task { @MainActor in
-            do {
-                try await task.send(.data(data))
-            } catch {
-                terminalBuffer += "\r\n[send error] \(error.localizedDescription)\r\n"
-            }
-        }
-    }
-
-    private func sendCommand() {
-        let cmd = commandInput.trimmingCharacters(in: .newlines)
-        guard !cmd.isEmpty else { return }
-        if commandHistory.last != cmd {
-            commandHistory.append(cmd)
-        }
-        historyIndex = -1
-        // Interactive shell: type the command + Enter (\\r matches most PTY shells).
-        sendRaw(cmd + "\r")
-        commandInput = ""
-    }
-
-    private func historyUp() {
-        guard !commandHistory.isEmpty else { return }
-        if historyIndex < 0 {
-            historyIndex = commandHistory.count - 1
-        } else if historyIndex > 0 {
-            historyIndex -= 1
-        }
-        commandInput = commandHistory[historyIndex]
-    }
-
-    private func historyDown() {
-        guard !commandHistory.isEmpty else { return }
-        if historyIndex < 0 { return }
-        if historyIndex < commandHistory.count - 1 {
-            historyIndex += 1
-            commandInput = commandHistory[historyIndex]
-        } else {
-            historyIndex = -1
-            commandInput = ""
-        }
-    }
-
-    private func pasteFromClipboard() {
-        #if canImport(UIKit)
-        if let text = UIPasteboard.general.string, !text.isEmpty {
-            if isTerminalConnected {
-                // Paste into the remote PTY (same as xterm paste).
-                sendRaw(text)
-            } else {
-                commandInput += text
-            }
-        }
-        #endif
-    }
-
-    private func disconnectTerminal() {
-        terminalTask?.cancel(with: .goingAway, reason: nil)
-        terminalSession?.invalidateAndCancel()
-        terminalTask = nil
-        terminalSession = nil
-        isTerminalConnected = false
+    private func reconnectTerminal() async {
+        terminalSession.disconnect(notifyUI: false)
+        terminalSession.clearScreen()
+        await connectTerminalIfNeeded()
     }
 }

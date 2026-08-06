@@ -37,6 +37,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
     case calagopus
     case openlist
     case arcane
+    case cloudsaver
 
     public var id: String { rawValue }
 
@@ -89,6 +90,8 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
             return .openlist
         case "arcane":
             return .arcane
+        case "cloudsaver", "cloud_saver":
+            return .cloudsaver
         default:
             return nil
         }
@@ -123,8 +126,9 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         .flaresolverr
     ]
 
+    /// Services eligible for the home tile grid (Media-tab apps stay on Media).
     public static var homeServices: [ServiceType] {
-        [.truenas, .openlist, .proxmox, .beszel, .portainer, .arcane]
+        allCases.filter { !mediaServices.contains($0) }
     }
 
     public var isMediaService: Bool {
@@ -169,6 +173,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .calagopus:          return "Calagopus"
         case .openlist:           return "OpenList"
         case .arcane:             return "Arcane"
+        case .cloudsaver:        return "CloudSaver"
         }
     }
 
@@ -210,6 +215,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .calagopus:          return t.serviceCalagopusDesc
         case .openlist:           return t.serviceOpenListDesc
         case .arcane:             return t.serviceArcaneDesc
+        case .cloudsaver:        return t.serviceCloudSaverDesc
         }
     }
 
@@ -256,6 +262,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .calagopus:          return "bird.fill"
         case .openlist:           return "folder.fill"
         case .arcane:             return "shippingbox.fill"
+        case .cloudsaver:        return "rectangle.grid.3x2.fill"
         }
     }
 
@@ -297,6 +304,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .calagopus:          return "https://cdn.jsdelivr.net/gh/selfhst/icons/png/calagopus.png"
         case .openlist:           return "https://cdn.jsdelivr.net/gh/selfhst/icons/png/alist.png"
         case .arcane:             return "https://cdn.jsdelivr.net/gh/selfhst/icons/png/arcane.png"
+        case .cloudsaver:        return "https://cdn.jsdelivr.net/gh/selfhst/icons/png/cloud.png"
         }
     }
 
@@ -344,6 +352,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .calagopus:          slug = "calagopus"
         case .openlist:           slug = "alist"
         case .arcane:             slug = "arcane"
+        case .cloudsaver:        slug = "cloud"
         }
         var orderedCandidates: [String] = []
         let primary = iconUrl.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -399,6 +408,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .calagopus:          return "service-calagopus"
         case .openlist:           return "service-openlist"
         case .arcane:             return "service-arcane"
+        case .cloudsaver:        return "service-cloudsaver"
         }
     }
 
@@ -411,6 +421,7 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .proxmox: return "https://pve.local:8006"
         case .truenas: return "https://truenas.local"
         case .openlist: return "http://openlist.local:5244"
+        case .cloudsaver: return "http://cloudsaver.local:8008"
         case .pihole: return "http://pi.hole"
         case .adguardHome: return "http://adguard.local"
         case .nginxProxyManager: return "http://npm.local:81"
@@ -480,8 +491,10 @@ public enum ServiceType: String, CaseIterable, Identifiable, Codable, Hashable, 
         case .truenas:            return ServiceColorSet(primary: .truenasAccessibleAccent, dark: Color(hex: "#006EA3"), bg: Color(hex: "#0095D5").opacity(0.09))
         case .pterodactyl:        return ServiceColorSet(primary: Color(hex: "#0E4BEF"), dark: Color(hex: "#0B38C5"), bg: Color(hex: "#0E4BEF").opacity(0.09))
         case .calagopus:          return ServiceColorSet(primary: Color(hex: "#16A34A"), dark: Color(hex: "#15803D"), bg: Color(hex: "#16A34A").opacity(0.09))
+        // OpenList classic blue; Arcane violet to match purple mark.
         case .openlist:           return ServiceColorSet(primary: Color(hex: "#3B82F6"), dark: Color(hex: "#1D4ED8"), bg: Color(hex: "#3B82F6").opacity(0.09))
-        case .arcane:             return ServiceColorSet(primary: Color(hex: "#F97316"), dark: Color(hex: "#C2410C"), bg: Color(hex: "#F97316").opacity(0.08))
+        case .arcane:             return ServiceColorSet(primary: Color(hex: "#8B5CF6"), dark: Color(hex: "#6D28D9"), bg: Color(hex: "#8B5CF6").opacity(0.11))
+        case .cloudsaver:        return ServiceColorSet(primary: Color(hex: "#A78BFA"), dark: Color(hex: "#7C3AED"), bg: Color(hex: "#A78BFA").opacity(0.10))
         }
     }
 }

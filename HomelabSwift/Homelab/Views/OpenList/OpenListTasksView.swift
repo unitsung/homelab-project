@@ -46,23 +46,36 @@ struct OpenListTasksView: View {
                     }
                 }
                 .pickerStyle(.menu)
+                .tint(serviceColor)
+                .foregroundStyle(serviceColor)
 
                 Picker(localizer.t.filesTaskPhaseLabel, selection: $phase) {
                     Text(localizer.t.filesTasksUndone).tag(OpenListTaskPhase.undone)
                     Text(localizer.t.filesTasksDone).tag(OpenListTaskPhase.done)
                 }
                 .pickerStyle(.segmented)
+                .tint(serviceColor)
             }
+            .tint(serviceColor)
 
             // Action chip bar — same operations as OpenList web.
             Section {
                 actionBar
                     .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
                     .listRowBackground(Color.clear)
+            }
 
+            Section {
                 Toggle(isOn: $mineOnly) {
-                    Text(localizer.t.filesTaskMineOnly)
-                        .font(.subheadline)
+                    Label {
+                        Text(localizer.t.filesTaskMineOnly)
+                            .font(.subheadline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                    } icon: {
+                        Image(systemName: "person.crop.circle")
+                            .foregroundStyle(serviceColor)
+                    }
                 }
                 .tint(serviceColor)
             }
@@ -156,23 +169,23 @@ struct OpenListTasksView: View {
     private var actionBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                chip(localizer.t.filesTaskRefresh, color: Color(hex: "#A78BFA").opacity(0.28)) {
+                chip(localizer.t.filesTaskRefresh, tint: serviceColor) {
                     Task { await reload(silent: false) }
                 }
-                chip(localizer.t.filesTaskRetryFailed, color: Color(hex: "#60A5FA").opacity(0.28)) {
+                chip(localizer.t.filesTaskRetryFailed, tint: AppTheme.info) {
                     Task { await retryFailed() }
                 }
-                chip(localizer.t.filesTaskClearDone, color: Color(hex: "#F87171").opacity(0.28)) {
+                chip(localizer.t.filesTaskClearDone, tint: AppTheme.danger) {
                     Task { await clearDone() }
                 }
-                chip(localizer.t.filesTaskClearSucceeded, color: Color(hex: "#4ADE80").opacity(0.28)) {
+                chip(localizer.t.filesTaskClearSucceeded, tint: AppTheme.running) {
                     Task { await clearSucceeded() }
                 }
 
                 if phase == .undone {
                     chip(
                         localizer.t.filesTaskCancelSelected,
-                        color: Color(hex: "#FBBF24").opacity(0.28),
+                        tint: AppTheme.warning,
                         disabled: selectedIDs.isEmpty
                     ) {
                         Task { await cancelSelected() }
@@ -180,7 +193,7 @@ struct OpenListTasksView: View {
                 } else {
                     chip(
                         localizer.t.filesTaskRetrySelected,
-                        color: Color(hex: "#67E8F9").opacity(0.35),
+                        tint: AppTheme.info,
                         disabled: selectedIDs.isEmpty
                     ) {
                         Task { await retrySelected() }
@@ -189,7 +202,7 @@ struct OpenListTasksView: View {
 
                 chip(
                     localizer.t.filesTaskDeleteSelected,
-                    color: Color(hex: "#FCD34D").opacity(0.4),
+                    tint: AppTheme.danger,
                     disabled: selectedIDs.isEmpty
                 ) {
                     Task { await deleteSelected() }
@@ -197,7 +210,7 @@ struct OpenListTasksView: View {
 
                 chip(
                     allDisplayedSelected ? localizer.t.filesTaskDeselectAll : localizer.t.filesTaskSelectAll,
-                    color: Color(.tertiarySystemFill)
+                    tint: serviceColor
                 ) {
                     toggleSelectAll()
                 }
@@ -207,19 +220,16 @@ struct OpenListTasksView: View {
 
     private func chip(
         _ title: String,
-        color: Color,
+        tint: Color,
         disabled: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             Text(title)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(disabled ? AppTheme.textMuted : .primary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(color, in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.glass)
+        .tint(tint)
         .disabled(disabled || isActing)
         .opacity(disabled ? 0.55 : 1)
     }
@@ -253,10 +263,10 @@ struct OpenListTasksView: View {
                         if !task.creator.isEmpty {
                             Text(task.creator.uppercased())
                                 .font(.caption2.weight(.bold))
+                                .foregroundStyle(serviceColor)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
-                                .background(Color(hex: "#A78BFA").opacity(0.22), in: Capsule())
-                                .foregroundStyle(Color(hex: "#7C3AED"))
+                                .glassCard(cornerRadius: 20, tint: serviceColor.opacity(0.18))
                         }
                         stateBadge(task)
                         Spacer(minLength: 0)
@@ -289,24 +299,23 @@ struct OpenListTasksView: View {
             // Per-row operations (web: 删除 / 展开 / retry)
             HStack(spacing: 8) {
                 if phase == .undone {
-                    rowAction(localizer.t.filesTaskCancel, tint: .red.opacity(0.12), fg: .red) {
+                    rowAction(localizer.t.filesTaskCancel, tint: AppTheme.danger) {
                         Task { await cancel(task) }
                     }
                 } else {
                     if task.state == .failed || task.state == .canceled || task.state == .errored {
-                        rowAction(localizer.t.filesTaskRetry, tint: serviceColor.opacity(0.14), fg: serviceColor) {
+                        rowAction(localizer.t.filesTaskRetry, tint: serviceColor) {
                             Task { await retry(task) }
                         }
                     }
-                    rowAction(localizer.t.filesTaskDelete, tint: .red.opacity(0.12), fg: .red) {
+                    rowAction(localizer.t.filesTaskDelete, tint: AppTheme.danger) {
                         Task { await delete(task) }
                     }
                 }
 
                 rowAction(
                     expanded ? localizer.t.filesTaskCollapse : localizer.t.filesTaskExpand,
-                    tint: Color(.tertiarySystemFill),
-                    fg: .primary
+                    tint: serviceColor
                 ) {
                     toggleExpand(task.id)
                 }
@@ -326,18 +335,14 @@ struct OpenListTasksView: View {
     private func rowAction(
         _ title: String,
         tint: Color,
-        fg: Color,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             Text(title)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(fg)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(tint, in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.glass)
+        .tint(tint)
         .disabled(isActing)
     }
 
@@ -367,7 +372,7 @@ struct OpenListTasksView: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .glassCard(cornerRadius: 10, tint: serviceColor.opacity(0.08))
     }
 
     private func detailLine(_ label: String, _ value: String) -> some View {
@@ -384,12 +389,13 @@ struct OpenListTasksView: View {
     }
 
     private func stateBadge(_ task: OpenListTaskInfo) -> some View {
-        Text(stateLabel(task.state))
+        let color = stateColor(task.state)
+        return Text(stateLabel(task.state))
             .font(.caption2.weight(.semibold))
+            .foregroundStyle(color)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(stateColor(task.state).opacity(0.15), in: Capsule())
-            .foregroundStyle(stateColor(task.state))
+            .glassCard(cornerRadius: 20, tint: color.opacity(0.18))
     }
 
     private func progressTint(for task: OpenListTaskInfo) -> Color {

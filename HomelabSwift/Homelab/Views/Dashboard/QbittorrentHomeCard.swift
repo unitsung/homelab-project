@@ -3,36 +3,78 @@ import SwiftUI
 struct QbittorrentHomeCard: View {
     @Environment(ServicesStore.self) private var servicesStore
     @Environment(DashboardRefreshCoordinator.self) private var coordinator
+    @Environment(Localizer.self) private var localizer
 
     @State private var totalTorrents: Int = 0
     @State private var downloadingCount: Int = 0
     @State private var seedingCount: Int = 0
     @State private var pausedCount: Int = 0
+    @State private var downloadSpeed: Int64 = 0
+    @State private var uploadSpeed: Int64 = 0
     @State private var hasInstance: Bool = false
+    @State private var fetchFailed: Bool = false
+    @State private var instanceId: UUID?
 
     var body: some View {
+        Group {
+            if hasInstance, let instanceId {
+                NavigationLink(value: HomeServiceRoute(type: .qbittorrent, instanceId: instanceId)) {
+                    cardContent
+                }
+                .buttonStyle(TilePressButtonStyle())
+            } else {
+                cardContent
+            }
+        }
+        .task(id: coordinator.refreshTrigger) { await fetchData() }
+    }
+
+    private var cardContent: some View {
         VStack(spacing: 12) {
             HStack {
                 Image(systemName: "arrow.down.circle").font(.subheadline.weight(.semibold)).foregroundStyle(AppTheme.info)
-                Text("qBittorrent").font(.subheadline.weight(.semibold))
+                Text(localizer.t.serviceQbittorrent).font(.subheadline.weight(.semibold))
                 Spacer()
+                if hasInstance {
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
             }
-            if hasInstance, totalTorrents > 0 {
+            if hasInstance, fetchFailed {
+                statPlaceholder(localizer.t.statusUnreachable)
+                Spacer(minLength: 0)
+            } else if hasInstance, totalTorrents > 0 {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    stat("种子", "\(totalTorrents)")
-                    stat("下载中", "\(downloadingCount)", accent: AppTheme.info)
-                    stat("做种", "\(seedingCount)", accent: AppTheme.running)
-                    stat("暂停", "\(pausedCount)")
+                    stat(localizer.t.homeQbitTorrents, "\(totalTorrents)")
+                    stat(localizer.t.homeQbitDownloading, "\(downloadingCount)", accent: AppTheme.info)
+                    stat(localizer.t.homeQbitSeeding, "\(seedingCount)", accent: AppTheme.running)
+                    stat(localizer.t.homeQbitPaused, "\(pausedCount)")
+                }
+                Spacer(minLength: 0)
+                // Two equal columns, each centered under the stats grid.
+                HStack(spacing: 8) {
+                    speedLabel(
+                        String(format: localizer.t.homeQbitDownloadSpeed, Formatters.formatBytes(Double(downloadSpeed)) + "/s"),
+                        color: AppTheme.info
+                    )
+                    speedLabel(
+                        String(format: localizer.t.homeQbitUploadSpeed, Formatters.formatBytes(Double(uploadSpeed)) + "/s"),
+                        color: AppTheme.running
+                    )
                 }
             } else if hasInstance {
-                statPlaceholder("无活动种子")
+                statPlaceholder(localizer.t.homeQbitNoActive)
+                Spacer(minLength: 0)
             } else {
-                statPlaceholder("未配置")
+                statPlaceholder(localizer.t.launcherNotConfigured)
+                Spacer(minLength: 0)
             }
         }
         .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .contentShape(Rectangle())
         .glassCard()
-        .task(id: coordinator.refreshTrigger) { await fetchData() }
     }
 
     private func stat(_ label: String, _ value: String, accent: Color? = nil) -> some View {
@@ -41,6 +83,17 @@ struct QbittorrentHomeCard: View {
             Text(label).font(.caption2).foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)
+        .multilineTextAlignment(.center)
+    }
+
+    private func speedLabel(_ text: String, color: Color) -> some View {
+        Text(text)
+            .font(.caption2.weight(.semibold).monospacedDigit())
+            .foregroundStyle(color)
+            .multilineTextAlignment(.center)
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+            .frame(maxWidth: .infinity)
     }
 
     private func statPlaceholder(_ text: String) -> some View {
@@ -48,15 +101,32 @@ struct QbittorrentHomeCard: View {
     }
 
     private func fetchData() async {
-        guard let instance = servicesStore.preferredInstance(for: .qbittorrent) else { hasInstance = false; return }
+        guard let instance = servicesStore.preferredInstance(for: .qbittorrent) else {
+            hasInstance = false
+            instanceId = nil
+            fetchFailed = false
+            return
+        }
         hasInstance = true
-        guard let client = await servicesStore.qbittorrentClient(instanceId: instance.id) else { return }
+        instanceId = instance.id
+        guard let client = await servicesStore.qbittorrentClient(instanceId: instance.id) else {
+            fetchFailed = true
+            return
+        }
         do {
-            let torrents = try await client.getTorrents()
+            async let torrentsTask = client.getTorrents()
+            async let transferTask = client.getTransferInfo()
+            let torrents = try await torrentsTask
+            let transfer = try? await transferTask
             totalTorrents = torrents.count
             downloadingCount = torrents.filter { $0.isDownloading && !$0.isPaused }.count
             seedingCount = torrents.filter { $0.isUploading && !$0.isPaused }.count
             pausedCount = torrents.filter { $0.isPaused && !$0.isChecking }.count
-        } catch {}
+            downloadSpeed = transfer?.dl_info_speed ?? torrents.reduce(0) { $0 + $1.dlspeed }
+            uploadSpeed = transfer?.up_info_speed ?? torrents.reduce(0) { $0 + $1.upspeed }
+            fetchFailed = false
+        } catch {
+            fetchFailed = true
+        }
     }
 }

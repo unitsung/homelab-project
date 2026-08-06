@@ -15,6 +15,17 @@ settings:
     Release:
       SWIFT_COMPILATION_MODE: incremental
 
+# Open-source VT100/xterm emulator for Arcane interactive container shell.
+# Pin pre-Metal (≤1.11.x): Xcode beta CI may lack MetalToolchain; CoreText renderer is enough for mobile.
+packages:
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    exactVersion: 1.11.2
+  # Official VideoLAN VLCKit (libVLC) for multi-format OpenList playback (MKV/AVI/etc.).
+  VLCKit:
+    url: https://code.videolan.org/videolan/VLCKit.git
+    exactVersion: 4.0.0-a22
+
 targets:
   Homelab:
     type: application
@@ -23,6 +34,9 @@ targets:
       - path: Homelab
         excludes:
           - "**/.DS_Store"
+    dependencies:
+      - package: SwiftTerm
+      - package: VLCKit
     configFiles:
       Debug: Config/Signing.xcconfig
       Release: Config/Signing.xcconfig

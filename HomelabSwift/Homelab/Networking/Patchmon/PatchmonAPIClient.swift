@@ -48,10 +48,7 @@ actor PatchmonAPIClient {
     func ping() async -> Bool {
         guard !baseURL.isEmpty else { return false }
         let headers = authHeaders(tokenKey: tokenKey, tokenSecret: tokenSecret)
-        let primary = await engine.pingURL("\(baseURL)\(hostsPath(hostGroup: nil))", extraHeaders: headers)
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL("\(fallbackURL)\(hostsPath(hostGroup: nil))", extraHeaders: headers)
+        return await engine.pingWithAccessMode(baseURL: baseURL, fallbackURL: fallbackURL, path: "\(hostsPath(hostGroup: nil))", extraHeaders: headers)
     }
 
     // MARK: - Authentication

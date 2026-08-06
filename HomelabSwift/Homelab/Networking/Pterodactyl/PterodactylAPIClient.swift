@@ -149,14 +149,10 @@ actor PterodactylAPIClient {
 
     func ping() async -> Bool {
         guard !baseURL.isEmpty else { return false }
-        let primary = await engine.pingURL(
-            "\(baseURL)/api/client",
-            extraHeaders: authHeaders()
-        )
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL(
-            "\(fallbackURL)/api/client",
+        return await engine.pingWithAccessMode(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: "/api/client",
             extraHeaders: authHeaders()
         )
     }

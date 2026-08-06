@@ -30,10 +30,12 @@ actor HealthchecksAPIClient {
 
     func ping() async -> Bool {
         guard !baseURL.isEmpty else { return false }
-        let primary = await engine.pingURL("\(baseURL)/api/v3/checks/", extraHeaders: authHeaders())
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL("\(fallbackURL)/api/v3/checks/", extraHeaders: authHeaders())
+        return await engine.pingWithAccessMode(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: "/api/v3/checks/",
+            extraHeaders: authHeaders()
+        )
     }
 
     // MARK: - Auth

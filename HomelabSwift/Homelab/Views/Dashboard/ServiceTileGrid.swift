@@ -2,30 +2,36 @@ import SwiftUI
 
 struct ServiceTileGrid: View {
     @Environment(ServicesStore.self) private var servicesStore
+    @Environment(SettingsStore.self) private var settingsStore
+    @Environment(Localizer.self) private var localizer
     @Binding var selectedNewServiceType: ServiceType?
 
     @State private var showAddPicker = false
 
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
-    var body: some View {
-        let availableServices = ServiceType.homeServices.filter {
-            servicesStore.preferredInstance(for: $0) != nil
-        }
+    /// Prefer saved `serviceOrder`; only show configured, non-hidden home-eligible services.
+    private var availableServices: [ServiceType] {
+        let configured = Set(
+            ServiceType.homeServices.filter { servicesStore.preferredInstance(for: $0) != nil }
+        )
+        return settingsStore.orderedHomeServices(configured: configured, includeHidden: false)
+    }
 
+    var body: some View {
         Group {
             if availableServices.isEmpty {
                 VStack(spacing: 14) {
                     Image(systemName: "square.grid.2x2")
                         .font(.title3)
                         .foregroundStyle(.tertiary)
-                    Text("暂无服务")
+                    Text(localizer.t.homeNoServices)
                         .font(.subheadline)
                         .foregroundStyle(.tertiary)
                     Button {
                         showAddPicker = true
                     } label: {
-                        Label("添加服务", systemImage: "plus.circle.fill")
+                        Label(localizer.t.homeAddService, systemImage: "plus.circle.fill")
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(AppTheme.info)
                     }
@@ -37,13 +43,12 @@ struct ServiceTileGrid: View {
             } else {
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(availableServices, id: \.rawValue) { type in
-                        NavigationLink(value: HomeServiceRoute(
-                            type: type,
-                            instanceId: servicesStore.preferredInstance(for: type)!.id
-                        )) {
-                            serviceTile(type: type)
+                        if let instanceId = servicesStore.preferredInstance(for: type)?.id {
+                            NavigationLink(value: HomeServiceRoute(type: type, instanceId: instanceId)) {
+                                serviceTile(type: type)
+                            }
+                            .buttonStyle(TilePressButtonStyle())
                         }
-                        .buttonStyle(TilePressButtonStyle())
                     }
                     addTile
                 }
@@ -51,6 +56,9 @@ struct ServiceTileGrid: View {
         }
         .sheet(isPresented: $showAddPicker) { addServicePickerSheet }
     }
+
+    /// Shared height so the “Add” tile matches real service tiles.
+    private let tileMinHeight: CGFloat = 112
 
     private func serviceTile(type: ServiceType) -> some View {
         VStack(spacing: 10) {
@@ -61,21 +69,26 @@ struct ServiceTileGrid: View {
             VStack(spacing: 4) {
                 Text(type.displayName)
                     .font(.caption.weight(.semibold))
+                    .multilineTextAlignment(.center)
                     .lineLimit(1)
+                    .frame(maxWidth: .infinity)
 
                 HStack(spacing: 4) {
                     Circle()
                         .fill(AppTheme.running)
                         .frame(width: 4, height: 4)
-                    Text("在线")
+                    Text(localizer.t.statusOnline)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
+                .frame(maxWidth: .infinity)
             }
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, minHeight: tileMinHeight)
         .padding(.vertical, 14)
         .padding(.horizontal, 6)
+        .contentShape(Rectangle())
         .glassCard()
     }
 
@@ -87,7 +100,7 @@ struct ServiceTileGrid: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .stroke(style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
-                        .foregroundStyle(.tertiary.opacity(0.4))
+                        .foregroundStyle(.tertiary.opacity(0.45))
                         .frame(width: 42, height: 42)
 
                     Image(systemName: "plus")
@@ -95,13 +108,25 @@ struct ServiceTileGrid: View {
                         .foregroundStyle(.tertiary)
                 }
 
-                Text("添加")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                VStack(spacing: 4) {
+                    Text(localizer.t.homeAdd)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity)
+                    // Reserve the same second line as service tiles (online status).
+                    Text(" ")
+                        .font(.caption2)
+                        .opacity(0)
+                        .frame(maxWidth: .infinity)
+                }
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, minHeight: tileMinHeight)
             .padding(.vertical, 14)
             .padding(.horizontal, 6)
+            .contentShape(Rectangle())
             .glassCard()
         }
         .buttonStyle(TilePressButtonStyle())
@@ -119,13 +144,13 @@ struct ServiceTileGrid: View {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.largeTitle)
                             .foregroundStyle(AppTheme.running)
-                        Text("所有服务已配置")
+                        Text(localizer.t.homeAllServicesConfigured)
                             .font(.headline)
                     }
                 }
             } else {
                 List {
-                    Section("选择要添加的服务") {
+                    Section(localizer.t.homeSelectServiceToAdd) {
                         ForEach(unconfiguredTypes, id: \.rawValue) { type in
                             Button {
                                 showAddPicker = false
@@ -148,11 +173,11 @@ struct ServiceTileGrid: View {
                 }
                 .scrollContentBackground(.hidden)
                 .background(AppTheme.background)
-                .navigationTitle("添加服务")
+                .navigationTitle(localizer.t.homeAddService)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("取消") { showAddPicker = false }
+                        Button(localizer.t.cancel) { showAddPicker = false }
                     }
                 }
             }

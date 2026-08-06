@@ -32,11 +32,12 @@ actor AdGuardHomeAPIClient {
 
     func ping() async -> Bool {
         if baseURL.isEmpty { return false }
-        if await engine.pingURL("\(baseURL)/status", extraHeaders: authHeaders()) { return true }
-        if !fallbackURL.isEmpty {
-            return await engine.pingURL("\(fallbackURL)/status", extraHeaders: authHeaders())
-        }
-        return false
+        return await engine.pingWithAccessMode(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: "/status",
+            extraHeaders: authHeaders()
+        )
     }
 
     // MARK: - Authentication

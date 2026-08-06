@@ -59,10 +59,7 @@ actor QbittorrentAPIClient {
             return false
         }
 
-        let primary = await engine.pingURL(baseURL + path, extraHeaders: authHeaders())
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL(fallbackURL + path, extraHeaders: authHeaders())
+        return await engine.pingWithAccessMode(baseURL: baseURL, fallbackURL: fallbackURL, path: path, extraHeaders: authHeaders())
     }
 
     // Authenticate and return the SID cookie value
@@ -113,6 +110,108 @@ actor QbittorrentAPIClient {
         }
     }
 
+    /// Upload one or more `.torrent` blobs via multipart `torrents` field.
+    func addTorrentFiles(_ files: [(fileName: String, data: Data)]) async throws {
+        guard !files.isEmpty else { return }
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var body = Data()
+        for file in files {
+            let safeName = file.fileName.replacingOccurrences(of: "\"", with: "_")
+            body.append(Data("--\(boundary)\r\n".utf8))
+            body.append(Data("Content-Disposition: form-data; name=\"torrents\"; filename=\"\(safeName)\"\r\n".utf8))
+            body.append(Data("Content-Type: application/x-bittorrent\r\n\r\n".utf8))
+            body.append(file.data)
+            body.append(Data("\r\n".utf8))
+        }
+        body.append(Data("--\(boundary)--\r\n".utf8))
+        var headers = authHeaders()
+        headers["Content-Type"] = "multipart/form-data; boundary=\(boundary)"
+        try await requestVoidWithSessionRefresh {
+            try await engine.requestVoid(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/add",
+                method: "POST",
+                headers: headers,
+                body: body
+            )
+        }
+    }
+
+    func getTorrentFiles(hash: String) async throws -> [QbittorrentTorrentFile] {
+        try await requestWithSessionRefresh {
+            try await engine.request(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/files?hash=\(hash)",
+                headers: authHeaders()
+            )
+        }
+    }
+
+    func getTorrentTrackers(hash: String) async throws -> [QbittorrentTracker] {
+        try await requestWithSessionRefresh {
+            try await engine.request(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/trackers?hash=\(hash)",
+                headers: authHeaders()
+            )
+        }
+    }
+
+    /// Download limit in bytes/s (`-1` = unlimited).
+    func setDownloadLimit(hash: String, limit: Int64) async throws {
+        try await requestVoidWithSessionRefresh {
+            try await engine.requestVoid(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/setDownloadLimit",
+                method: "POST",
+                headers: formHeaders(),
+                body: formBody(["hashes": hash, "limit": "\(limit)"])
+            )
+        }
+    }
+
+    /// Upload limit in bytes/s (`-1` = unlimited).
+    func setUploadLimit(hash: String, limit: Int64) async throws {
+        try await requestVoidWithSessionRefresh {
+            try await engine.requestVoid(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/setUploadLimit",
+                method: "POST",
+                headers: formHeaders(),
+                body: formBody(["hashes": hash, "limit": "\(limit)"])
+            )
+        }
+    }
+
+    func getDownloadLimit(hash: String) async throws -> Int64 {
+        let map: [String: Int64] = try await requestWithSessionRefresh {
+            try await engine.request(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/downloadLimit?hashes=\(hash)",
+                headers: authHeaders()
+            )
+        }
+        return map[hash] ?? -1
+    }
+
+    func getUploadLimit(hash: String) async throws -> Int64 {
+        let map: [String: Int64] = try await requestWithSessionRefresh {
+            try await engine.request(
+                baseURL: baseURL,
+                fallbackURL: fallbackURL,
+                path: "/api/v2/torrents/uploadLimit?hashes=\(hash)",
+                headers: authHeaders()
+            )
+        }
+        return map[hash] ?? -1
+    }
+
     func pauseAll() async throws {
         try await postTorrentControl(primaryPath: "/api/v2/torrents/pause", fallbackPath: "/api/v2/torrents/stop", hashes: "all")
     }
@@ -127,6 +226,20 @@ actor QbittorrentAPIClient {
 
     func resumeTorrent(hash: String) async throws {
         try await postTorrentControl(primaryPath: "/api/v2/torrents/resume", fallbackPath: "/api/v2/torrents/start", hashes: hash)
+    }
+
+    /// Pause many torrents in one request (`hashes` pipe-separated as per qB API).
+    func pauseTorrents(hashes: [String]) async throws {
+        let joined = hashes.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }.joined(separator: "|")
+        guard !joined.isEmpty else { return }
+        try await postTorrentControl(primaryPath: "/api/v2/torrents/pause", fallbackPath: "/api/v2/torrents/stop", hashes: joined)
+    }
+
+    /// Resume many torrents in one request.
+    func resumeTorrents(hashes: [String]) async throws {
+        let joined = hashes.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }.joined(separator: "|")
+        guard !joined.isEmpty else { return }
+        try await postTorrentControl(primaryPath: "/api/v2/torrents/resume", fallbackPath: "/api/v2/torrents/start", hashes: joined)
     }
 
     /// qB 4.x uses pause/resume; 5.x often exposes stop/start. Try primary then fallback on 404/405.
@@ -198,6 +311,13 @@ actor QbittorrentAPIClient {
     }
 
     func deleteTorrent(hash: String, deleteFiles: Bool) async throws {
+        try await deleteTorrents(hashes: [hash], deleteFiles: deleteFiles)
+    }
+
+    /// Delete many torrents in one request (`hashes` pipe-separated).
+    func deleteTorrents(hashes: [String], deleteFiles: Bool) async throws {
+        let joined = hashes.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }.joined(separator: "|")
+        guard !joined.isEmpty else { return }
         try await requestVoidWithSessionRefresh {
             try await engine.requestVoid(
                 baseURL: baseURL,
@@ -205,7 +325,7 @@ actor QbittorrentAPIClient {
                 path: "/api/v2/torrents/delete",
                 method: "POST",
                 headers: formHeaders(),
-                body: formBody(["hashes": hash, "deleteFiles": deleteFiles ? "true" : "false"])
+                body: formBody(["hashes": joined, "deleteFiles": deleteFiles ? "true" : "false"])
             )
         }
     }

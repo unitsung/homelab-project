@@ -48,10 +48,11 @@ actor WakapiAPIClient {
 
     func ping() async -> Bool {
         guard !baseURL.isEmpty else { return false }
-        let primary = await engine.pingURL("\(baseURL)/api/health")
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL("\(fallbackURL)/api/health")
+        return await engine.pingWithAccessMode(
+            baseURL: baseURL,
+            fallbackURL: fallbackURL,
+            path: "/api/health"
+        )
     }
 
     func authenticate(url: String, apiKey: String, fallbackUrl: String? = nil) async throws {

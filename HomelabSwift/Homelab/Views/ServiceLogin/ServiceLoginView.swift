@@ -50,6 +50,7 @@ struct ServiceLoginView: View {
             || serviceType == .maltrail
             || serviceType == .uptimeKuma
             || serviceType == .openlist
+            || serviceType == .cloudsaver
             || serviceType == .arcane
     }
 
@@ -76,6 +77,7 @@ struct ServiceLoginView: View {
 
     /// OpenList: password login by default; token field is optional alternative.
     private var isOpenList: Bool { serviceType == .openlist }
+    private var isCloudSaver: Bool { serviceType == .cloudsaver }
 
     private var usesKomodoAuth: Bool {
         serviceType == .komodo
@@ -101,7 +103,7 @@ struct ServiceLoginView: View {
             return normalizedOptional(apiKey) != nil || (isEditing && existingInstance?.apiKey?.isEmpty == false)
         }
 
-        if isOpenList {
+        if isOpenList || isCloudSaver {
             let hasToken = normalizedOptional(apiKey) != nil
                 || (isEditing && !(existingInstance?.token.isEmpty ?? true))
             let hasUser = normalizedOptional(username) != nil
@@ -304,7 +306,7 @@ struct ServiceLoginView: View {
                 icon: "globe",
                 placeholder: serviceType == .unifiNetwork && unifiAuthMode == .siteManager
                     ? localizer.t.unifiSiteManagerURLPlaceholder
-                    : serviceType.urlPlaceholder,
+                    : localizer.t.loginUrl,
                 text: $url,
                 keyboardType: .URL
             )
@@ -427,7 +429,7 @@ struct ServiceLoginView: View {
                     showPassword: showPassword
                 )
 
-                if isOpenList {
+                if isOpenList || isCloudSaver {
                     InputField(
                         icon: "key.fill",
                         placeholder: localizer.t.loginOpenListTokenOptional,
@@ -556,6 +558,7 @@ struct ServiceLoginView: View {
         case .pterodactyl:       return localizer.t.loginHintPterodactyl
         case .calagopus:         return localizer.t.loginHintCalagopus
         case .openlist:          return localizer.t.loginHintOpenList
+        case .cloudsaver:       return localizer.t.loginHintCloudSaver
         case .arcane:            return localizer.t.loginHintArcane
         case .qbittorrent, .radarr, .sonarr, .lidarr, .jellyseerr, .prowlarr, .bazarr:
                                  return nil
@@ -849,6 +852,36 @@ struct ServiceLoginView: View {
                 allowSelfSigned: allowSelfSigned
             )
 
+
+        case .cloudsaver:
+            let user = normalizedOptional(username) ?? existingInstance?.username
+            let pass = normalizedOptional(password) ?? existingInstance?.password
+            guard let user, !user.isEmpty else {
+                throw APIError.custom(localizer.t.loginErrorCredentials)
+            }
+            guard let pass, !pass.isEmpty else {
+                throw APIError.custom(localizer.t.loginErrorCredentials)
+            }
+            let client = CloudSaverAPIClient(instanceId: existingInstanceId ?? UUID())
+            let jwt = try await client.authenticate(
+                url: url,
+                username: user,
+                password: pass,
+                fallbackUrl: fallbackUrl,
+                allowSelfSigned: allowSelfSigned
+            )
+            return ServiceInstance(
+                id: existingInstanceId ?? UUID(),
+                type: .cloudsaver,
+                label: label,
+                url: url,
+                token: jwt,
+                username: user,
+                apiKey: nil,
+                fallbackUrl: fallbackUrl,
+                allowSelfSigned: allowSelfSigned,
+                password: pass
+            )
 
         case .openlist:
             let optionalToken = normalizedOptional(apiKey)

@@ -63,11 +63,7 @@ actor PortainerAPIClient {
     func ping() async -> Bool {
         if baseURL.isEmpty { return false }
         let headers = authHeaders()
-        if await engine.pingURL("\(baseURL)/api/status", extraHeaders: headers) { return true }
-        if !fallbackURL.isEmpty {
-            return await engine.pingURL("\(fallbackURL)/api/status", extraHeaders: headers)
-        }
-        return false
+        return await engine.pingWithAccessMode(baseURL: baseURL, fallbackURL: fallbackURL, path: "/api/status", extraHeaders: headers)
     }
 
     // MARK: - Authentication

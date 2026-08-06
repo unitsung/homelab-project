@@ -2,6 +2,21 @@ import SwiftUI
 import UniformTypeIdentifiers
 import UIKit
 
+/// Direction of folder hierarchy change — drives slide-in/out transitions.
+enum OpenListFolderNavDirection {
+    case forward
+    case backward
+    case none
+
+    var reversed: OpenListFolderNavDirection {
+        switch self {
+        case .forward: return .backward
+        case .backward: return .forward
+        case .none: return .none
+        }
+    }
+}
+
 /// Native file browser modeled after OpenList web UX:
 /// folder → enter · file → built-in preview (player / image / text / md / html / pdf)
 /// + open external player / copy link / delete (same operation model as OpenList web).
@@ -16,16 +31,28 @@ struct OpenListFileBrowserView: View {
     @State private var items: [FileItem] = []
     @State private var canWrite = false
     @State private var state: LoadableState<Void> = .idle
+    /// In-flight folder change (enter / up / breadcrumb). Distinct from full-screen `.loading`.
+    @State private var isNavigating = false
+    @State private var folderNavDirection: OpenListFolderNavDirection = .none
+    /// Bumps on each navigate call so stale responses are ignored.
+    @State private var navigateGeneration = 0
 
     @State private var searchText = ""
     @State private var searchResults: [FileItem] = []
     @State private var isSearching = false
+    /// True while a search request is in flight (distinct from “showing search results”).
+    @State private var isSearchLoading = false
+    /// Bumps on each search so stale responses cannot overwrite newer results.
+    @State private var searchGeneration = 0
 
     @State private var isSelecting = false
     @State private var selectedIDs: Set<String> = []
+    @State private var sortMode: OpenListSortMode = .nameAsc
+    @State private var viewMode: OpenListViewMode = .list
 
     @State private var actionMessage: String?
     @State private var toastTask: Task<Void, Never>?
+    @State private var uploadProgress: (current: Int, total: Int)?
 
     /// File opened in the bottom sheet (details + play)
     @State private var activeItem: FileItem?
@@ -40,6 +67,8 @@ struct OpenListFileBrowserView: View {
     @State private var showNewFolderAlert = false
     @State private var newFolderName = ""
     @State private var showFileImporter = false
+    @State private var showOfflineDownload = false
+    @State private var offlineURLsText = ""
 
     @State private var pendingDelete: [FileItem] = []
     @State private var showDeleteConfirm = false
@@ -71,11 +100,14 @@ struct OpenListFileBrowserView: View {
         let title: String
         let isAudio: Bool
         var externalSubtitleURL: URL? = nil
+        var openlistDirectoryPath: String? = nil
     }
     @State private var builtInPlay: BuiltInPlaySession?
 
     private var breadcrumbs: [FileBreadcrumb] { OpenListPath.breadcrumbs(for: path) }
-    private var displayedItems: [FileItem] { isSearching ? searchResults : items }
+    private var displayedItems: [FileItem] {
+        sortMode.sorted(isSearching ? searchResults : items)
+    }
     private var selectedItems: [FileItem] { displayedItems.filter { selectedIDs.contains($0.id) } }
     private var serviceColor: Color { ServiceType.openlist.colors.primary }
 
@@ -102,26 +134,37 @@ struct OpenListFileBrowserView: View {
                 actionToolbar
             }
 
+            if let uploadProgress {
+                HStack(spacing: 10) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(String(format: localizer.t.filesUploadingProgress, uploadProgress.current, uploadProgress.total))
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(AppTheme.textSecondary)
+                    Spacer(minLength: 0)
+                }
+                .padding(.vertical, 4)
+            }
+
+            sortBar
+
             if isSelecting {
                 selectionBar
             }
 
-            if displayedItems.isEmpty, case .loaded = state {
-                emptyState
-            } else {
-                // Stable list identity — avoid remount/transition thrash when path changes.
-                LazyVStack(spacing: 8) {
-                    ForEach(displayedItems) { item in
-                        fileRow(item)
-                    }
-                }
-            }
+            folderListBody
+                .animation(.easeInOut(duration: 0.28), value: isNavigating)
+                .animation(.easeInOut(duration: 0.28), value: path)
+                .animation(.easeInOut(duration: 0.22), value: isSearching)
+                .animation(.easeInOut(duration: 0.22), value: isSearchLoading)
         }
         .searchable(text: $searchText, prompt: localizer.t.filesSearchPlaceholder)
         .onSubmit(of: .search) { Task { await runSearch() } }
         .onChange(of: searchText) { _, v in
             if v.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                searchGeneration += 1
                 isSearching = false
+                isSearchLoading = false
                 searchResults = []
             }
         }
@@ -215,7 +258,9 @@ struct OpenListFileBrowserView: View {
                 url: session.url,
                 title: session.title,
                 isAudio: session.isAudio,
-                externalSubtitleURL: session.externalSubtitleURL
+                externalSubtitleURL: session.externalSubtitleURL,
+                openlistInstanceId: instanceId,
+                openlistDirectoryPath: session.openlistDirectoryPath
             )
         }
         .sheet(isPresented: $showShare) {
@@ -295,10 +340,39 @@ struct OpenListFileBrowserView: View {
         ) { result in
             Task { await handleImport(result) }
         }
-        .confirmationDialog(
+        .sheet(isPresented: $showOfflineDownload) {
+            NavigationStack {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(localizer.t.filesOfflineDownloadHint)
+                        .font(.footnote)
+                        .foregroundStyle(AppTheme.textSecondary)
+                    TextEditor(text: $offlineURLsText)
+                        .font(.body.monospaced())
+                        .frame(minHeight: 160)
+                        .padding(8)
+                        .glassCard(cornerRadius: 12, tint: serviceColor.opacity(0.08))
+                    Spacer(minLength: 0)
+                }
+                .padding(16)
+                .navigationTitle(localizer.t.filesOfflineDownload)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(localizer.t.cancel) { showOfflineDownload = false }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(localizer.t.filesOfflineDownloadSubmit) {
+                            Task { await submitOfflineDownload() }
+                        }
+                    }
+                }
+            }
+            .presentationDetents([.medium, .large])
+        }
+        // Centered alert (not bottom action sheet) — clearer on notched iPhones.
+        .alert(
             localizer.t.filesDeleteConfirm,
-            isPresented: $showDeleteConfirm,
-            titleVisibility: .visible
+            isPresented: $showDeleteConfirm
         ) {
             Button(localizer.t.delete, role: .destructive) {
                 Task { await performDelete(pendingDelete) }
@@ -322,7 +396,7 @@ struct OpenListFileBrowserView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(serviceColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .glassCard(cornerRadius: 12, tint: serviceColor.opacity(0.18))
     }
 
     private var breadcrumbBar: some View {
@@ -361,46 +435,92 @@ struct OpenListFileBrowserView: View {
                 } label: {
                     Label(localizer.t.filesNewFolder, systemImage: "folder.badge.plus")
                         .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
                 .tint(serviceColor)
+                .disabled(uploadProgress != nil)
 
                 Button {
                     showFileImporter = true
                 } label: {
                     Label(localizer.t.filesUpload, systemImage: "plus.circle.fill")
                         .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
+                .tint(serviceColor)
+                .disabled(uploadProgress != nil)
+
+                Button {
+                    offlineURLsText = ""
+                    showOfflineDownload = true
+                } label: {
+                    Label(localizer.t.filesOfflineDownload, systemImage: "arrow.down.circle")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.glass)
                 .tint(serviceColor)
             }
         }
     }
 
+    private var sortBar: some View {
+        HStack {
+            Text(localizer.t.filesSortBy)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppTheme.textSecondary)
+            Picker(localizer.t.filesSortBy, selection: $sortMode) {
+                Text(localizer.t.filesSortName).tag(OpenListSortMode.nameAsc)
+                Text(localizer.t.filesSortDate).tag(OpenListSortMode.dateDesc)
+                Text(localizer.t.filesSortSize).tag(OpenListSortMode.sizeDesc)
+                Text(localizer.t.filesSortType).tag(OpenListSortMode.type)
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .tint(serviceColor)
+            .foregroundStyle(serviceColor)
+            Spacer()
+            Picker(localizer.t.filesViewList, selection: $viewMode) {
+                Image(systemName: "list.bullet").tag(OpenListViewMode.list)
+                Image(systemName: "square.grid.2x2").tag(OpenListViewMode.grid)
+            }
+            .pickerStyle(.segmented)
+            .frame(maxWidth: 120)
+            .tint(serviceColor)
+            .accessibilityLabel(viewMode == .list ? localizer.t.filesViewList : localizer.t.filesViewGrid)
+        }
+        .tint(serviceColor)
+        .padding(.vertical, 2)
+    }
+
     private var selectionBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 Text(String(format: localizer.t.filesSelectedCount, selectedIDs.count))
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppTheme.textSecondary)
                 Button(localizer.t.filesDownload) {
                     Task { await downloadItems(selectedItems) }
                 }
+                .buttonStyle(.glassProminent)
+                .tint(serviceColor)
                 .disabled(selectedItems.filter { !$0.isDirectory }.isEmpty)
                 Button(localizer.t.filesCopy) {
                     pathPickMode = .copy(selectedItems)
                 }
+                .buttonStyle(.glass)
+                .tint(serviceColor)
                 .disabled(selectedIDs.isEmpty || !canWrite)
                 Button(localizer.t.filesMove) {
                     pathPickMode = .move(selectedItems)
                 }
+                .buttonStyle(.glass)
+                .tint(serviceColor)
                 .disabled(selectedIDs.isEmpty || !canWrite)
                 Button(localizer.t.filesCopyLink) {
                     Task { await copyLinks(for: selectedItems) }
                 }
+                .buttonStyle(.glass)
+                .tint(serviceColor)
                 .disabled(selectedItems.filter { !$0.isDirectory }.isEmpty)
                 Button(role: .destructive) {
                     pendingDelete = selectedItems
@@ -408,10 +528,90 @@ struct OpenListFileBrowserView: View {
                 } label: {
                     Text(localizer.t.delete)
                 }
+                .buttonStyle(.glass)
+                .tint(AppTheme.danger)
                 .disabled(selectedIDs.isEmpty)
             }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(serviceColor)
             .padding(.vertical, 4)
         }
+    }
+
+    @ViewBuilder
+    private var folderListBody: some View {
+        ZStack {
+            if isNavigating || isSearchLoading {
+                folderLoadingPlaceholder
+                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
+            } else if displayedItems.isEmpty, case .loaded = state {
+                emptyState
+                    .id("empty-\(path)-\(isSearching)")
+                    .transition(folderContentTransition)
+            } else if !displayedItems.isEmpty {
+                Group {
+                    if viewMode == .grid {
+                        LazyVGrid(
+                            columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
+                            spacing: 10
+                        ) {
+                            ForEach(displayedItems) { item in
+                                fileGridCell(item)
+                            }
+                        }
+                    } else {
+                        LazyVStack(spacing: 6) {
+                            ForEach(displayedItems) { item in
+                                fileRow(item)
+                            }
+                        }
+                    }
+                }
+                .id("list-\(path)-\(isSearching)-\(viewMode.rawValue)")
+                .transition(folderContentTransition)
+            }
+        }
+        // Reserve space so the layout does not jump when swapping placeholder ↔ list.
+        .frame(maxWidth: .infinity, minHeight: 180, alignment: .top)
+    }
+
+    private var folderContentTransition: AnyTransition {
+        switch folderNavDirection {
+        case .forward:
+            return .asymmetric(
+                insertion: .move(edge: .trailing).combined(with: .opacity),
+                removal: .move(edge: .leading).combined(with: .opacity)
+            )
+        case .backward:
+            return .asymmetric(
+                insertion: .move(edge: .leading).combined(with: .opacity),
+                removal: .move(edge: .trailing).combined(with: .opacity)
+            )
+        case .none:
+            return .opacity
+        }
+    }
+
+    private var folderLoadingPlaceholder: some View {
+        let label = isSearchLoading ? localizer.t.filesSearching : localizer.t.loading
+        return VStack(spacing: 10) {
+            HStack(spacing: 10) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(label)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(AppTheme.textSecondary)
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 4)
+
+            ForEach(0..<6, id: \.self) { _ in
+                SkeletonRow()
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .top)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label)
     }
 
     private var emptyState: some View {
@@ -427,9 +627,9 @@ struct OpenListFileBrowserView: View {
                     newFolderName = ""
                     showNewFolderAlert = true
                 } label: {
-                    Text(localizer.t.filesNewFolder)
+                    Label(localizer.t.filesNewFolder, systemImage: "folder.badge.plus")
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
                 .tint(serviceColor)
             }
         }
@@ -438,6 +638,61 @@ struct OpenListFileBrowserView: View {
     }
 
     // MARK: - Rows
+
+    @ViewBuilder
+    private func fileGridCell(_ item: FileItem) -> some View {
+        let selected = selectedIDs.contains(item.id)
+        Button {
+            Task { await handleTap(item) }
+        } label: {
+            VStack(spacing: 6) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(item.isDirectory ? serviceColor.opacity(0.14) : ServiceType.openlist.colors.bg)
+                        .frame(height: 88)
+                    if let thumb = item.thumbnailURL, !item.isDirectory {
+                        OpenListCachedThumbnail(url: thumb, systemImageName: item.systemImageName)
+                            .frame(height: 88)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    } else {
+                        Image(systemName: item.isDirectory ? "folder.fill" : item.systemImageName)
+                            .font(.title2)
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(serviceColor)
+                    }
+                    if isSelecting {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                                    .font(.body.weight(.semibold))
+                                    .foregroundStyle(selected ? serviceColor : .white.opacity(0.9))
+                                    .padding(6)
+                            }
+                            Spacer()
+                        }
+                    }
+                }
+                Text(item.name)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, minHeight: 28, alignment: .top)
+            }
+            .padding(8)
+            .frame(maxWidth: .infinity)
+            .glassCard(cornerRadius: 12, tint: selected ? serviceColor.opacity(0.16) : nil)
+            .overlay {
+                if selected {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(serviceColor.opacity(0.45), lineWidth: 1.5)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .contextMenu { fileContextMenu(item) }
+    }
 
     @ViewBuilder
     private func fileRow(_ item: FileItem) -> some View {
@@ -449,76 +704,78 @@ struct OpenListFileBrowserView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .contextMenu {
-            if item.isDirectory {
-                Button { Task { await navigate(to: item.path) } } label: {
-                    Label(localizer.t.filesOpen, systemImage: "folder")
-                }
-            } else {
-                Button { Task { await openFileSheet(item) } } label: {
-                    Label(localizer.t.filesPreview, systemImage: "eye")
-                }
-                if item.isVideoOrAudio {
-                    Button {
-                        Task { await openBuiltInPlayer(item) }
-                    } label: {
-                        Label(localizer.t.filesPlay, systemImage: "play.fill")
-                    }
-                    Button {
-                        playerPickerItem = item
-                        showPlayerPicker = true
-                    } label: {
-                        Label(localizer.t.filesOpenExternal, systemImage: "arrow.up.forward.app")
-                    }
-                }
-                Button { Task { await downloadItems([item]) } } label: {
-                    Label(localizer.t.filesDownload, systemImage: "arrow.down.circle")
-                }
-                Button { Task { await copyLink(for: item) } } label: {
-                    Label(localizer.t.filesCopyLink, systemImage: "link")
-                }
-                if item.isArchive, canWrite {
-                    Button {
-                        pathPickMode = .extract(item)
-                    } label: {
-                        Label(localizer.t.filesExtract, systemImage: "doc.zipper")
-                    }
-                }
-            }
-            // Rename always offered; server enforces write permission.
-            Button {
-                renameItem = item
-                renameText = item.name
-                showRenameAlert = true
-            } label: {
-                Label(localizer.t.filesRename, systemImage: "pencil")
-            }
-            if canWrite {
-                Button { pathPickMode = .copy([item]) } label: {
-                    Label(localizer.t.filesCopy, systemImage: "doc.on.doc")
-                }
-                Button { pathPickMode = .move([item]) } label: {
-                    Label(localizer.t.filesMove, systemImage: "folder")
-                }
-            }
-            Button { toggleSelect(item) } label: {
-                Label(
-                    selected ? localizer.t.filesDeselect : localizer.t.filesSelect,
-                    systemImage: selected ? "checkmark.circle.fill" : "checkmark.circle"
-                )
-            }
-            Divider()
-            Button(role: .destructive) {
-                pendingDelete = [item]
-                showDeleteConfirm = true
-            } label: {
-                Label(localizer.t.delete, systemImage: "trash")
-            }
-        }
+        .contextMenu { fileContextMenu(item) }
         .onLongPressGesture(minimumDuration: 0.45) {
-            HapticManager.medium()
             if !isSelecting { isSelecting = true }
             toggleSelect(item)
+        }
+    }
+
+    @ViewBuilder
+    private func fileContextMenu(_ item: FileItem) -> some View {
+        let selected = selectedIDs.contains(item.id)
+        if item.isDirectory {
+            Button { Task { await navigate(to: item.path) } } label: {
+                Label(localizer.t.filesOpen, systemImage: "folder")
+            }
+        } else {
+            Button { Task { await openFileSheet(item) } } label: {
+                Label(localizer.t.filesPreview, systemImage: "eye")
+            }
+            if item.isVideoOrAudio {
+                Button {
+                    Task { await openBuiltInPlayer(item) }
+                } label: {
+                    Label(localizer.t.filesPlay, systemImage: "play.fill")
+                }
+                Button {
+                    playerPickerItem = item
+                    showPlayerPicker = true
+                } label: {
+                    Label(localizer.t.filesOpenExternal, systemImage: "arrow.up.forward.app")
+                }
+            }
+            Button { Task { await downloadItems([item]) } } label: {
+                Label(localizer.t.filesDownload, systemImage: "arrow.down.circle")
+            }
+            Button { Task { await copyLink(for: item) } } label: {
+                Label(localizer.t.filesCopyLink, systemImage: "link")
+            }
+            if item.isArchive, canWrite {
+                Button {
+                    pathPickMode = .extract(item)
+                } label: {
+                    Label(localizer.t.filesExtract, systemImage: "doc.zipper")
+                }
+            }
+        }
+        Button {
+            renameItem = item
+            renameText = item.name
+            showRenameAlert = true
+        } label: {
+            Label(localizer.t.filesRename, systemImage: "pencil")
+        }
+        if canWrite {
+            Button { pathPickMode = .copy([item]) } label: {
+                Label(localizer.t.filesCopy, systemImage: "doc.on.doc")
+            }
+            Button { pathPickMode = .move([item]) } label: {
+                Label(localizer.t.filesMove, systemImage: "folder")
+            }
+        }
+        Button { toggleSelect(item) } label: {
+            Label(
+                selected ? localizer.t.filesDeselect : localizer.t.filesSelect,
+                systemImage: selected ? "checkmark.circle.fill" : "checkmark.circle"
+            )
+        }
+        Divider()
+        Button(role: .destructive) {
+            pendingDelete = [item]
+            showDeleteConfirm = true
+        } label: {
+            Label(localizer.t.delete, systemImage: "trash")
         }
     }
 
@@ -529,6 +786,7 @@ struct OpenListFileBrowserView: View {
     private func handleEdgeSwipeBack() async {
         if isSearching {
             isSearching = false
+            isSearchLoading = false
             searchText = ""
             searchResults = []
             return
@@ -649,14 +907,47 @@ struct OpenListFileBrowserView: View {
     }
 
     @MainActor
+    private func submitOfflineDownload() async {
+        let lines = offlineURLsText
+            .split(whereSeparator: \.isNewline)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .filter { line in
+                let l = line.lowercased()
+                return l.hasPrefix("http://") || l.hasPrefix("https://") || l.hasPrefix("magnet:")
+            }
+        guard !lines.isEmpty else {
+            showToast(localizer.t.filesOfflineDownloadInvalid)
+            return
+        }
+        guard let client else {
+            showToast(APIError.notConfigured.localizedDescription)
+            return
+        }
+        do {
+            try await client.addOfflineDownload(urls: lines, toDirectory: path)
+            showOfflineDownload = false
+            offlineURLsText = ""
+            showToast(localizer.t.filesOfflineDownloadStarted)
+        } catch {
+            showToast((error as? APIError)?.localizedDescription ?? error.localizedDescription)
+        }
+    }
+
+    @MainActor
     private func handleImport(_ result: Result<[URL], Error>) async {
         guard let client else { return }
         switch result {
         case .failure(let error):
             showToast(error.localizedDescription)
         case .success(let urls):
+            guard !urls.isEmpty else { return }
             var okCount = 0
-            for url in urls {
+            var failCount = 0
+            uploadProgress = (0, urls.count)
+            defer { uploadProgress = nil }
+            for (index, url) in urls.enumerated() {
+                uploadProgress = (index + 1, urls.count)
                 let accessing = url.startAccessingSecurityScopedResource()
                 defer { if accessing { url.stopAccessingSecurityScopedResource() } }
                 do {
@@ -665,12 +956,21 @@ struct OpenListFileBrowserView: View {
                     try await client.upload(fileName: name, data: data, toDirectory: path)
                     okCount += 1
                 } catch {
-                    showToast((error as? APIError)?.localizedDescription ?? error.localizedDescription)
+                    failCount += 1
+                    if urls.count == 1 {
+                        showToast((error as? APIError)?.localizedDescription ?? error.localizedDescription)
+                    }
                 }
             }
             if okCount > 0 {
-                showToast(String(format: localizer.t.filesUploadedCount, okCount))
+                var msg = String(format: localizer.t.filesUploadedCount, okCount)
+                if failCount > 0 {
+                    msg += " · " + String(format: localizer.t.filesUploadFailedCount, failCount)
+                }
+                showToast(msg)
                 await reload(silent: true)
+            } else if failCount > 0, urls.count > 1 {
+                showToast(String(format: localizer.t.filesUploadFailedCount, failCount))
             }
         }
     }
@@ -704,6 +1004,15 @@ struct OpenListFileBrowserView: View {
             if !silent { state = .error(.notConfigured) }
             return
         }
+        // Avoid clobbering an in-flight folder change with a stale list response.
+        if isNavigating { return }
+
+        let pathAtStart = path
+        let hadContent: Bool = {
+            if case .loaded = state { return true }
+            return !items.isEmpty
+        }()
+
         // Keep chrome + previous list when already loaded (no skeleton flash on refresh).
         if !silent, case .loaded = state {
             // soft refresh
@@ -711,63 +1020,142 @@ struct OpenListFileBrowserView: View {
             state = .loading
         }
         do {
-            let result = try await client.list(path: path)
+            let result = try await client.list(path: pathAtStart)
+            guard pathAtStart == path, !isNavigating else { return }
             items = result.items
             canWrite = result.writable
             state = .loaded(())
         } catch let error as APIError {
-            if !silent { state = .error(error) }
+            guard pathAtStart == path, !isNavigating else { return }
+            // Prefer toast over full-page error so an already-browsable tree stays usable.
+            if hadContent {
+                if !silent {
+                    showToast(error.localizedDescription)
+                    state = .loaded(())
+                }
+            } else if !silent {
+                state = .error(error)
+            }
         } catch {
-            if !silent { state = .error(.networkError(error)) }
+            guard pathAtStart == path, !isNavigating else { return }
+            if hadContent {
+                if !silent {
+                    showToast(error.localizedDescription)
+                    state = .loaded(())
+                }
+            } else if !silent {
+                state = .error(.networkError(error))
+            }
         }
     }
 
-    /// Folder change without skeleton flash or list remount animations.
+    /// Enter / leave a folder with loading placeholder + directional slide transition.
     @MainActor
     private func navigate(to newPath: String) async {
         let normalized = OpenListPath.normalize(newPath)
         let from = path
-        if normalized == from, !isSearching { return }
+        let previousItems = items
+        let previousWritable = canWrite
+        if normalized == from, !isSearching, !isNavigating { return }
 
+        let fromDepth = Self.pathDepth(from)
+        let toDepth = Self.pathDepth(normalized)
+        if toDepth > fromDepth {
+            folderNavDirection = .forward
+        } else if toDepth < fromDepth {
+            folderNavDirection = .backward
+        } else {
+            folderNavDirection = .none
+        }
+
+        navigateGeneration += 1
+        let generation = navigateGeneration
+
+        searchGeneration += 1
         isSearching = false
+        isSearchLoading = false
         searchText = ""
         searchResults = []
         isSelecting = false
         selectedIDs.removeAll()
-        // Update path immediately so title/breadcrumb stay in sync; keep previous rows until fetch returns.
-        path = normalized
+
+        // Path + title update immediately; clear stale rows and show loading animation.
+        withAnimation(.easeInOut(duration: 0.22)) {
+            path = normalized
+            items = []
+            isNavigating = true
+        }
 
         guard let client else {
+            isNavigating = false
             state = .error(.notConfigured)
             return
         }
         do {
             let result = try await client.list(path: normalized)
-            // Direct assignment (no withAnimation / id remount) — avoids layout flicker.
-            items = result.items
-            canWrite = result.writable
+            guard generation == navigateGeneration else { return }
+            withAnimation(.easeInOut(duration: 0.3)) {
+                items = result.items
+                canWrite = result.writable
+                isNavigating = false
+            }
             state = .loaded(())
         } catch let error as APIError {
-            path = from
-            state = .error(error)
+            guard generation == navigateGeneration else { return }
+            withAnimation(.easeInOut(duration: 0.25)) {
+                path = from
+                items = previousItems
+                canWrite = previousWritable
+                isNavigating = false
+                folderNavDirection = folderNavDirection.reversed
+            }
+            // Toast only — never flip ServiceDashboardLayout to full-page error mid-browse.
+            state = .loaded(())
+            showToast(error.localizedDescription)
         } catch {
-            path = from
-            state = .error(.networkError(error))
+            guard generation == navigateGeneration else { return }
+            withAnimation(.easeInOut(duration: 0.25)) {
+                path = from
+                items = previousItems
+                canWrite = previousWritable
+                isNavigating = false
+                folderNavDirection = folderNavDirection.reversed
+            }
+            state = .loaded(())
+            showToast(error.localizedDescription)
         }
+    }
+
+    private static func pathDepth(_ path: String) -> Int {
+        let n = OpenListPath.normalize(path)
+        if n == "/" { return 0 }
+        return n.split(separator: "/").filter { !$0.isEmpty }.count
     }
 
     @MainActor
     private func runSearch() async {
         let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty, let client else { return }
+        searchGeneration += 1
+        let generation = searchGeneration
         isSearching = true
+        isSearchLoading = true
+        searchResults = []
+        defer {
+            if generation == searchGeneration {
+                isSearchLoading = false
+            }
+        }
         do {
-            searchResults = try await client.search(keyword: q, path: path)
-            state = .loaded(())
-        } catch let error as APIError {
-            state = .error(error)
+            let found = try await client.search(keyword: q, path: path)
+            guard generation == searchGeneration else { return }
+            searchResults = found
+            if case .error = state { state = .loaded(()) }
         } catch {
-            state = .error(.networkError(error))
+            guard generation == searchGeneration else { return }
+            // Keep the browser on screen; surface the failure as a toast.
+            if case .error = state { state = .loaded(()) }
+            showToast((error as? APIError)?.localizedDescription ?? error.localizedDescription)
         }
     }
 
@@ -861,6 +1249,7 @@ struct OpenListFileBrowserView: View {
 
     @MainActor
     private func openBuiltInPlayer(_ item: FileItem) async {
+        // VLCKit handles MKV/AVI/etc. — no longer bounce users to external apps for those.
         do {
             let detail = try await ensureDetail(for: item)
             // Prefer OpenList /d stream for media (sign-auth). contentURL (/p) as fallback.
@@ -880,7 +1269,8 @@ struct OpenListFileBrowserView: View {
                 url: url,
                 title: item.name,
                 isAudio: item.previewKind == .audio,
-                externalSubtitleURL: subtitleURL
+                externalSubtitleURL: subtitleURL,
+                openlistDirectoryPath: item.parentDirectory
             )
             // Dismiss preview sheet first — fullScreenCover over sheet often blanks / fails.
             activeItem = nil
@@ -898,19 +1288,23 @@ struct OpenListFileBrowserView: View {
         let stem = (item.name as NSString).deletingPathExtension
         let parent = item.parentDirectory
         guard let listing = try? await client.list(path: parent) else { return nil }
+        let subtitleExts: Set<String> = ["srt", "vtt", "ass", "ssa", "sub"]
         let candidates = listing.items.filter { sub in
             guard !sub.isDirectory else { return false }
             let ext = sub.fileExtension
-            guard ext == "srt" || ext == "vtt" else { return false }
+            guard subtitleExts.contains(ext) else { return false }
             let subStem = (sub.name as NSString).deletingPathExtension
             return subStem == stem || sub.name.hasPrefix(stem)
         }
-        // Prefer exact stem match, then any prefix match; srt before vtt
+        // Prefer exact stem match, then any prefix match; srt/ass before vtt
+        let preferredOrder = ["srt", "ass", "ssa", "vtt", "sub"]
         let sorted = candidates.sorted { a, b in
             let aExact = (a.name as NSString).deletingPathExtension == stem
             let bExact = (b.name as NSString).deletingPathExtension == stem
             if aExact != bExact { return aExact && !bExact }
-            if a.fileExtension != b.fileExtension { return a.fileExtension == "srt" }
+            let aRank = preferredOrder.firstIndex(of: a.fileExtension) ?? 99
+            let bRank = preferredOrder.firstIndex(of: b.fileExtension) ?? 99
+            if aRank != bRank { return aRank < bRank }
             return a.name < b.name
         }
         guard let best = sorted.first else { return nil }
@@ -1049,6 +1443,115 @@ private struct OpenListHierarchicalBackChrome: UIViewControllerRepresentable {
     }
 }
 
+// MARK: - Sort
+
+enum OpenListViewMode: String, CaseIterable, Identifiable {
+    case list
+    case grid
+    var id: String { rawValue }
+}
+
+enum OpenListSortMode: String, CaseIterable, Identifiable {
+    case nameAsc
+    case dateDesc
+    case sizeDesc
+    case type
+
+    var id: String { rawValue }
+
+    func sorted(_ items: [FileItem]) -> [FileItem] {
+        // Folders first for name/type; date/size keep natural mix but folders still lead for type.
+        switch self {
+        case .nameAsc:
+            return items.sorted { a, b in
+                if a.isDirectory != b.isDirectory { return a.isDirectory && !b.isDirectory }
+                return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+            }
+        case .dateDesc:
+            return items.sorted { a, b in
+                let ad = a.modifiedAt ?? .distantPast
+                let bd = b.modifiedAt ?? .distantPast
+                if ad != bd { return ad > bd }
+                return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+            }
+        case .sizeDesc:
+            return items.sorted { a, b in
+                if a.isDirectory != b.isDirectory { return a.isDirectory && !b.isDirectory }
+                if a.size != b.size { return a.size > b.size }
+                return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+            }
+        case .type:
+            return items.sorted { a, b in
+                if a.isDirectory != b.isDirectory { return a.isDirectory && !b.isDirectory }
+                let ae = a.fileExtension
+                let be = b.fileExtension
+                if ae != be { return ae.localizedCaseInsensitiveCompare(be) == .orderedAscending }
+                return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+            }
+        }
+    }
+}
+
+// MARK: - Thumbnail cache
+
+enum OpenListThumbnailCache {
+    // NSCache is thread-safe; mark unsafe for Swift 6 static isolation.
+    nonisolated(unsafe) private static let cache = NSCache<NSURL, UIImage>()
+
+    static func image(for url: URL) -> UIImage? {
+        cache.object(forKey: url as NSURL)
+    }
+
+    static func store(_ image: UIImage, for url: URL) {
+        cache.setObject(image, forKey: url as NSURL)
+    }
+}
+
+// MARK: - Cached thumbnail
+
+private struct OpenListCachedThumbnail: View {
+    let url: URL
+    let systemImageName: String
+
+    @State private var image: UIImage?
+    @State private var failed = false
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else if failed {
+                Image(systemName: systemImageName)
+                    .font(.title3)
+                    .foregroundStyle(ServiceType.openlist.colors.primary)
+            } else {
+                ProgressView()
+                    .controlSize(.small)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .task(id: url) {
+            if let cached = OpenListThumbnailCache.image(for: url) {
+                image = cached
+                return
+            }
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                if let ui = UIImage(data: data) {
+                    OpenListThumbnailCache.store(ui, for: url)
+                    image = ui
+                } else {
+                    failed = true
+                }
+            } catch {
+                failed = true
+            }
+        }
+    }
+}
+
 // MARK: - Share sheet
 
 private struct OpenListShareSheet: UIViewControllerRepresentable {
@@ -1068,100 +1571,89 @@ struct FileRowView: View {
     var isSelecting: Bool = false
     var isSelected: Bool = false
 
+    @Environment(Localizer.self) private var localizer
+    private var accent: Color { ServiceType.openlist.colors.primary }
+
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 12) {
             if isSelecting {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundStyle(isSelected ? ServiceType.openlist.colors.primary : AppTheme.textSecondary)
-                    .frame(width: 28, height: 28)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(isSelected ? accent : AppTheme.textSecondary)
+                    .frame(width: 22, height: 22)
             }
 
             ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(ServiceType.openlist.colors.bg)
-                    .frame(width: 52, height: 52)
-                if let thumb = item.thumbnailURL {
-                    AsyncImage(url: thumb) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image.resizable().scaledToFill()
-                        default:
-                            Image(systemName: item.systemImageName)
-                                .font(.title3)
-                                .foregroundStyle(ServiceType.openlist.colors.primary)
-                        }
-                    }
-                    .frame(width: 52, height: 52)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(item.isDirectory ? accent.opacity(0.14) : ServiceType.openlist.colors.bg)
+                    .frame(width: 40, height: 40)
+                if let thumb = item.thumbnailURL, !item.isDirectory {
+                    OpenListCachedThumbnail(url: thumb, systemImageName: item.systemImageName)
+                        .frame(width: 40, height: 40)
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 } else {
-                    Image(systemName: item.systemImageName)
-                        .font(.title3)
-                        .foregroundStyle(ServiceType.openlist.colors.primary)
+                    Image(systemName: item.isDirectory ? "folder.fill" : item.systemImageName)
+                        .font(.body.weight(.semibold))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(accent)
                 }
             }
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(item.name)
-                    .font(.body.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                HStack(spacing: 10) {
-                    if item.isDirectory {
-                        Text("Folder")
-                            .font(.caption)
-                            .foregroundStyle(AppTheme.textSecondary)
-                    } else {
-                        Text(ByteCountFormatter.string(fromByteCount: item.size, countStyle: .file))
-                            .font(.caption)
-                            .foregroundStyle(AppTheme.textSecondary)
-                        Text(item.previewKind.shortLabel)
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(ServiceType.openlist.colors.primary.opacity(0.85))
-                    }
-                    if let modified = item.modifiedAt {
-                        Text(modified, style: .relative)
-                            .font(.caption)
-                            .foregroundStyle(AppTheme.textSecondary)
-                    }
-                }
+                    .lineLimit(1)
+                Text(subtitleLine)
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textMuted)
+                    .lineLimit(1)
             }
-            Spacer(minLength: 0)
+            Spacer(minLength: 4)
+
             if !isSelecting {
-                if item.isDirectory {
-                    Image(systemName: "chevron.right")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .frame(minWidth: 28, minHeight: 44)
-                } else {
-                    Image(systemName: trailingGlyph(for: item))
-                        .font(.title3)
-                        .foregroundStyle(ServiceType.openlist.colors.primary.opacity(0.9))
-                        .frame(minWidth: 36, minHeight: 44)
-                }
+                Image(systemName: item.isDirectory ? "chevron.right" : trailingGlyph(for: item))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(item.isDirectory ? AppTheme.textMuted : accent.opacity(0.85))
+                    .frame(width: 20)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .frame(minHeight: 72)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(isSelected ? ServiceType.openlist.colors.bg : Color(uiColor: .secondarySystemGroupedBackground))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(minHeight: 56)
+        .contentShape(Rectangle())
+        .glassCard(
+            cornerRadius: 12,
+            tint: isSelected ? accent.opacity(0.16) : nil
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(isSelected ? ServiceType.openlist.colors.primary.opacity(0.35) : .clear, lineWidth: 1.5)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(isSelected ? accent.opacity(0.35) : Color.clear, lineWidth: 1)
         )
+    }
+
+    private var subtitleLine: String {
+        var parts: [String] = []
+        if item.isDirectory {
+            parts.append(localizer.t.filesFolderKind)
+        } else {
+            parts.append(ByteCountFormatter.string(fromByteCount: item.size, countStyle: .file))
+            let kind = item.previewKind.shortLabel
+            if kind != "File" { parts.append(kind) }
+        }
+        if let modified = item.modifiedAt {
+            parts.append(modified.formatted(.relative(presentation: .named)))
+        }
+        return parts.joined(separator: " · ")
     }
 
     private func trailingGlyph(for item: FileItem) -> String {
         switch item.previewKind {
-        case .video, .audio: return "play.circle.fill"
-        case .image: return "photo.circle"
-        case .markdown, .text, .html: return "eye.circle"
-        case .pdf: return "doc.circle"
-        case .download, .none: return "ellipsis.circle"
+        case .video, .audio: return "play.fill"
+        case .image: return "photo"
+        case .markdown, .text, .html: return "doc.text"
+        case .pdf: return "doc.richtext"
+        case .download, .none: return "ellipsis"
         }
     }
 }

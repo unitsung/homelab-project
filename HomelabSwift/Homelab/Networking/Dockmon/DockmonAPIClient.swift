@@ -26,10 +26,7 @@ actor DockmonAPIClient {
     func ping() async -> Bool {
         guard !baseURL.isEmpty else { return false }
         let headers = authHeaders(apiKey: apiKey)
-        let primary = await engine.pingURL("\(baseURL)/api/hosts", extraHeaders: headers)
-        if primary { return true }
-        guard !fallbackURL.isEmpty else { return false }
-        return await engine.pingURL("\(fallbackURL)/api/hosts", extraHeaders: headers)
+        return await engine.pingWithAccessMode(baseURL: baseURL, fallbackURL: fallbackURL, path: "/api/hosts", extraHeaders: headers)
     }
 
     func authenticate(url: String, apiKey: String, fallbackUrl: String? = nil) async throws {

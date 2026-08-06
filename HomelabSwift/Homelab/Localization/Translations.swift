@@ -41,6 +41,30 @@ struct Translations {
     let homeDiskTemperature: String
     let homeDiskUsage: String
     let homeDockerLabel: String
+    let homeHeroCard: String
+    let homeReorderCardsHint: String
+    let homeReorderServicesHint: String
+    let csPluginTriggeredDefault: String
+    let csPluginFailedDefault: String
+    let csPluginFailedDetail: String
+    let filesFolderKind: String
+    let filesPlayerUnsupportedFormatHint: String
+    let filesPlayerOpenExternalFailed: String
+    let filesPlayerCannotPlayExt: String
+    let filesPlayerCannotPlayExtDetail: String
+    let filesPlayerCannotPlayExtFormat: String
+    let filesPlayerSubtitleOff: String
+    let filesPlayerSubtitleEmbedded: String
+    let filesPlayerSubtitleExternal: String
+    let filesPlayerSubtitleImport: String
+    let filesPlayerAudioDefault: String
+    let filesPlayerAudio: String
+    let filesPlayerSpeed: String
+    let filesPlayerPortrait: String
+    let filesPlayerLandscape: String
+    let filesSearching: String
+    let homeResetLayout: String
+    let homeHiddenBadge: String
     let homeNoSensorData: String
     let overviewEmptyTitle: String
     let overviewEmptyMessage: String
@@ -1188,6 +1212,37 @@ struct Translations {
     let tailscaleConnected: String
     let tailscaleNotConnected: String
 
+    // Network access mode (LAN vs remote / Tailscale)
+    let networkAccessMode: String
+    let networkAccessLocal: String
+    let networkAccessRemote: String
+
+    // Bulk host replace (settings)
+    let settingsBulkHost: String
+    let settingsBulkHostDesc: String
+    let settingsBulkHostHint: String
+    let settingsBulkHostPlaceholder: String
+    let settingsBulkHostNormalized: String
+    let settingsBulkHostInvalid: String
+    let settingsBulkHostScope: String
+    let settingsBulkHostPrimary: String
+    let settingsBulkHostFallback: String
+    let settingsBulkHostBoth: String
+    let settingsBulkHostPreview: String
+    let settingsBulkHostPreviewEmpty: String
+    let settingsBulkHostNoChanges: String
+    let settingsBulkHostApply: String
+    let settingsBulkHostApplying: String
+    let settingsBulkHostConfirmTitle: String
+    let settingsBulkHostConfirmBody: String
+    let settingsBulkHostApplied: String
+
+    // Player external subtitles
+    let filesPlayerSubtitleFromOpenList: String
+    let filesPlayerSubtitleFromFiles: String
+    let filesPlayerSubtitleLoadFailed: String
+    let filesPlayerSubtitlePickTitle: String
+
     // Bookmarks v2
     let categoryColor: String
     let bookmarkFavicon: String
@@ -1695,6 +1750,8 @@ struct Translations {
     let serviceCalagopusDesc: String
     let loginHintCalagopus: String
     let serviceOpenListDesc: String
+    let serviceCloudSaverDesc: String
+    let loginHintCloudSaver: String
     let loginHintOpenList: String
     let loginHintArcane: String
     let loginOpenListTokenOptional: String
@@ -1880,6 +1937,246 @@ struct Translations {
     let arcanePruningVolumes: String
     let arcaneRunningSystemPrune: String
     let arcaneActionOkFormat: String
+    let arcaneUpdateBadge: String
+    let arcaneKill: String
+    let arcaneUnpause: String
+    let arcaneRedeploy: String
+    let arcaneForceRemove: String
+    let arcaneStartedAt: String
+    let arcaneHealthLabel: String
+    let arcaneAutoUpdate: String
+    let arcaneAutoUpdateHint: String
+    let arcaneTabInfo: String
+    let arcaneTabLogs: String
+    let arcaneTabExec: String
+    let arcaneTabEnv: String
+    let arcaneClear: String
+    let arcaneSend: String
+    let arcaneBatchResultFormat: String
+    let arcaneBatchAllOkFormat: String
+    let arcaneContainersTitle: String
+    let filesSortBy: String
+    let filesSortName: String
+    let filesSortDate: String
+    let filesSortSize: String
+    let filesSortType: String
+    let filesUploadingProgress: String
+    let filesUploadFailedCount: String
+    let qbEmptyNoTorrents: String
+    let qbEmptyFilterNoMatch: String
+    let qbConnectionConnected: String
+    let qbConnectionDisconnected: String
+    let qbConnectionFirewalled: String
+    let qbSelect: String
+    let qbSelectedCount: String
+    let qbPauseSelected: String
+    let qbResumeSelected: String
+    let qbDeleteSelected: String
+    let qbCategoryAll: String
+    let qbCategoryNone: String
+    let qbBatchResultFormat: String
+    let homeQbitDownloadSpeed: String
+    let homeQbitUploadSpeed: String
+    let qbAddTorrentFile: String
+    let qbTorrentDetail: String
+    let qbFiles: String
+    let qbNoFiles: String
+    let qbPriority: String
+    let arcaneLogFilter: String
+    let arcaneLogExport: String
+    let arcaneLogEmpty: String
+    let arcaneLogLoading: String
+    let arcaneLogPaused: String
+    let arcaneLogAutoScrollOn: String
+    let arcaneLogTimeoutHint: String
+    let arcaneLogFailedFormat: String
+    let arcaneProgressPullHint: String
+    let arcaneProgressWithErrors: String
+    let arcaneProgressComplete: String
+    let arcaneInfoImage: String
+    let arcaneInfoCreated: String
+    let arcaneInfoCmd: String
+    let arcaneInfoWorkdir: String
+    let arcaneInfoPorts: String
+    let arcaneInfoCompose: String
+    let arcaneTerminalFullscreen: String
+    let arcaneTerminalConnected: String
+    let arcaneTerminalDisconnected: String
+    let arcaneTerminalConnect: String
+    let arcaneTerminalDisconnect: String
+    let arcaneTerminalPlaceholder: String
+    let arcaneTerminalInteractiveHint: String
+    let filesViewList: String
+    let filesViewGrid: String
+    let arcaneImagesTitle: String
+    let arcaneImagesAll: String
+    let arcaneImagesWithUpdates: String
+    let arcaneImageInUse: String
+    let arcaneImageUnused: String
+    let arcaneImageNoData: String
+    let arcaneStatsTitle: String
+    let arcaneStatsUnavailable: String
+    let arcaneStatsCPU: String
+    let arcaneStatsMemory: String
+    let qbTrackers: String
+    let qbNoTrackers: String
+    let qbDownloadLimit: String
+    let qbUploadLimit: String
+    let qbLimitUnlimited: String
+    let qbApplyLimits: String
+    let qbLimitsSaved: String
+    let filesOfflineDownload: String
+    let filesOfflineDownloadHint: String
+    let filesOfflineDownloadSubmit: String
+    let filesOfflineDownloadStarted: String
+    let filesOfflineDownloadInvalid: String
+    let filesPlayerPiP: String
+
+    // Home extras + CloudSaver
+    let homeNoServices: String
+    let homeAddService: String
+    let homeAdd: String
+    let homeAllServicesConfigured: String
+    let homeSelectServiceToAdd: String
+    let homeDockerTotal: String
+    let homeDockerRunning: String
+    let homeDockerImages: String
+    let homeQbitTorrents: String
+    let homeQbitDownloading: String
+    let homeQbitSeeding: String
+    let homeQbitPaused: String
+    let homeQbitNoActive: String
+    let csTabDouban: String
+    let csTabSearch: String
+    let csDoubanSectionTitle: String
+    let csDoubanHint: String
+    let csSort: String
+    let csLoadingCharts: String
+    let csNoCharts: String
+    let csNoChartsHint: String
+    let csSearchPlaceholder: String
+    let csSource: String
+    let csSourceAll: String
+    let csSourceQuark: String
+    let csSortDefault: String
+    let csSortRating: String
+    let csSortYear: String
+    let csSearching: String
+    let csSearchingHint: String
+    let csSearchEmptyTitle: String
+    let csSearchEmptyHint: String
+    let csDetails: String
+    let csWantToWatch: String
+    let csAlreadyWanted: String
+    let csLoadMore: String
+    let csServiceNotReady: String
+    let csChartsEmpty: String
+    let csNoResults: String
+    let csOpenLibrary: String
+    let csTransferringTo: String
+    let csTransferredTo: String
+    let csNeed115DefaultFolder: String
+    let csLinkInvalid: String
+    let csLinkValid: String
+    let csChecking: String
+    let csNoShareCode: String
+    let csNoFiles: String
+    let csHealthUnknown: String
+    let csHealthValidFiles: String
+    let csHealthInvalid: String
+    let csChipMovieHot: String
+    let csChipMovieNew: String
+    let csChipMovieCold: String
+    let csChipTvHot: String
+    let csChipTvCn: String
+    let csChipTvEu: String
+    let csChipTvKr: String
+    let csChipTvJp: String
+    let csChipTvAnime: String
+    let csChipTvShow: String
+    let csChipTvDoc: String
+    let csRepExcellent: String
+    let csRepHighlyRated: String
+    let csRepWorthWatching: String
+    let csRepAverage: String
+    let csRepPoor: String
+    let csHonorNew: String
+    let csHonorStrong: String
+    let csHonorRecommend: String
+    let csHonorOk: String
+    let csHonorCaution: String
+    let csSettingsTitle: String
+    let csDefaultFolders: String
+    let csDefaultFolder115: String
+    let csDefaultFolderQuark: String
+    let csDefaultFoldersFooter: String
+    let csPlaybackIngest: String
+    let csLibraryURL: String
+    let csIngestHint: String
+    let csPluginId: String
+    let csPostSaveLitePan: String
+    let csPostSaveLitePanFooter: String
+    let csWantWatchNote: String
+    let csNotSetPickFolder: String
+    let csCidLabel: String
+    let csPickFromDrive: String
+    let csBrowseCloudFolders: String
+    let csConnectingService: String
+    let csLoadingFolders: String
+    let csNoSubfoldersStillOk: String
+    let csNoSubfolders: String
+    let csSelected: String
+    let csSelectDefaultFolder: String
+    let csSetAsDefault: String
+    let csRootFolder: String
+    let csServiceNotReadyLogin: String
+    let csDetailTitle: String
+    let csSourceColon: String
+    let csPubDate: String
+    let csChannel: String
+    let csAggregatedCount: String
+    let csDefaultSave: String
+    let csShareLink: String
+    let csLinkCopied: String
+    let csCopyLink: String
+    let csOpenInBrowser: String
+    let csShareCode: String
+    let csReceiveCode: String
+    let csCheckingLink: String
+    let csLinkValidFiles: String
+    let csLinkInvalidDetail: String
+    let csShareFiles: String
+    let csShareFilesMore: String
+    let csWantDefaultFolder: String
+    let csSaved: String
+    let csPickFolderAndSave: String
+    let csPickSaveFolder: String
+    let csPickFolderHint: String
+    let csUseDefault: String
+    let csCurrent: String
+    let csSetCurrentAsDefault: String
+    let csDefaultFolderSet: String
+    let csSaveToDrive: String
+    let csSelectedCid: String
+    let csRefreshFolders: String
+    let csSaving: String
+    let csLinkInvalidCannotSave: String
+    let csPickFolderNotRoot: String
+    let csPickFolderPlease: String
+    let csFolderNotSelected: String
+    let csDefaultNotSet: String
+    let csNeedDefaultAfterBrowse: String
+    let csWantSuccess: String
+    let csWantSuccessHint: String
+    let csUnknownCloud: String
+    let csShareEmptyOrInvalid: String
+    let csQuarkNotRoot: String
+    let csSaveSuccess: String
+    let csNotConfigured: String
+    let csAppSessionExpired: String
+    let csPanCookieExpired: String
+    let csRatingCount: String
+    let csWant115Only: String
 }
 
 // MARK: - Factory
@@ -2240,8 +2537,8 @@ extension ArrStrings {
                 statusLabel: "Status",
                 versionLabel: "Version",
                 messageLabel: "Message",
-                urlLabel: "URL",
-                fallbackURLLabel: "Fallback URL",
+                urlLabel: "Local URL",
+                fallbackURLLabel: "Remote URL",
                 apiKeyLabel: "API Key",
                 publicIPLabel: "Public IP",
                 countryLabel: "Country",
@@ -2387,8 +2684,8 @@ extension ArrStrings {
                 statusLabel: "状态",
                 versionLabel: "版本",
                 messageLabel: "消息",
-                urlLabel: "URL",
-                fallbackURLLabel: "备用 URL",
+                urlLabel: "内网 URL",
+                fallbackURLLabel: "外网 URL",
                 apiKeyLabel: "API 密钥",
                 publicIPLabel: "公网 IP",
                 countryLabel: "国家",

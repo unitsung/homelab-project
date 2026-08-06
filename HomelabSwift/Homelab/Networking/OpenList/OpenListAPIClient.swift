@@ -484,10 +484,11 @@ actor OpenListAPIClient {
             throw APIError.custom("No download URL")
         }
         let data = try await downloadFileBytes(from: remote)
-        let name = preferredName
-            ?? detail.item.name
-            ?? OpenListPath.normalize(path).split(separator: "/").last.map(String.init)
-            ?? "download"
+        let name: String = {
+            if let preferredName, !preferredName.isEmpty { return preferredName }
+            if !detail.item.name.isEmpty { return detail.item.name }
+            return OpenListPath.normalize(path).split(separator: "/").last.map(String.init) ?? "download"
+        }()
         let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
             .appendingPathComponent("Downloads", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
@@ -552,6 +553,22 @@ actor OpenListAPIClient {
     /// Ping still uses list for FS access check.
     func listRootForAuth() async throws {
         _ = try await list(path: "/")
+    }
+
+    /// Queue offline downloads (aria2 / qB / etc. as configured on the server).
+    /// Official: POST `/api/fs/add_offline_download`
+    func addOfflineDownload(urls: [String], toDirectory path: String, tool: String = "") async throws {
+        let urls = urls.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        guard !urls.isEmpty else { return }
+        let dir = OpenListPath.normalize(path)
+        var payload: [String: Any] = [
+            "path": dir,
+            "urls": urls
+        ]
+        let tool = tool.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !tool.isEmpty { payload["tool"] = tool }
+        let body = try JSONSerialization.data(withJSONObject: payload)
+        try await postVoidEnvelope(path: "/api/fs/add_offline_download", body: body)
     }
 
     func search(keyword: String, path: String? = nil) async throws -> [FileItem] {

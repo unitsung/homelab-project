@@ -21,6 +21,7 @@ struct ArcaneDashboard: View {
     @State private var query = ""
     @State private var filter: ContainerFilter = .all
     @State private var bannerMessage: String?
+    @State private var bannerTask: Task<Void, Never>?
     @State private var confirmStopAll = false
     @State private var confirmStartAll = false
     @State private var confirmBatchUpdate = false
@@ -32,9 +33,11 @@ struct ArcaneDashboard: View {
     @State private var isBatchRunning = false
     @State private var updateSession: ArcaneUpdateProgressSession?
     @State private var showUpdateProgress = false
+    @State private var showImagesSheet = false
     /// Server-side `updates=has_update` result (authoritative when local flags are missing).
     @State private var serverUpdateContainers: [ArcaneContainer] = []
     @State private var isLoadingUpdatesFilter = false
+    @State private var pendingDeleteId: String?
 
     private let arcaneColor = ServiceType.arcane.colors.primary
 
@@ -124,22 +127,29 @@ struct ArcaneDashboard: View {
                 dockerHostSection(info)
             }
 
+            // Keep feedback near the top so long container lists never hide it.
+            if let bannerMessage {
+                bannerView(bannerMessage)
+            }
+
             bulkActionsSection
             containerStatsSection
             filterBar
             containerListSection
-
-            if let bannerMessage {
-                Text(bannerMessage)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(AppTheme.surface.opacity(0.9), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            }
         }
         .navigationTitle(ServiceType.arcane.displayName)
+        .onChange(of: bannerMessage) { _, newValue in
+            bannerTask?.cancel()
+            guard let newValue else { return }
+            let isError = Self.bannerLooksLikeError(newValue)
+            bannerTask = Task { @MainActor in
+                try? await Task.sleep(nanoseconds: isError ? 4_000_000_000 : 2_800_000_000)
+                guard !Task.isCancelled else { return }
+                if bannerMessage == newValue {
+                    bannerMessage = nil
+                }
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(selectionMode ? localizer.t.done : localizer.t.actionEdit) {
@@ -160,31 +170,32 @@ struct ArcaneDashboard: View {
                 )
             }
         }
-        .confirmationDialog(localizer.t.arcaneConfirmStopAll, isPresented: $confirmStopAll, titleVisibility: .visible) {
+        // Centered alerts (more reliable than bottom action sheets on notched iPhones).
+        .alert(localizer.t.arcaneConfirmStopAll, isPresented: $confirmStopAll) {
             Button(localizer.t.arcaneStopAll, role: .destructive) {
                 Task { await runStopAll() }
             }
             Button(localizer.t.cancel, role: .cancel) {}
         }
-        .confirmationDialog(localizer.t.arcaneConfirmStartAll, isPresented: $confirmStartAll, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmStartAll, isPresented: $confirmStartAll) {
             Button(localizer.t.arcaneStartAll) {
                 Task { await runStartAll() }
             }
             Button(localizer.t.cancel, role: .cancel) {}
         }
-        .confirmationDialog(localizer.t.arcaneConfirmUpdateSelected, isPresented: $confirmBatchUpdate, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmUpdateSelected, isPresented: $confirmBatchUpdate) {
             Button(localizer.t.arcaneUpdate) {
                 Task { await runBatchUpdate() }
             }
             Button(localizer.t.cancel, role: .cancel) {}
         }
-        .confirmationDialog(localizer.t.arcaneConfirmDeleteSelected, isPresented: $confirmBatchDelete, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmDeleteSelected, isPresented: $confirmBatchDelete) {
             Button(localizer.t.delete, role: .destructive) {
                 Task { await runBatchDelete() }
             }
             Button(localizer.t.cancel, role: .cancel) {}
         }
-        .confirmationDialog(localizer.t.arcaneConfirmPruneDangling, isPresented: $confirmPruneDangling, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmPruneDangling, isPresented: $confirmPruneDangling) {
             Button(localizer.t.arcanePruneDangling, role: .destructive) {
                 Task { await runPruneImages(danglingOnly: true) }
             }
@@ -192,7 +203,7 @@ struct ArcaneDashboard: View {
         } message: {
             Text(localizer.t.arcanePruneDanglingHint)
         }
-        .confirmationDialog(localizer.t.arcaneConfirmPruneUnusedImages, isPresented: $confirmPruneUnusedImages, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmPruneUnusedImages, isPresented: $confirmPruneUnusedImages) {
             Button(localizer.t.arcanePruneUnusedImages, role: .destructive) {
                 Task { await runPruneImages(danglingOnly: false) }
             }
@@ -200,7 +211,7 @@ struct ArcaneDashboard: View {
         } message: {
             Text(localizer.t.arcanePruneUnusedImagesHint)
         }
-        .confirmationDialog(localizer.t.arcaneConfirmPruneVolumes, isPresented: $confirmPruneVolumes, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmPruneVolumes, isPresented: $confirmPruneVolumes) {
             Button(localizer.t.arcanePruneVolumes, role: .destructive) {
                 Task { await runPruneVolumes() }
             }
@@ -208,7 +219,7 @@ struct ArcaneDashboard: View {
         } message: {
             Text(localizer.t.arcanePruneVolumesHint)
         }
-        .confirmationDialog(localizer.t.arcaneConfirmSystemPrune, isPresented: $confirmSystemPrune, titleVisibility: .visible) {
+        .alert(localizer.t.arcaneConfirmSystemPrune, isPresented: $confirmSystemPrune) {
             Button(localizer.t.arcaneSystemPrune, role: .destructive) {
                 Task { await runSystemPrune() }
             }
@@ -216,10 +227,34 @@ struct ArcaneDashboard: View {
         } message: {
             Text(localizer.t.arcaneSystemPruneHint)
         }
+        .alert(localizer.t.delete, isPresented: Binding(
+            get: { pendingDeleteId != nil },
+            set: { if !$0 { pendingDeleteId = nil } }
+        )) {
+            Button(localizer.t.delete, role: .destructive) {
+                if let id = pendingDeleteId {
+                    pendingDeleteId = nil
+                    Task { await deleteOne(id) }
+                }
+            }
+            Button(localizer.t.cancel, role: .cancel) {
+                pendingDeleteId = nil
+            }
+        } message: {
+            Text(localizer.t.arcaneForceRemove)
+        }
         .sheet(isPresented: $showUpdateProgress) {
             if let updateSession {
                 ArcaneUpdateProgressSheet(session: updateSession)
             }
+        }
+        .sheet(isPresented: $showImagesSheet) {
+            ArcaneImagesSheet(
+                instanceId: selectedInstanceId,
+                environmentId: selectedEnvironment?.id ?? ArcaneEnvironment.localId
+            )
+            .environment(localizer)
+            .environment(servicesStore)
         }
         .task(id: selectedInstanceId) { await fetchAll() }
         .onChange(of: filter) { _, newValue in
@@ -458,17 +493,31 @@ struct ArcaneDashboard: View {
             }
 
             if let imageUsage {
-                Text(
-                    String(
-                        format: localizer.t.arcaneImagesUsageFormat,
-                        imageUsage.total,
-                        imageUsage.unused,
-                        Formatters.formatBytes(Double(imageUsage.totalSize))
-                    )
-                )
-                    .font(.caption2)
-                    .foregroundStyle(AppTheme.textSecondary)
+                Button {
+                    showImagesSheet = true
+                } label: {
+                    HStack {
+                        Text(
+                            String(
+                                format: localizer.t.arcaneImagesUsageFormat,
+                                imageUsage.total,
+                                imageUsage.unused,
+                                Formatters.formatBytes(Double(imageUsage.totalSize))
+                            )
+                        )
+                        .font(.caption2)
+                        .foregroundStyle(AppTheme.textSecondary)
+                        Spacer()
+                        Text(localizer.t.arcaneImagesTitle)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(arcaneColor)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(arcaneColor)
+                    }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
             }
 
             if isBatchRunning {
@@ -491,12 +540,9 @@ struct ArcaneDashboard: View {
         } label: {
             Label(title, systemImage: icon)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(disabled ? AppTheme.textMuted : color)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background((disabled ? Color.secondary : color).opacity(0.12), in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.glass)
+        .tint(disabled ? Color.secondary : color)
         .disabled(disabled || isBatchRunning)
     }
 
@@ -586,14 +632,8 @@ struct ArcaneDashboard: View {
                                 }
                             }
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(filter == item ? .white : AppTheme.textSecondary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(
-                                Capsule().fill(filter == item ? arcaneColor : Color.secondary.opacity(0.12))
-                            )
                         }
-                        .buttonStyle(.plain)
+                        .glassChipStyle(selected: filter == item, tint: arcaneColor)
                     }
                 }
             }
@@ -657,12 +697,12 @@ struct ArcaneDashboard: View {
                                 .foregroundStyle(.primary)
                                 .lineLimit(1)
                             if containerNeedsUpdate(container) {
-                                Text("UPDATE")
+                                Text(localizer.t.arcaneUpdateBadge)
                                     .font(.caption2.bold())
                                     .foregroundStyle(AppTheme.warning)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(AppTheme.warning.opacity(0.15), in: Capsule())
+                                    .glassCard(cornerRadius: 20, tint: AppTheme.warning.opacity(0.2))
                             }
                         }
                         Text(container.image)
@@ -681,26 +721,28 @@ struct ArcaneDashboard: View {
                         Menu {
                             if container.isRunning {
                                 Button { performAction(.stop, on: container.id) } label: {
-                                    Label("Stop", systemImage: "stop.fill")
+                                    Label(localizer.t.actionStop, systemImage: "stop.fill")
                                 }
                                 Button { performAction(.restart, on: container.id) } label: {
-                                    Label("Restart", systemImage: "arrow.clockwise")
+                                    Label(localizer.t.actionRestart, systemImage: "arrow.clockwise")
                                 }
                                 Button { performAction(.pause, on: container.id) } label: {
-                                    Label("Pause", systemImage: "pause.fill")
+                                    Label(localizer.t.actionPause, systemImage: "pause.fill")
                                 }
                             } else {
                                 Button { performAction(.start, on: container.id) } label: {
-                                    Label("Start", systemImage: "play.fill")
+                                    Label(localizer.t.actionStart, systemImage: "play.fill")
                                 }
                             }
                             Button { Task { await updateOne(container.id) } } label: {
-                                Label("Update", systemImage: "arrow.down.circle")
+                                Label(localizer.t.arcaneUpdate, systemImage: "arrow.down.circle")
                             }
                             Button { Task { await redeployOne(container.id) } } label: {
-                                Label("Redeploy", systemImage: "arrow.triangle.2.circlepath")
+                                Label(localizer.t.arcaneRedeploy, systemImage: "arrow.triangle.2.circlepath")
                             }
-                            Button(role: .destructive) { Task { await deleteOne(container.id) } } label: {
+                            Button(role: .destructive) {
+                                pendingDeleteId = container.id
+                            } label: {
                                 Label(localizer.t.delete, systemImage: "trash")
                             }
                         } label: {
@@ -1156,12 +1198,24 @@ struct ArcaneDashboard: View {
         isBatchRunning = true
         defer { isBatchRunning = false }
         guard let client = await servicesStore.arcaneClient(instanceId: selectedInstanceId) else { return }
+        var ok = 0
+        var fail = 0
         for id in selectedIds {
             do {
                 try await client.containerAction(id: id, action: action, environmentId: envId())
-            } catch {}
+                ok += 1
+            } catch {
+                fail += 1
+            }
         }
-        bannerMessage = String(format: localizer.t.arcaneBatchActionFormat, action.rawValue, selectedIds.count)
+        let actionTitle = localizedActionTitle(action)
+        if fail == 0 {
+            bannerMessage = String(format: localizer.t.arcaneBatchAllOkFormat, actionTitle, ok)
+            HapticManager.success()
+        } else {
+            bannerMessage = String(format: localizer.t.arcaneBatchResultFormat, actionTitle, ok, fail)
+            HapticManager.error()
+        }
         await fetchContainers()
     }
 
@@ -1169,14 +1223,36 @@ struct ArcaneDashboard: View {
         isBatchRunning = true
         defer { isBatchRunning = false }
         guard let client = await servicesStore.arcaneClient(instanceId: selectedInstanceId) else { return }
+        var ok = 0
+        var fail = 0
         for id in selectedIds {
             do {
                 try await client.deleteContainer(id: id, environmentId: envId(), force: true)
-            } catch {}
+                ok += 1
+            } catch {
+                fail += 1
+            }
         }
         selectedIds.removeAll()
-        bannerMessage = localizer.t.arcaneDeletedSelected
+        if fail == 0 {
+            bannerMessage = String(format: localizer.t.arcaneBatchAllOkFormat, localizer.t.delete, ok)
+            HapticManager.success()
+        } else {
+            bannerMessage = String(format: localizer.t.arcaneBatchResultFormat, localizer.t.delete, ok, fail)
+            HapticManager.error()
+        }
         await fetchContainers()
+    }
+
+    private func localizedActionTitle(_ action: ArcaneContainerAction) -> String {
+        switch action {
+        case .start: return localizer.t.actionStart
+        case .stop: return localizer.t.actionStop
+        case .restart: return localizer.t.actionRestart
+        case .pause: return localizer.t.actionPause
+        case .unpause: return localizer.t.arcaneUnpause
+        case .kill: return localizer.t.arcaneKill
+        }
     }
 
     private func statusColor(for state: String) -> Color {
@@ -1187,6 +1263,32 @@ struct ArcaneDashboard: View {
         default: return AppTheme.warning
         }
     }
+
+    private func bannerView(_ text: String) -> some View {
+        let isError = Self.bannerLooksLikeError(text)
+        let tint = isError ? AppTheme.danger : AppTheme.running
+        return HStack(spacing: 8) {
+            Image(systemName: isError ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                .foregroundStyle(tint)
+            Text(text)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(tint)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .glassCard(cornerRadius: 10, tint: tint.opacity(0.2))
+    }
+
+    private static func bannerLooksLikeError(_ text: String) -> Bool {
+        let lower = text.lowercased()
+        return lower.contains("fail")
+            || lower.contains("error")
+            || lower.contains("unavailable")
+            || text.contains("失败")
+            || text.contains("错误")
+            || text.contains("不可用")
+    }
 }
 
 // MARK: - Routes
@@ -1196,15 +1298,119 @@ enum ArcaneRoute: Hashable {
     case containerDetail(instanceId: UUID, environmentId: String, containerId: String)
 }
 
-// MARK: - Full list (kept for navigation)
+// MARK: - Full list (legacy route → dashboard)
 
 struct ArcaneContainerListView: View {
     let instanceId: UUID
     let environmentId: String
 
     var body: some View {
-        // Reuse dashboard with fixed env by navigating to detail from main list.
-        Text("Use dashboard list")
-            .navigationTitle("Containers")
+        // Prefer the full dashboard (env picker + filters + bulk actions).
+        ArcaneDashboard(instanceId: instanceId)
+    }
+}
+
+// MARK: - Images browser
+
+private struct ArcaneImagesSheet: View {
+    let instanceId: UUID
+    let environmentId: String
+
+    @Environment(ServicesStore.self) private var servicesStore
+    @Environment(Localizer.self) private var localizer
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var images: [ArcaneImageSummary] = []
+    @State private var isLoading = true
+    @State private var errorText: String?
+    @State private var updatesOnly = false
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isLoading {
+                    ProgressView(localizer.t.loading)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let errorText {
+                    ContentUnavailableView(errorText, systemImage: "exclamationmark.triangle")
+                } else if images.isEmpty {
+                    ContentUnavailableView(localizer.t.arcaneImageNoData, systemImage: "photo.stack")
+                } else {
+                    List(images) { image in
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                Text(image.primaryTag)
+                                    .font(.subheadline.weight(.semibold))
+                                    .lineLimit(2)
+                                Spacer()
+                                if image.hasUpdate {
+                                    Text(localizer.t.arcaneUpdateBadge)
+                                        .font(.caption2.bold())
+                                        .foregroundStyle(AppTheme.warning)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .glassCard(cornerRadius: 20, tint: AppTheme.warning.opacity(0.2))
+                                }
+                            }
+                            HStack {
+                                Text(Formatters.formatBytes(Double(image.size ?? 0)))
+                                Spacer()
+                                Text(image.inUse == true ? localizer.t.arcaneImageInUse : localizer.t.arcaneImageUnused)
+                                    .foregroundStyle(image.inUse == true ? AppTheme.running : AppTheme.textMuted)
+                            }
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            if !image.usedContainerNames.isEmpty {
+                                Text(image.usedContainerNames.joined(separator: ", "))
+                                    .font(.caption2)
+                                    .foregroundStyle(AppTheme.textMuted)
+                                    .lineLimit(2)
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                    .listStyle(.insetGrouped)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(localizer.t.arcaneImagesTitle)
+                        .font(.headline)
+                        .lineLimit(1)
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(localizer.t.close) { dismiss() }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Picker(localizer.t.arcaneImagesTitle, selection: $updatesOnly) {
+                        Text(localizer.t.arcaneImagesAll).tag(false)
+                        Text(localizer.t.arcaneImagesWithUpdates).tag(true)
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                }
+            }
+            .task(id: updatesOnly) { await load() }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+    }
+
+    @MainActor
+    private func load() async {
+        isLoading = true
+        defer { isLoading = false }
+        guard let client = await servicesStore.arcaneClient(instanceId: instanceId) else {
+            errorText = localizer.t.arcaneClientUnavailable
+            return
+        }
+        do {
+            images = try await client.getImages(environmentId: environmentId, updatesOnly: updatesOnly)
+            errorText = nil
+        } catch {
+            errorText = error.localizedDescription
+            images = []
+        }
     }
 }

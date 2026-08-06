@@ -63,6 +63,16 @@ extension View {
     func glassCard(cornerRadius: CGFloat = AppTheme.cardRadius, tint: Color? = nil) -> some View {
         self.modifier(GlassEffectModifier(cornerRadius: cornerRadius, tint: tint, interactive: false))
     }
+
+    /// Selected → glassProminent; unselected → glass. Shared by filter / chip bars.
+    @ViewBuilder
+    func glassChipStyle(selected: Bool, tint: Color) -> some View {
+        if selected {
+            self.buttonStyle(.glassProminent).tint(tint).controlSize(.small)
+        } else {
+            self.buttonStyle(.glass).tint(tint).controlSize(.small)
+        }
+    }
 }
 
 // NOTE: .buttonStyle(.glass) and .buttonStyle(.glassProminent)

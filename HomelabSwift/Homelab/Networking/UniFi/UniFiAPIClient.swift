@@ -904,11 +904,10 @@ actor UniFiAPIClient {
         if mode == .siteManager {
             return await engine.pingURL("\(baseURL)/v1/sites?pageSize=1", extraHeaders: authHeaders)
         }
+        let activeBase = NetworkAccessMode.effectiveBaseURL(primary: baseURL, fallback: fallbackURL)
+        guard !activeBase.isEmpty else { return false }
         for path in Self.localNetworkPathCandidates("sites?pageSize=1") {
-            if await engine.pingURL("\(baseURL)\(path)", extraHeaders: authHeaders) {
-                return true
-            }
-            if !fallbackURL.isEmpty, await engine.pingURL("\(fallbackURL)\(path)", extraHeaders: authHeaders) {
+            if await engine.pingURL("\(activeBase)\(path)", extraHeaders: authHeaders) {
                 return true
             }
         }

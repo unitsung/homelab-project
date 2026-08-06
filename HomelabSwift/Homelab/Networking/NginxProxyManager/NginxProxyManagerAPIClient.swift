@@ -53,11 +53,7 @@ actor NginxProxyManagerAPIClient {
 
     func ping() async -> Bool {
         if baseURL.isEmpty { return false }
-        if await engine.pingURL("\(baseURL)/api/", extraHeaders: [:]) { return true }
-        if !fallbackURL.isEmpty {
-            return await engine.pingURL("\(fallbackURL)/api/", extraHeaders: [:])
-        }
-        return false
+        return await engine.pingWithAccessMode(baseURL: baseURL, fallbackURL: fallbackURL, path: "/api/", extraHeaders: [:])
     }
 
     // MARK: - Authentication

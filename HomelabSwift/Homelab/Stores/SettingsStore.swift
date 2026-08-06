@@ -74,6 +74,13 @@ final class SettingsStore {
         }
     }
 
+    /// Global LAN vs remote (Tailscale) access force mode.
+    var networkAccessMode: NetworkAccessMode {
+        didSet {
+            NetworkAccessMode.persist(networkAccessMode)
+        }
+    }
+
     private(set) var availableUpdateVersion: String? = nil {
         didSet {
             UserDefaults.standard.set(availableUpdateVersion, forKey: Keys.availableUpdateVersion)
@@ -135,6 +142,7 @@ final class SettingsStore {
         static let backupRememberSelectionEnabled = "homelab_backup_remember_selection_enabled"
         static let backupSelectedServiceTypes = "homelab_backup_selected_service_types"
         static let checkForUpdatesEnabled = "homelab_check_updates_enabled"
+        static let networkAccessMode = NetworkAccessMode.userDefaultsKey
     }
 
     // Point updates at this fork (upstream JohnnWi/homelab-project is archived).
@@ -169,6 +177,8 @@ final class SettingsStore {
         self.backupRememberSelectionEnabled = UserDefaults.standard.object(forKey: Keys.backupRememberSelectionEnabled) as? Bool ?? true
         let savedBackupSelection = UserDefaults.standard.stringArray(forKey: Keys.backupSelectedServiceTypes) ?? []
         self.backupSelectedServiceTypes = Set(savedBackupSelection.compactMap(Self.serviceType(fromStoredRawValue:)))
+        let savedNetworkMode = UserDefaults.standard.string(forKey: Keys.networkAccessMode)
+        self.networkAccessMode = savedNetworkMode.flatMap(NetworkAccessMode.init(rawValue:)) ?? .local
         self.dismissedUpdateVersion = UserDefaults.standard.string(forKey: Keys.dismissedUpdateVersion)
         self.dismissedPopupVersion = UserDefaults.standard.string(forKey: Keys.dismissedPopupVersion)
         self.availableUpdateVersion = UserDefaults.standard.string(forKey: Keys.availableUpdateVersion)
@@ -227,6 +237,20 @@ final class SettingsStore {
         dashboardCardOrder = DashboardCardID.defaultOrder
     }
 
+    /// Restore default order for home-eligible services (keep non-home types where they are).
+    func resetHomeServiceOrder() {
+        let homeDefault = ServiceType.homeServices
+        let homeSet = Set(homeDefault)
+        let rest = serviceOrder.filter { !homeSet.contains($0) }
+        serviceOrder = Self.normalizedServiceOrder(homeDefault + rest)
+    }
+
+    /// Reset overview cards and home service tile order.
+    func resetHomeLayout() {
+        resetDashboardCardOrder()
+        resetHomeServiceOrder()
+    }
+
     func canMoveService(_ type: ServiceType, offset: Int, within allowedTypes: [ServiceType]) -> Bool {
         let allowedSet = Set(allowedTypes)
         let filtered = serviceOrder.filter { allowedSet.contains($0) }
@@ -252,6 +276,41 @@ final class SettingsStore {
         var updated = serviceOrder
         updated.swapAt(sourceGlobal, destinationGlobal)
         serviceOrder = updated
+    }
+
+    /// Drag-reorder subset of `serviceOrder` (e.g. home tiles) via `List.onMove`.
+    func moveServices(from source: IndexSet, to destination: Int, within allowedTypes: [ServiceType]) {
+        let allowedSet = Set(allowedTypes)
+        var filtered = serviceOrder.filter { allowedSet.contains($0) }
+        guard !filtered.isEmpty else { return }
+        filtered.move(fromOffsets: source, toOffset: destination)
+
+        var result: [ServiceType] = []
+        var fi = 0
+        for type in serviceOrder {
+            if allowedSet.contains(type) {
+                if fi < filtered.count {
+                    result.append(filtered[fi])
+                    fi += 1
+                }
+            } else {
+                result.append(type)
+            }
+        }
+        while fi < filtered.count {
+            result.append(filtered[fi])
+            fi += 1
+        }
+        serviceOrder = Self.normalizedServiceOrder(result)
+    }
+
+    /// Home service tiles in saved order (configured instances only).
+    /// - Parameter includeHidden: when false, omits services the user hid from home.
+    func orderedHomeServices(configured: Set<ServiceType>, includeHidden: Bool = false) -> [ServiceType] {
+        let allowed = Set(ServiceType.homeServices).intersection(configured)
+        let ordered = serviceOrder.filter { allowed.contains($0) }
+        if includeHidden { return ordered }
+        return ordered.filter { !isServiceHidden($0) }
     }
 
     // MARK: - PIN Security

@@ -1,15 +1,22 @@
 import Foundation
 
+/// Home dashboard cards that can be reordered (matches what `HomeView` actually renders).
 enum DashboardCardID: String, CaseIterable, Codable, Identifiable, Hashable, Sendable {
-    case cpu
-    case memory
-    case disk
-    case diskTemperature
+    case hero
     case docker
+    case qbittorrent
 
     var id: String { rawValue }
 
-    /// Default display order for the home metric grid.
+    /// Hero (Beszel overview) is full-width; Docker + qBittorrent share a two-column row.
+    var spansFullWidth: Bool {
+        switch self {
+        case .hero: return true
+        case .docker, .qbittorrent: return false
+        }
+    }
+
+    /// Default display order for the home metric/overview strip.
     static var defaultOrder: [DashboardCardID] { Array(allCases) }
 
     /// Keeps first occurrence of each known id, then appends any missing cases in `defaultOrder`.
@@ -25,7 +32,26 @@ enum DashboardCardID: String, CaseIterable, Codable, Identifiable, Hashable, Sen
         return result
     }
 
+    /// Accepts current ids plus legacy metric keys from the pre-Hero redesign.
     static func normalizeOrder(rawValues: [String]) -> [DashboardCardID] {
-        normalizeOrder(rawValues.compactMap(DashboardCardID.init(rawValue:)))
+        let mapped = rawValues.compactMap(Self.init(migrating:))
+        return normalizeOrder(mapped)
+    }
+
+    /// Map stored raw values → current cases. Old cpu/memory/disk/temp collapse to `.hero`.
+    init?(migrating rawValue: String) {
+        let key = rawValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if let modern = DashboardCardID(rawValue: key) {
+            self = modern
+            return
+        }
+        switch key {
+        case "cpu", "memory", "disk", "disktemperature", "disk_temperature", "system", "overview":
+            self = .hero
+        case "qbit", "qbittorrent":
+            self = .qbittorrent
+        default:
+            return nil
+        }
     }
 }
