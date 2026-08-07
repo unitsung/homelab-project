@@ -25,6 +25,20 @@ secrets.json
 *.apk
 *.aab
 
+# Local-only notes / tools (never push)
+.local/
+# Comet (repo root and HomelabSwift working copy) — keep on disk, never GitHub
+docs/
+**/docs/comet/
+.comet/
+**/.comet/
+.codegraph/
+**/.codegraph/
+**/.opencode/
+# Comet-managed agent stubs under HomelabSwift (ambient resume probes)
+HomelabSwift/AGENTS.md
+HomelabSwift/CLAUDE.md
+
 # IDE / Editor
 .claude/
 .qwen/
